@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ControllerPlayground (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "ControllerPlayground (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
