@@ -1,4 +1,4 @@
-<Window x:Class="ControllerPlayground.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Controller Playground">
+<Window x:Class="ControllerPlayground.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="using:ControllerPlayground.Controls" Title="Controller Playground">
 
     <Grid
     x:Name="PlayArea"
@@ -22,6 +22,11 @@
         HorizontalAlignment="Center"
         VerticalAlignment="Top"
         Margin="0,30,0,0" />
+
+        <controls:GameTile
+            Title="Halo Infinite"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center" />
     </Grid>
 
 </Window>
