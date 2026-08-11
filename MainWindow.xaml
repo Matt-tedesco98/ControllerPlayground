@@ -1,40 +1,53 @@
 <Window x:Class="ControllerPlayground.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="using:ControllerPlayground.Controls"
-        Title="Controller Playground">
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="using:ControllerPlayground.Controls"
+		Title="Controller Playground">
 
     <Grid
-        x:Name="PlayArea"
-        Background="#202020"
-        KeyDown="PlayArea_KeyDown"
-        IsTabStop="True">
+		x:Name="PlayArea"
+		Background="#202020"
+		IsTabStop="True">
 
         <Rectangle
-            x:Name="Player"
-            Width="60"
-            Height="60"
-            Fill="DodgerBlue"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Margin="100,100,0,0" />
+			x:Name="Player"
+			Width="60"
+			Height="60"
+			Fill="DodgerBlue"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Top"
+			Margin="100,100,0,0" />
 
         <TextBlock
-            Text="Use the arrow keys to move"
-            Foreground="White"
-            FontSize="24"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Top"
-            Margin="0,30,0,0" />
+			Text="Use the arrow keys to move"
+			Foreground="White"
+			FontSize="24"
+			HorizontalAlignment="Center"
+			VerticalAlignment="Top"
+			Margin="0,30,0,0" />
 
         <TextBlock
-            x:Name="ControllerStatus"
-            Text="Waiting for Controller"
-            FontSize="24"
-            Margin="20" />
+			x:Name="ControllerStatus"
+			Text="Waiting for Controller"
+			FontSize="24"
+			Margin="20" />
+        
+        <StackPanel
+			Orientation="Horizontal"
+			HorizontalAlignment="Center"
+			VerticalAlignment="Center"
+			Spacing="24"
+            XYFocusKeyboardNavigation="Enabled">
 
-        <controls:GameTile
-            Title="Halo Infinite"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center" />
+
+            <controls:GameTile
+			Title="Halo Infinite"/>
+            <controls:GameTile
+            Title="Forza Horizon 5"/>
+            <controls:GameTile
+			Title="Minecraft"/>
+            <controls:GameTile
+            Title="Steam"/>
+
+        </StackPanel>
     </Grid>
 
 </Window>
