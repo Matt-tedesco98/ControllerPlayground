@@ -12,7 +12,12 @@ public sealed partial class MainWindow : Window {
 
     public MainWindow() {
         InitializeComponent();
-        
+
+        bool controllerInit = ControllerInputNative.ControllerInput_Initialize();
+
+        System.Diagnostics.Debug.WriteLine(
+            $"ControllerInputNative initialized: {controllerInit}");
+
         //_gameInputService = new GameInputService();
         //System.Diagnostics.Debug.WriteLine(
         //    $"GameInputService initialized: {_gameInputService.IsInitialized}");
