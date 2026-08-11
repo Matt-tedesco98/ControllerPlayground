@@ -4,7 +4,7 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="../ControllerInput/ControllerInput.vcxproj" Id="67400383-636e-42e0-acee-f5534d258b05">
+  <Project Path="ControllerInput/ControllerInput.vcxproj" Id="67400383-636e-42e0-acee-f5534d258b05">
     <Platform Solution="*|ARM64" Project="x64" />
   </Project>
   <Project Path="ControllerPlayground.csproj">
