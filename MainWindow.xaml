@@ -29,7 +29,16 @@
 			Text="Waiting for Controller"
 			FontSize="24"
 			Margin="20" />
-        
+
+        <TextBlock
+			x:Name="ControllerDebugText"
+            FontSize="18"
+            Foreground="White"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
+            Margin="20" 
+            Text="Controller: Waiting..." />
+
         <StackPanel
 			Orientation="Horizontal"
 			HorizontalAlignment="Center"

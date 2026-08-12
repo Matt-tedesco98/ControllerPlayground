@@ -20,3 +20,38 @@ bool ControllerInput_Initialize() {
 
 	return SUCCEEDED(result);
 }
+
+bool ControllerInput_GetState(ControllerState* State) {
+	if (g_gameInput == nullptr || State == nullptr)
+		return false; // Not initialized or invalid state pointer
+
+	IGameInputReading* reading = nullptr;
+
+	HRESULT result = g_gameInput->GetCurrentReading(
+		GameInputKindGamepad,
+		nullptr,
+		&reading
+	);
+
+	if (FAILED(result) || reading == nullptr)
+		return false; // Failed to get reading
+
+	GameInputGamepadState gamepadState{};
+
+	bool success = reading->GetGamepadState(&gamepadState);
+
+	if (success) {
+		State->buttons = static_cast<unsigned int>(gamepadState.buttons);
+		State->leftTrigger = gamepadState.leftTrigger;
+		State->rightTrigger = gamepadState.rightTrigger;
+		State->leftStickX = gamepadState.leftThumbstickX;
+		State->leftStickY = gamepadState.leftThumbstickY;
+		State->rightStickX = gamepadState.rightThumbstickX;
+		State->rightStickY = gamepadState.rightThumbstickY;
+	}
+
+	reading->Release(); // Release the reading object
+
+	return success;
+
+}

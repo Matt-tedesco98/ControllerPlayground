@@ -10,6 +10,8 @@ public sealed partial class MainWindow : Window {
     private double _y = 100;
     private const double Speed = 10;
 
+    private readonly DispatcherTimer _controllerTimer = new();
+
     public MainWindow() {
         InitializeComponent();
 
@@ -17,6 +19,10 @@ public sealed partial class MainWindow : Window {
 
         System.Diagnostics.Debug.WriteLine(
             $"ControllerInputNative initialized: {controllerInit}");
+
+        _controllerTimer.Interval = TimeSpan.FromMilliseconds(16);
+        _controllerTimer.Tick += ControllerTimer_Tick;
+        _controllerTimer.Start();
 
         //_gameInputService = new GameInputService();
         //System.Diagnostics.Debug.WriteLine(
@@ -48,6 +54,17 @@ public sealed partial class MainWindow : Window {
         Player.Margin = new Thickness(_x, _y, 0, 0);
     }
 
+    private void ControllerTimer_Tick(object? sender, object e) {
+        if (ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
+            ControllerDebugText.Text =
+                $"Buttons: 0x{state.Buttons:X}\n" +
+                $"LT: {state.LeftTrigger:F2}   RT: {state.RightTrigger:F2}\n" +
+                $"LS: {state.LeftThumbstickX:F2}, {state.LeftThumbstickY:F2}\n" +
+                $"RS: {state.RightThumbstickX:F2}, {state.RightThumbstickY:F2}";
+        } else {
+            ControllerDebugText.Text = "No controller detected";
+        }
+    }
     //private void GamepadTimer_Tick(object? sender, object e) {
     //    if (!_gameInputService.TryGetGamepadState(out var state)) {
     //        ControllerStatus.Text = "No controller detected";
