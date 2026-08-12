@@ -4,6 +4,7 @@ namespace ControllerPlayground.Input;
 
 internal sealed class ControllerService {
     private uint _previousButtons;
+    private ControllerAction _previousStickAction = ControllerAction.none;
 
     public ControllerAction PollAction() {
         if (!ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
@@ -42,6 +43,38 @@ internal sealed class ControllerService {
 
         if ((pressedThisFrame & 0x00000002) != 0)
             return ControllerAction.View;
+
+        ControllerAction stickAction = ControllerAction.none;
+
+        const float pressThreshold = 0.65f;
+        const float releaseThreshold = 0.30f;
+
+        if (_previousStickAction == ControllerAction.none) {
+
+            if (state.LeftThumbstickX > pressThreshold) {
+                _previousStickAction = ControllerAction.NavigateRight;
+                return ControllerAction.NavigateRight;
+            }
+
+            if (state.LeftThumbstickX < -pressThreshold) {
+                _previousStickAction = ControllerAction.NavigateLeft;
+                return ControllerAction.NavigateLeft;
+            }
+
+            if (state.LeftThumbstickY > pressThreshold) {
+                _previousStickAction = ControllerAction.NavigateUp;
+                return ControllerAction.NavigateUp;
+            }
+
+            if (state.LeftThumbstickY < -pressThreshold) {
+                _previousStickAction = ControllerAction.NavigateDown;
+                return ControllerAction.NavigateDown;
+            }
+        } else {
+            if (Math.Abs(state.LeftThumbstickX) < releaseThreshold && Math.Abs(state.LeftThumbstickY) < releaseThreshold) {
+                _previousStickAction = ControllerAction.none;
+            }
+        }
 
         return ControllerAction.none;
     }

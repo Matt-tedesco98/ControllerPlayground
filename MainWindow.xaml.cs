@@ -109,6 +109,10 @@ public sealed partial class MainWindow : Window {
                         }
                         break;
                     }
+                case ControllerAction.Back:
+                    System.Diagnostics.Debug.WriteLine("Back Requested");
+                    break;
+
             }
         }
         //private void GamepadTimer_Tick(object? sender, object e) {
