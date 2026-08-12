@@ -24,6 +24,10 @@ namespace ControllerPlayground.Controls {
         private void TileButton_LostFocus(object sender, RoutedEventArgs e) {
             TileButton.Scale = new System.Numerics.Vector3(1, 1, 1);
         }
+
+        public bool FocusTile() {
+            return TileButton.Focus(FocusState.Programmatic);
+        }
         public GameTile() {
             InitializeComponent();
 

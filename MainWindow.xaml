@@ -48,6 +48,7 @@
 
 
             <controls:GameTile
+            x:Name="FirstGameTile"
 			Title="Halo Infinite"/>
             <controls:GameTile
             Title="Forza Horizon 5"/>

@@ -16,6 +16,10 @@ public sealed partial class MainWindow : Window {
     public MainWindow() {
         InitializeComponent();
 
+        PlayArea.Loaded += (_, _) => { 
+            FirstGameTile.FocusTile();
+        };
+
         bool controllerInit = ControllerInputNative.ControllerInput_Initialize();
 
         System.Diagnostics.Debug.WriteLine(
@@ -66,8 +70,28 @@ public sealed partial class MainWindow : Window {
             ControllerDebugText.Text = "No controller detected";
         }
         ControllerAction action = _controllerService.PollAction();
-        if(action != ControllerAction.none) {
+        if (action != ControllerAction.none) {
+
             System.Diagnostics.Debug.WriteLine($"Controller Action: {action}");
+
+            var focusOptions = new FindNextElementOptions {
+                SearchRoot = PlayArea
+            };
+
+            switch (action) {
+                case ControllerAction.NavigateUp:
+                    FocusManager.TryMoveFocus(FocusNavigationDirection.Up, focusOptions);
+                    break;
+                case ControllerAction.NavigateDown:
+                    FocusManager.TryMoveFocus(FocusNavigationDirection.Down, focusOptions);
+                    break;
+                case ControllerAction.NavigateLeft:
+                    FocusManager.TryMoveFocus(FocusNavigationDirection.Left, focusOptions);
+                    break;
+                case ControllerAction.NavigateRight:
+                    FocusManager.TryMoveFocus(FocusNavigationDirection.Right, focusOptions);
+                    break;
+            }
         }
     }
     //private void GamepadTimer_Tick(object? sender, object e) {
