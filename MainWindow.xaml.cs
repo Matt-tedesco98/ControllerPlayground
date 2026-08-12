@@ -2,6 +2,8 @@ using ControllerPlayground.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using System;
+using Microsoft.UI.Xaml.Media;
+using ControllerPlayground.Controls;
 
 namespace ControllerPlayground;
 
@@ -16,7 +18,7 @@ public sealed partial class MainWindow : Window {
     public MainWindow() {
         InitializeComponent();
 
-        PlayArea.Loaded += (_, _) => { 
+        PlayArea.Loaded += (_, _) => {
             FirstGameTile.FocusTile();
         };
 
@@ -91,26 +93,48 @@ public sealed partial class MainWindow : Window {
                 case ControllerAction.NavigateRight:
                     FocusManager.TryMoveFocus(FocusNavigationDirection.Right, focusOptions);
                     break;
+                case ControllerAction.Accept: {
+                        var focused = FocusManager.GetFocusedElement(PlayArea.XamlRoot);
+
+                        if (focused is DependencyObject element) {
+                            DependencyObject? current = element;
+
+                            while (current != null) {
+                                if (current is GameTile gameTile) {
+                                    gameTile.Activate();
+                                    break;
+                                }
+                                current = VisualTreeHelper.GetParent(current);
+                            }
+                        }
+                        break;
+                    }
             }
         }
+        //private void GamepadTimer_Tick(object? sender, object e) {
+        //    if (!_gameInputService.TryGetGamepadState(out var state)) {
+        //        ControllerStatus.Text = "No controller detected";
+        //        return;
+        //    }
+
+        //    bool aPressed =
+        //        (state.Buttons & GameInputGamepadButtons.A) != 0;
+
+        //    ControllerStatus.Text =
+        //        $"Controller detected\n" +
+        //        $"A: {aPressed}\n" +
+        //        $"Left Stick: {state.LeftThumbstickX:F2}, {state.LeftThumbstickY:F2}\n" +
+        //        $"LT: {state.LeftTrigger:F2}   RT: {state.RightTrigger:F2}";
+        //}
+
+
+        //private readonly GameInputService _gameInputService;
+        //private readonly DispatcherTimer _gamepadTimer;
     }
-    //private void GamepadTimer_Tick(object? sender, object e) {
-    //    if (!_gameInputService.TryGetGamepadState(out var state)) {
-    //        ControllerStatus.Text = "No controller detected";
-    //        return;
-    //    }
 
-    //    bool aPressed =
-    //        (state.Buttons & GameInputGamepadButtons.A) != 0;
-
-    //    ControllerStatus.Text =
-    //        $"Controller detected\n" +
-    //        $"A: {aPressed}\n" +
-    //        $"Left Stick: {state.LeftThumbstickX:F2}, {state.LeftThumbstickY:F2}\n" +
-    //        $"LT: {state.LeftTrigger:F2}   RT: {state.RightTrigger:F2}";
-    //}
-
-
-    //private readonly GameInputService _gameInputService;
-    //private readonly DispatcherTimer _gamepadTimer;
+    private void GameTile_Activated(object sender, EventArgs e) {
+        if(sender is GameTile gameTile) {
+            System.Diagnostics.Debug.WriteLine($"GameTile activated: {gameTile.Title}");
+        }
+    }
 }

@@ -49,13 +49,17 @@
 
             <controls:GameTile
             x:Name="FirstGameTile"
-			Title="Halo Infinite"/>
+			Title="Halo Infinite"
+            Activated="GameTile_Activated"/>
             <controls:GameTile
-            Title="Forza Horizon 5"/>
+            Title="Forza Horizon 5"
+            Activated="GameTile_Activated"/>
             <controls:GameTile
-			Title="Minecraft"/>
+			Title="Minecraft"
+            Activated="GameTile_Activated"/>
             <controls:GameTile
-            Title="Steam"/>
+            Title="Steam"
+            Activated="GameTile_Activated"/>
 
         </StackPanel>
     </Grid>
