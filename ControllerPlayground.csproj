@@ -61,12 +61,11 @@
 		<PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
 		<PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
 		<PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+		<PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
 
 	<Target Name="CopyControllerInput" AfterTargets="Build">
-		<Copy SourceFiles="$(SolutionDir)x64\$(Configuration)\ControllerInput.dll"
-			  DestinationFolder="$(OutDir)"
-			  SkipUnchangedFiles="true" />
+		<Copy SourceFiles="$(SolutionDir)x64\$(Configuration)\ControllerInput.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
 	</Target>
 
 	<ItemGroup>

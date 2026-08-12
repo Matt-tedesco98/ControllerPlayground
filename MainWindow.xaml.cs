@@ -11,6 +11,7 @@ public sealed partial class MainWindow : Window {
     private const double Speed = 10;
 
     private readonly DispatcherTimer _controllerTimer = new();
+    private readonly ControllerService _controllerService = new();
 
     public MainWindow() {
         InitializeComponent();
@@ -63,6 +64,10 @@ public sealed partial class MainWindow : Window {
                 $"RS: {state.RightThumbstickX:F2}, {state.RightThumbstickY:F2}";
         } else {
             ControllerDebugText.Text = "No controller detected";
+        }
+        ControllerAction action = _controllerService.PollAction();
+        if(action != ControllerAction.none) {
+            System.Diagnostics.Debug.WriteLine($"Controller Action: {action}");
         }
     }
     //private void GamepadTimer_Tick(object? sender, object e) {
