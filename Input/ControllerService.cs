@@ -4,8 +4,16 @@ namespace ControllerPlayground.Input;
 
 internal sealed class ControllerService {
     private uint _previousButtons;
+
+    //Controller Dpad handling variables
+    private ControllerAction _heldDpadAction = ControllerAction.none;
+    private long _nextDpadRepeatTime;
+
+    //Controller Stick handling variables
     private ControllerAction _heldStickAction = ControllerAction.none;
     private long _nextStickRepeatTime;
+
+    // Constants for repeat behavior
     private const int InitialRepeatDelayMs = 400;
     private const int RepeatIntervalMs = 120;
 
@@ -23,17 +31,35 @@ internal sealed class ControllerService {
         uint pressedThisFrame = currentButtons & ~_previousButtons;
         _previousButtons = currentButtons;
 
-        if ((pressedThisFrame & 0x00000040) != 0)
-            return ControllerAction.NavigateUp;
+        ControllerAction dpadAction = ControllerAction.none;
 
-        if ((pressedThisFrame & 0x00000080) != 0)
-            return ControllerAction.NavigateDown;
+        if ((currentButtons & 0x00000040) != 0)
+            dpadAction = ControllerAction.NavigateUp;
 
-        if ((pressedThisFrame & 0x00000100) != 0)
-            return ControllerAction.NavigateLeft;
+        if ((currentButtons & 0x00000080) != 0)
+            dpadAction = ControllerAction.NavigateDown;
 
-        if ((pressedThisFrame & 0x00000200) != 0)
-            return ControllerAction.NavigateRight;
+        if ((currentButtons & 0x00000100) != 0)
+            dpadAction = ControllerAction.NavigateLeft;
+
+        if ((currentButtons & 0x00000200) != 0)
+            dpadAction = ControllerAction.NavigateRight;
+
+        long dpadNow = Environment.TickCount64;
+
+        if (dpadAction == ControllerAction.none) {
+            _heldDpadAction = ControllerAction.none;
+            _nextDpadRepeatTime = 0;
+        } else if (dpadAction != _heldDpadAction) {
+            // New direction pressed move immediately
+            _heldDpadAction = dpadAction;
+            _nextDpadRepeatTime = dpadNow + InitialRepeatDelayMs;
+            return dpadAction;
+        } else if (dpadNow >= _nextDpadRepeatTime) {
+            // Still held after delay, repeat the action
+            _nextDpadRepeatTime = dpadNow + RepeatIntervalMs;
+            return dpadAction;
+        }
 
         if ((pressedThisFrame & 0x00000004) != 0)
             return ControllerAction.Accept;
