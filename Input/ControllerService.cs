@@ -4,7 +4,10 @@ namespace ControllerPlayground.Input;
 
 internal sealed class ControllerService {
     private uint _previousButtons;
-    private ControllerAction _previousStickAction = ControllerAction.none;
+    private ControllerAction _heldStickAction = ControllerAction.none;
+    private long _nextStickRepeatTime;
+    private const int InitialRepeatDelayMs = 400;
+    private const int RepeatIntervalMs = 120;
 
     public ControllerAction PollAction() {
         if (!ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
@@ -44,36 +47,49 @@ internal sealed class ControllerService {
         if ((pressedThisFrame & 0x00000002) != 0)
             return ControllerAction.View;
 
-        ControllerAction stickAction = ControllerAction.none;
 
         const float pressThreshold = 0.65f;
         const float releaseThreshold = 0.30f;
 
-        if (_previousStickAction == ControllerAction.none) {
+        float x = state.LeftThumbstickX;
+        float y = state.LeftThumbstickY;
 
-            if (state.LeftThumbstickX > pressThreshold) {
-                _previousStickAction = ControllerAction.NavigateRight;
-                return ControllerAction.NavigateRight;
-            }
+        ControllerAction stickAction = ControllerAction.none;
 
-            if (state.LeftThumbstickX < -pressThreshold) {
-                _previousStickAction = ControllerAction.NavigateLeft;
-                return ControllerAction.NavigateLeft;
+        // Stick is pushed far enough to choose a direction
+        if (Math.Abs(x) >= pressThreshold || Math.Abs(y) >= pressThreshold) {
+            // Using the angle of the stick to determine the direction or switch randomly if the stick is in a diagonal position
+            if(Math.Abs(x) >= Math.Abs(y)) {
+                stickAction = x > 0 ? ControllerAction.NavigateRight : ControllerAction.NavigateLeft;
+            } else {
+                stickAction = y > 0 ? ControllerAction.NavigateUp : ControllerAction.NavigateDown;
             }
+        }
 
-            if (state.LeftThumbstickY > pressThreshold) {
-                _previousStickAction = ControllerAction.NavigateUp;
-                return ControllerAction.NavigateUp;
-            }
-
-            if (state.LeftThumbstickY < -pressThreshold) {
-                _previousStickAction = ControllerAction.NavigateDown;
-                return ControllerAction.NavigateDown;
-            }
+        //Stick returned close enough to center to release the action
+        else if (Math.Abs(x) <= releaseThreshold && Math.Abs(y) <= releaseThreshold) {
+            stickAction = ControllerAction.none;
         } else {
-            if (Math.Abs(state.LeftThumbstickX) < releaseThreshold && Math.Abs(state.LeftThumbstickY) < releaseThreshold) {
-                _previousStickAction = ControllerAction.none;
-            }
+            // Stick is still held in a direction, but not far enough to trigger a new action
+            stickAction = _heldStickAction;
+        }
+
+        long now = Environment.TickCount64;
+
+        if (stickAction == ControllerAction.none) {
+            _heldStickAction = ControllerAction.none;
+            _nextStickRepeatTime = 0;
+        }
+        else if (stickAction != _heldStickAction) {
+            // New direction pressed move immediately
+            _heldStickAction = stickAction;
+            _nextStickRepeatTime = now + InitialRepeatDelayMs;
+            return stickAction;
+        }
+        else if (now >= _nextStickRepeatTime) {
+            // Still held after delay, repeat the action
+            _nextStickRepeatTime = now + RepeatIntervalMs;
+            return stickAction;
         }
 
         return ControllerAction.none;
