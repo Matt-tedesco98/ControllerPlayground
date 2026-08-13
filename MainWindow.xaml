@@ -7,45 +7,12 @@
 		Background="#202020"
 		IsTabStop="True">
 
-        <Rectangle
-			x:Name="Player"
-			Width="60"
-			Height="60"
-			Fill="DodgerBlue"
-			HorizontalAlignment="Left"
-			VerticalAlignment="Top"
-			Margin="100,100,0,0" />
-
-        <TextBlock
-			Text="Use the arrow keys to move"
-			Foreground="White"
-			FontSize="24"
-			HorizontalAlignment="Center"
-			VerticalAlignment="Top"
-			Margin="0,30,0,0" />
-
-        <TextBlock
-			x:Name="ControllerStatus"
-			Text="Waiting for Controller"
-			FontSize="24"
-			Margin="20" />
-
-        <TextBlock
-			x:Name="ControllerDebugText"
-            FontSize="18"
-            Foreground="White"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Bottom"
-            Margin="20" 
-            Text="Controller: Waiting..." />
-
         <StackPanel
 			Orientation="Horizontal"
 			HorizontalAlignment="Center"
 			VerticalAlignment="Center"
 			Spacing="24"
             XYFocusKeyboardNavigation="Enabled">
-
 
             <controls:GameTile
             x:Name="FirstGameTile"

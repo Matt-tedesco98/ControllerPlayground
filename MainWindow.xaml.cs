@@ -42,102 +42,50 @@ public sealed partial class MainWindow : Window {
         Activated += (_, _) => { PlayArea.Focus(FocusState.Programmatic); };
     }
 
-    private void PlayArea_KeyDown(object sender, KeyRoutedEventArgs e) {
-        switch (e.Key) {
-            case Windows.System.VirtualKey.Left:
-                _x -= Speed;
-                break;
-            case Windows.System.VirtualKey.Right:
-                _x += Speed;
-                break;
-            case Windows.System.VirtualKey.Up:
-                _y -= Speed;
-                break;
-            case Windows.System.VirtualKey.Down:
-                _y += Speed;
-                break;
-        }
-
-        Player.Margin = new Thickness(_x, _y, 0, 0);
-    }
-
     private void ControllerTimer_Tick(object? sender, object e) {
-        if (ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
-            ControllerDebugText.Text =
-                $"Buttons: 0x{state.Buttons:X}\n" +
-                $"LT: {state.LeftTrigger:F2}   RT: {state.RightTrigger:F2}\n" +
-                $"LS: {state.LeftThumbstickX:F2}, {state.LeftThumbstickY:F2}\n" +
-                $"RS: {state.RightThumbstickX:F2}, {state.RightThumbstickY:F2}";
-        } else {
-            ControllerDebugText.Text = "No controller detected";
-        }
         ControllerAction action = _controllerService.PollAction();
-        if (action != ControllerAction.none) {
 
-            System.Diagnostics.Debug.WriteLine($"Controller Action: {action}");
+        var focusOptions = new FindNextElementOptions {
+            SearchRoot = PlayArea
+        };
 
-            var focusOptions = new FindNextElementOptions {
-                SearchRoot = PlayArea
-            };
+        switch (action) {
+            case ControllerAction.NavigateUp:
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Up, focusOptions);
+                break;
+            case ControllerAction.NavigateDown:
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Down, focusOptions);
+                break;
+            case ControllerAction.NavigateLeft:
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Left, focusOptions);
+                break;
+            case ControllerAction.NavigateRight:
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Right, focusOptions);
+                break;
+            case ControllerAction.Accept: {
+                    var focused = FocusManager.GetFocusedElement(PlayArea.XamlRoot);
 
-            switch (action) {
-                case ControllerAction.NavigateUp:
-                    FocusManager.TryMoveFocus(FocusNavigationDirection.Up, focusOptions);
-                    break;
-                case ControllerAction.NavigateDown:
-                    FocusManager.TryMoveFocus(FocusNavigationDirection.Down, focusOptions);
-                    break;
-                case ControllerAction.NavigateLeft:
-                    FocusManager.TryMoveFocus(FocusNavigationDirection.Left, focusOptions);
-                    break;
-                case ControllerAction.NavigateRight:
-                    FocusManager.TryMoveFocus(FocusNavigationDirection.Right, focusOptions);
-                    break;
-                case ControllerAction.Accept: {
-                        var focused = FocusManager.GetFocusedElement(PlayArea.XamlRoot);
+                    if (focused is DependencyObject element) {
+                        DependencyObject? current = element;
 
-                        if (focused is DependencyObject element) {
-                            DependencyObject? current = element;
-
-                            while (current != null) {
-                                if (current is GameTile gameTile) {
-                                    gameTile.Activate();
-                                    break;
-                                }
-                                current = VisualTreeHelper.GetParent(current);
+                        while (current != null) {
+                            if (current is GameTile gameTile) {
+                                gameTile.Activate();
+                                break;
                             }
+                            current = VisualTreeHelper.GetParent(current);
                         }
-                        break;
                     }
-                case ControllerAction.Back:
-                    System.Diagnostics.Debug.WriteLine("Back Requested");
                     break;
+                }
+            case ControllerAction.Back:
+                System.Diagnostics.Debug.WriteLine("Back Requested");
+                break;
 
-            }
         }
-        //private void GamepadTimer_Tick(object? sender, object e) {
-        //    if (!_gameInputService.TryGetGamepadState(out var state)) {
-        //        ControllerStatus.Text = "No controller detected";
-        //        return;
-        //    }
-
-        //    bool aPressed =
-        //        (state.Buttons & GameInputGamepadButtons.A) != 0;
-
-        //    ControllerStatus.Text =
-        //        $"Controller detected\n" +
-        //        $"A: {aPressed}\n" +
-        //        $"Left Stick: {state.LeftThumbstickX:F2}, {state.LeftThumbstickY:F2}\n" +
-        //        $"LT: {state.LeftTrigger:F2}   RT: {state.RightTrigger:F2}";
-        //}
-
-
-        //private readonly GameInputService _gameInputService;
-        //private readonly DispatcherTimer _gamepadTimer;
     }
-
     private void GameTile_Activated(object sender, EventArgs e) {
-        if(sender is GameTile gameTile) {
+        if (sender is GameTile gameTile) {
             System.Diagnostics.Debug.WriteLine($"GameTile activated: {gameTile.Title}");
         }
     }
