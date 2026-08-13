@@ -20,6 +20,8 @@ public sealed partial class MainWindow : Window {
 
         _controllerService.ConnectionChanged += ControllerService_ConnectionChanged;
 
+        _controllerService.ControllerFamilyChanged += ControllerService_ControllerFamilyChanged;
+
         PlayArea.Loaded += (_, _) => {
             FirstGameTile.FocusTile();
         };
@@ -86,5 +88,14 @@ public sealed partial class MainWindow : Window {
         if (sender is GameTile gameTile) {
             System.Diagnostics.Debug.WriteLine($"GameTile activated: {gameTile.Title}");
         }
+    }
+
+    private void ControllerService_ControllerFamilyChanged(ControllerFamily family) {
+
+        AcceptPrompt.Text = $"{ControllerGlyphs.GetAcceptGlyph(family)} Select";
+
+        BackPrompt.Text = $"{ControllerGlyphs.GetBackGlyph(family)} Back";
+
+        System.Diagnostics.Debug.WriteLine($"Controller family changed: {family}");
     }
 }

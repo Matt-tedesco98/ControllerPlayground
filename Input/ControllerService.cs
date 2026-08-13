@@ -6,6 +6,7 @@ internal sealed class ControllerService {
     public bool IsConnected { get; private set; }
 
     public ControllerFamily Family { get; private set; } = ControllerFamily.Unknown;
+    public event Action<ControllerFamily>? ControllerFamilyChanged;
 
     public event Action<bool>? ConnectionChanged;
     private uint _previousButtons;
@@ -25,17 +26,17 @@ internal sealed class ControllerService {
     public ControllerAction PollAction() {
         if (!ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
             SetConnectionState(false);
-            Family = ControllerFamily.Unknown;
+            SetControllerFamily(ControllerFamily.Unknown);
             return ControllerAction.none;
         }
 
         SetConnectionState(true);
-        
+
         if (Family == ControllerFamily.Unknown) {
             UpdateControllerFamily();
         }
 
-        ControllerButtons currentButtons = (ControllerButtons)state.Buttons;    
+        ControllerButtons currentButtons = (ControllerButtons)state.Buttons;
 
         ControllerButtons previousButton = (ControllerButtons)_previousButtons;
 
@@ -87,7 +88,7 @@ internal sealed class ControllerService {
         // Stick is pushed far enough to choose a direction
         if (Math.Abs(x) >= pressThreshold || Math.Abs(y) >= pressThreshold) {
             // Using the angle of the stick to determine the direction or switch randomly if the stick is in a diagonal position
-            if(Math.Abs(x) >= Math.Abs(y)) {
+            if (Math.Abs(x) >= Math.Abs(y)) {
                 stickAction = x > 0 ? ControllerAction.NavigateRight : ControllerAction.NavigateLeft;
             } else {
                 stickAction = y > 0 ? ControllerAction.NavigateUp : ControllerAction.NavigateDown;
@@ -150,19 +151,27 @@ internal sealed class ControllerService {
 
     private void UpdateControllerFamily() {
         if (!ControllerInputNative.ControllerInput_GetDeviceInfo(out ControllerDeviceInfo info)) {
-            Family = ControllerFamily.Unknown;
+            SetControllerFamily(ControllerFamily.Unknown);
             return;
         }
 
         if (info.VendorId == 0x045E && info.ProductId == 0x02FF) {
-            Family = ControllerFamily.Xbox;
+            SetControllerFamily(ControllerFamily.Xbox);
         } else if (info.VendorId == 0x054C && info.ProductId == 0x0CE6) {
-            Family = ControllerFamily.PlayStation;
+            SetControllerFamily(ControllerFamily.PlayStation);
         } else {
-            Family = ControllerFamily.Unknown;
+            SetControllerFamily(ControllerFamily.Unknown);
         }
 
         System.Diagnostics.Debug.WriteLine(
-            $"Controller VID 0x{info.VendorId:X4}, PID 0x{info.ProductId:X4}, Family: {Family}"); 
+            $"Controller VID 0x{info.VendorId:X4}, PID 0x{info.ProductId:X4}, Family: {Family}");
+    }
+
+    private void SetControllerFamily(ControllerFamily family) {
+        if (Family == family)
+            return;
+
+        Family = family;
+        ControllerFamilyChanged?.Invoke(family);
     }
 }
