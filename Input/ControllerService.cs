@@ -3,6 +3,9 @@
 namespace ControllerPlayground.Input;
 
 internal sealed class ControllerService {
+    public bool IsConnected { get; private set; }
+
+    public event Action<bool>? ConnectionChanged;
     private uint _previousButtons;
 
     //Controller Dpad handling variables
@@ -19,8 +22,11 @@ internal sealed class ControllerService {
 
     public ControllerAction PollAction() {
         if (!ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
+            SetConnectionState(false);
             return ControllerAction.none;
         }
+
+        SetConnectionState(true);
 
         ControllerButtons currentButtons = (ControllerButtons)state.Buttons;    
 
@@ -96,6 +102,14 @@ internal sealed class ControllerService {
             return stickResult;
 
         return ControllerAction.none;
+    }
+
+    private void SetConnectionState(bool connected) {
+        if (IsConnected == connected)
+            return;
+
+        IsConnected = connected;
+        ConnectionChanged?.Invoke(connected);
     }
 
     private static ControllerAction HandleRepeat(

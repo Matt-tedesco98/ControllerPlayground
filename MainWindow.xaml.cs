@@ -18,6 +18,8 @@ public sealed partial class MainWindow : Window {
     public MainWindow() {
         InitializeComponent();
 
+        _controllerService.ConnectionChanged += ControllerService_ConnectionChanged;
+
         PlayArea.Loaded += (_, _) => {
             FirstGameTile.FocusTile();
         };
@@ -30,14 +32,6 @@ public sealed partial class MainWindow : Window {
         _controllerTimer.Interval = TimeSpan.FromMilliseconds(16);
         _controllerTimer.Tick += ControllerTimer_Tick;
         _controllerTimer.Start();
-
-        //_gameInputService = new GameInputService();
-        //System.Diagnostics.Debug.WriteLine(
-        //    $"GameInputService initialized: {_gameInputService.IsInitialized}");
-        //_gamepadTimer = new DispatcherTimer();
-        //_gamepadTimer.Interval = TimeSpan.FromMilliseconds(16);
-        //_gamepadTimer.Tick += GamepadTimer_Tick;
-        //_gamepadTimer.Start();
 
         Activated += (_, _) => { PlayArea.Focus(FocusState.Programmatic); };
     }
@@ -83,6 +77,10 @@ public sealed partial class MainWindow : Window {
                 break;
 
         }
+    }
+
+    private void ControllerService_ConnectionChanged(bool connected) {
+        System.Diagnostics.Debug.WriteLine(connected ? "Controller connected" : "Controller disconnected");
     }
     private void GameTile_Activated(object sender, EventArgs e) {
         if (sender is GameTile gameTile) {
