@@ -22,55 +22,44 @@ internal sealed class ControllerService {
             return ControllerAction.none;
         }
 
-        uint currentButtons = state.Buttons;
-        if (currentButtons != _previousButtons) {
-            System.Diagnostics.Debug.WriteLine(
-                $"RAW: 0x{_previousButtons:X8} -> 0x{currentButtons:X8}"
-                );
-        }
-        uint pressedThisFrame = currentButtons & ~_previousButtons;
-        _previousButtons = currentButtons;
+        ControllerButtons currentButtons = (ControllerButtons)state.Buttons;    
+
+        ControllerButtons previousButton = (ControllerButtons)_previousButtons;
+
+        ControllerButtons pressedThisFrame = currentButtons & ~previousButton;
+
+        _previousButtons = state.Buttons;
 
         ControllerAction dpadAction = ControllerAction.none;
 
-        if ((currentButtons & 0x00000040) != 0)
+        if ((currentButtons & ControllerButtons.DpadUp) != 0)
             dpadAction = ControllerAction.NavigateUp;
 
-        if ((currentButtons & 0x00000080) != 0)
+        if ((currentButtons & ControllerButtons.DpadDown) != 0)
             dpadAction = ControllerAction.NavigateDown;
 
-        if ((currentButtons & 0x00000100) != 0)
+        if ((currentButtons & ControllerButtons.DpadLeft) != 0)
             dpadAction = ControllerAction.NavigateLeft;
 
-        if ((currentButtons & 0x00000200) != 0)
+        if ((currentButtons & ControllerButtons.DpadRight) != 0)
             dpadAction = ControllerAction.NavigateRight;
 
-        long dpadNow = Environment.TickCount64;
+        // Handle Dpad repeat behavior
+        ControllerAction dpadResult = HandleRepeat(dpadAction, ref _heldDpadAction, ref _nextDpadRepeatTime);
 
-        if (dpadAction == ControllerAction.none) {
-            _heldDpadAction = ControllerAction.none;
-            _nextDpadRepeatTime = 0;
-        } else if (dpadAction != _heldDpadAction) {
-            // New direction pressed move immediately
-            _heldDpadAction = dpadAction;
-            _nextDpadRepeatTime = dpadNow + InitialRepeatDelayMs;
-            return dpadAction;
-        } else if (dpadNow >= _nextDpadRepeatTime) {
-            // Still held after delay, repeat the action
-            _nextDpadRepeatTime = dpadNow + RepeatIntervalMs;
-            return dpadAction;
-        }
+        if (dpadResult != ControllerAction.none)
+            return dpadResult;
 
-        if ((pressedThisFrame & 0x00000004) != 0)
+        if ((pressedThisFrame & ControllerButtons.Accept) != 0)
             return ControllerAction.Accept;
 
-        if ((pressedThisFrame & 0x00000008) != 0)
+        if ((pressedThisFrame & ControllerButtons.Back) != 0)
             return ControllerAction.Back;
 
-        if ((pressedThisFrame & 0x00000001) != 0)
+        if ((pressedThisFrame & ControllerButtons.Menu) != 0)
             return ControllerAction.Menu;
 
-        if ((pressedThisFrame & 0x00000002) != 0)
+        if ((pressedThisFrame & ControllerButtons.View) != 0)
             return ControllerAction.View;
 
 
@@ -100,22 +89,39 @@ internal sealed class ControllerService {
             stickAction = _heldStickAction;
         }
 
+
+        // Handle Stick repeat behavior
+        ControllerAction stickResult = HandleRepeat(stickAction, ref _heldStickAction, ref _nextStickRepeatTime);
+        if (stickResult != ControllerAction.none)
+            return stickResult;
+
+        return ControllerAction.none;
+    }
+
+    private static ControllerAction HandleRepeat(
+        ControllerAction action,
+        ref ControllerAction heldAction,
+        ref long nextRepeatTime) {
+
         long now = Environment.TickCount64;
 
-        if (stickAction == ControllerAction.none) {
-            _heldStickAction = ControllerAction.none;
-            _nextStickRepeatTime = 0;
+        if (action == ControllerAction.none) {
+            heldAction = ControllerAction.none;
+            nextRepeatTime = 0;
+            return ControllerAction.none;
         }
-        else if (stickAction != _heldStickAction) {
+
+        if (action != heldAction) {
             // New direction pressed move immediately
-            _heldStickAction = stickAction;
-            _nextStickRepeatTime = now + InitialRepeatDelayMs;
-            return stickAction;
+            heldAction = action;
+            nextRepeatTime = now + InitialRepeatDelayMs;
+            return action;
         }
-        else if (now >= _nextStickRepeatTime) {
+
+        if (now >= nextRepeatTime) {
             // Still held after delay, repeat the action
-            _nextStickRepeatTime = now + RepeatIntervalMs;
-            return stickAction;
+            nextRepeatTime = now + RepeatIntervalMs;
+            return action;
         }
 
         return ControllerAction.none;
