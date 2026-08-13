@@ -5,6 +5,8 @@ namespace ControllerPlayground.Input;
 internal sealed class ControllerService {
     public bool IsConnected { get; private set; }
 
+    public ControllerFamily Family { get; private set; } = ControllerFamily.Unknown;
+
     public event Action<bool>? ConnectionChanged;
     private uint _previousButtons;
 
@@ -23,10 +25,15 @@ internal sealed class ControllerService {
     public ControllerAction PollAction() {
         if (!ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
             SetConnectionState(false);
+            Family = ControllerFamily.Unknown;
             return ControllerAction.none;
         }
 
         SetConnectionState(true);
+        
+        if (Family == ControllerFamily.Unknown) {
+            UpdateControllerFamily();
+        }
 
         ControllerButtons currentButtons = (ControllerButtons)state.Buttons;    
 
@@ -141,4 +148,21 @@ internal sealed class ControllerService {
         return ControllerAction.none;
     }
 
+    private void UpdateControllerFamily() {
+        if (!ControllerInputNative.ControllerInput_GetDeviceInfo(out ControllerDeviceInfo info)) {
+            Family = ControllerFamily.Unknown;
+            return;
+        }
+
+        if (info.VendorId == 0x045E && info.ProductId == 0x02FF) {
+            Family = ControllerFamily.Xbox;
+        } else if (info.VendorId == 0x054C && info.ProductId == 0x0CE6) {
+            Family = ControllerFamily.PlayStation;
+        } else {
+            Family = ControllerFamily.Unknown;
+        }
+
+        System.Diagnostics.Debug.WriteLine(
+            $"Controller VID 0x{info.VendorId:X4}, PID 0x{info.ProductId:X4}, Family: {Family}"); 
+    }
 }

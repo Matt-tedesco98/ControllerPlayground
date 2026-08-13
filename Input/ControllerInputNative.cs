@@ -13,6 +13,12 @@ internal struct ControllerState {
     public float RightThumbstickY;
 }
 
+[StructLayout(LayoutKind.Sequential)]
+internal struct ControllerDeviceInfo {
+    public ushort VendorId;
+    public ushort ProductId;
+}
+
 internal static class ControllerInputNative {
     [DllImport("ControllerInput.dll", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -21,4 +27,8 @@ internal static class ControllerInputNative {
     [DllImport("ControllerInput.dll", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool ControllerInput_GetState(out ControllerState state);
+
+    [DllImport("ControllerInput.dll", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static extern bool ControllerInput_GetDeviceInfo(out ControllerDeviceInfo info);
 }

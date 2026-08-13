@@ -20,8 +20,14 @@ struct ControllerState {
 
 };
 
+struct ControllerDeviceInfo {
+	unsigned short vendorId; // Vendor ID of the controller
+	unsigned short productId; // Product ID of the controller
+};
+
 extern "C"
 {
     CONTROLLERINPUT_API bool ControllerInput_Initialize();
 	CONTROLLERINPUT_API bool ControllerInput_GetState(ControllerState* state);
+	CONTROLLERINPUT_API bool ControllerInput_GetDeviceInfo(ControllerDeviceInfo* info);
 }
