@@ -14,17 +14,15 @@
             Margin="24"
             Spacing="20">
             
-            <TextBlock
-                x:Name="AcceptPrompt"
-                FontSize="18"
-                Foreground="White"
-                Text="Enter Select"/>
-
-            <TextBlock
+           <controls:ControllerPrompt
+               x:Name="AcceptPrompt"
+               Glyph="Enter"
+               Label="Select"/>
+            
+            <controls:ControllerPrompt
                 x:Name="BackPrompt"
-                FontSize="18"
-                Foreground="White"
-                Text="Esc Back"/>
+                Glyph="Esc"
+                Label="Back"/>
         </StackPanel>
        
         <StackPanel

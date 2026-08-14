@@ -155,9 +155,9 @@ internal sealed class ControllerService {
             return;
         }
 
-        if (info.VendorId == 0x045E && info.ProductId == 0x02FF) {
+        if (info.VendorId == 0x045E) {
             SetControllerFamily(ControllerFamily.Xbox);
-        } else if (info.VendorId == 0x054C && info.ProductId == 0x0CE6) {
+        } else if (info.VendorId == 0x054C) {
             SetControllerFamily(ControllerFamily.PlayStation);
         } else {
             SetControllerFamily(ControllerFamily.Unknown);

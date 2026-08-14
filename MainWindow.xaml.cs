@@ -92,9 +92,9 @@ public sealed partial class MainWindow : Window {
 
     private void ControllerService_ControllerFamilyChanged(ControllerFamily family) {
 
-        AcceptPrompt.Text = $"{ControllerGlyphs.GetAcceptGlyph(family)} Select";
+        AcceptPrompt.Glyph = ControllerGlyphs.GetAcceptGlyph(family);
 
-        BackPrompt.Text = $"{ControllerGlyphs.GetBackGlyph(family)} Back";
+        BackPrompt.Glyph = ControllerGlyphs.GetBackGlyph(family);
 
         System.Diagnostics.Debug.WriteLine($"Controller family changed: {family}");
     }
