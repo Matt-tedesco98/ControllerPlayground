@@ -25,6 +25,9 @@ internal sealed class ControllerService {
 
     public ControllerAction PollAction() {
         if (!ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
+            if (IsConnected) {
+                ResetInputState();
+            }
             SetConnectionState(false);
             SetControllerFamily(ControllerFamily.Unknown);
             return ControllerAction.none;
@@ -173,5 +176,13 @@ internal sealed class ControllerService {
 
         Family = family;
         ControllerFamilyChanged?.Invoke(family);
+    }
+
+    private void ResetInputState() {
+        _previousButtons = 0;
+        _heldDpadAction = ControllerAction.none;
+        _nextDpadRepeatTime = 0;
+        _heldStickAction = ControllerAction.none;
+        _nextStickRepeatTime = 0;
     }
 }
