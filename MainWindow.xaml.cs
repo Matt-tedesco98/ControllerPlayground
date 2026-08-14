@@ -8,10 +8,6 @@ using ControllerPlayground.Controls;
 namespace ControllerPlayground;
 
 public sealed partial class MainWindow : Window {
-    private double _x = 100;
-    private double _y = 100;
-    private const double Speed = 10;
-
     private readonly DispatcherTimer _controllerTimer = new();
     private readonly ControllerService _controllerService = new();
 
