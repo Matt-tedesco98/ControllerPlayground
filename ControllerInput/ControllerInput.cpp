@@ -36,6 +36,22 @@ bool ControllerInput_GetState(ControllerState* State) {
 	if (FAILED(result) || reading == nullptr)
 		return false; // Failed to get reading
 
+	IGameInputDevice* device = nullptr;
+	reading->GetDevice(&device);
+
+	if (device == nullptr) {
+		reading->Release();
+		return false; // Failed to get device
+	}
+
+	GameInputDeviceStatus status = device->GetDeviceStatus();
+
+	if ((status & GameInputDeviceConnected) != GameInputDeviceConnected) {
+		device->Release();
+		reading->Release();
+		return false; // Device is not connected
+	}
+
 	GameInputGamepadState gamepadState{};
 
 	bool success = reading->GetGamepadState(&gamepadState);
@@ -50,6 +66,7 @@ bool ControllerInput_GetState(ControllerState* State) {
 		State->rightStickY = gamepadState.rightThumbstickY;
 	}
 
+	device->Release(); // Release the device object
 	reading->Release(); // Release the reading object
 
 	return success;
