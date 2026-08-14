@@ -6,26 +6,16 @@
     xmlns:local="using:ControllerPlayground.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:ControllerPlayground.Controls"
     mc:Ignorable="d">
 
     <StackPanel
         Orientation="Horizontal"
         Spacing="8">
 
-        <Border
-            Width="32"
-            Height="32"
-            CornerRadius="16"
-            BorderThickness="2"
-            BorderBrush="White">
-
-            <TextBlock
-                x:Name="GlyphText"
-                Text="{x:Bind Glyph, Mode=OneWay}"
-                FontWeight="SemiBold"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"/>
-        </Border>
+        <controls:ControllerGlyph
+            Family="{x:Bind Family, Mode=OneWay}"
+            Button="{x:Bind Button, Mode=OneWay}"/>
 
         <TextBlock
             x:Name="LabelText"

@@ -1,35 +1,9 @@
+using ControllerPlayground.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace ControllerPlayground.Controls {
     public sealed partial class ControllerPrompt : UserControl {
-
-        public static readonly DependencyProperty GlyphProperty = DependencyProperty.Register(
-                nameof(Glyph),
-                typeof(string),
-                typeof(ControllerPrompt),
-                new PropertyMetadata("A"));
-
-        public string Glyph {
-            get => (string)GetValue(GlyphProperty);
-            set => SetValue(GlyphProperty, value);
-        }
 
         public static readonly DependencyProperty LabelProperty = DependencyProperty.Register(
                 nameof(Label),
@@ -40,6 +14,28 @@ namespace ControllerPlayground.Controls {
         public string Label {
             get => (string)GetValue(LabelProperty);
             set => SetValue(LabelProperty, value);
+        }
+
+        public static readonly DependencyProperty FamilyProperty = DependencyProperty.Register(
+            nameof(Family),
+            typeof(ControllerFamily),
+            typeof(ControllerPrompt),
+            new PropertyMetadata(ControllerFamily.Unknown));
+
+        public static readonly DependencyProperty ButtonProperty = DependencyProperty.Register(
+            nameof(Button),
+            typeof(ControllerButton),
+            typeof(ControllerPrompt),
+            new PropertyMetadata(ControllerButton.Accept));
+
+        public ControllerFamily Family {
+            get => (ControllerFamily)GetValue(FamilyProperty);
+            set => SetValue(FamilyProperty, value);
+        }
+
+        public ControllerButton Button {
+            get => (ControllerButton)GetValue(ButtonProperty);
+            set => SetValue(ButtonProperty, value);
         }
 
         public ControllerPrompt() {

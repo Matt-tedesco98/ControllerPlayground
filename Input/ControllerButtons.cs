@@ -2,7 +2,7 @@ using System;
 
 namespace ControllerPlayground.Input {
     [Flags]
-    internal enum ControllerButtons : uint {
+    internal enum ControllerButtons {
         none = 0x00000000,
 
         Menu = 0x00000001,

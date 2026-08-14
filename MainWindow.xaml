@@ -16,12 +16,12 @@
             
            <controls:ControllerPrompt
                x:Name="AcceptPrompt"
-               Glyph="Enter"
+               Button="Accept"
                Label="Select"/>
             
             <controls:ControllerPrompt
                 x:Name="BackPrompt"
-                Glyph="Esc"
+                Button="Back"
                 Label="Back"/>
         </StackPanel>
        

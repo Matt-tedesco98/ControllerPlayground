@@ -13,6 +13,7 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
+	  <None Remove="Controls\ControllerGlyph.xaml" />
 	  <None Remove="Controls\ControllerPrompt.xaml" />
 	</ItemGroup>
 
@@ -76,6 +77,12 @@
 			<Link>ControllerInput.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Controls\ControllerGlyph.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 
 	<ItemGroup>

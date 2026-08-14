@@ -1,18 +1,17 @@
 ﻿namespace ControllerPlayground.Input {
     internal static class ControllerGlyphs {
-        public static string GetAcceptGlyph(ControllerFamily family) {
-            return family switch {
-                ControllerFamily.Xbox => "A", // Xbox A button
-                ControllerFamily.PlayStation => "X", // PlayStation Cross button
-                _ => "Enter" // Default to Enter key
-            };
-        }
+        public static string GetGlyph(ControllerFamily family, ControllerButton button) {
+            return (family, button) switch {
+                (ControllerFamily.Xbox, ControllerButton.Accept) => "A",
+                (ControllerFamily.Xbox, ControllerButton.Back) => "B",
 
-        public static string GetBackGlyph(ControllerFamily family) {
-            return family switch {
-                ControllerFamily.Xbox => "B", // Xbox B button
-                ControllerFamily.PlayStation => "O", // PlayStation Circle button
-                _ => "ESC" // Default to ESC button
+                (ControllerFamily.PlayStation, ControllerButton.Accept) => "X",
+                (ControllerFamily.PlayStation, ControllerButton.Back) => "O",
+
+                (_, ControllerButton.Accept) => "Enter",
+                (_, ControllerButton.Back) => "Esc",
+
+                _ => "?"
             };
         }
     }

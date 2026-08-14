@@ -1,5 +1,5 @@
 ﻿namespace ControllerPlayground.Input {
-    internal enum ControllerFamily {
+    public enum ControllerFamily {
         Unknown,
         Xbox,
         PlayStation,
