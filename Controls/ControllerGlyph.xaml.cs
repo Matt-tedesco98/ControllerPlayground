@@ -2,6 +2,8 @@ using ControllerPlayground;
 using ControllerPlayground.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Imaging;
+using System;
 
 namespace ControllerPlayground.Controls {
     public sealed partial class ControllerGlyph : UserControl {
@@ -48,12 +50,27 @@ namespace ControllerPlayground.Controls {
     DependencyObject d,
     DependencyPropertyChangedEventArgs e) {
             if (d is ControllerGlyph glyph) {
-                glyph.UpdateGlyph();
+                glyph.UpdateVisual();
             }
         }
 
         private void UpdateGlyph() {
             Glyph = ControllerGlyphs.GetGlyph(Family, Button);
+        }
+
+        private void UpdateVisual() {
+            string? assetPath = ControllerGlyphs.GetAssetPath(Family, Button);
+            if (!string.IsNullOrEmpty(assetPath) && Uri.TryCreate(assetPath, UriKind.Absolute, out Uri? uri)) {
+                GlyphImage.Source = new SvgImageSource(uri);
+                GlyphImage.Visibility = Visibility.Visible;
+                FallbackGlyph.Visibility = Visibility.Collapsed;
+
+            } else {
+                Glyph = ControllerGlyphs.GetGlyph(Family, Button);
+                GlyphImage.Source = null;
+                GlyphImage.Visibility = Visibility.Collapsed;
+                FallbackGlyph.Visibility = Visibility.Visible;
+            }
         }
 
         public ControllerGlyph() {

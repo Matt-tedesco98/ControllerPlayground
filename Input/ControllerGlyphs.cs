@@ -14,5 +14,16 @@
                 _ => "?"
             };
         }
+
+        public static string? GetAssetPath(ControllerFamily family, ControllerButton button) {
+            return (family, button) switch { 
+                (ControllerFamily.Xbox, ControllerButton.Accept) => "ms-appx:///Assets/ControllerGlyphs/Xbox/xbox_button_a.svg",
+                (ControllerFamily.Xbox, ControllerButton.Back) => "ms-appx:///Assets/ControllerGlyphs/Xbox/xbox_button_b.svg",
+
+                (ControllerFamily.PlayStation, ControllerButton.Accept) => "ms-appx:///Assets/ControllerGlyphs/PlayStation/ps_button_x.svg",
+                (ControllerFamily.PlayStation, ControllerButton.Back) => "ms-appx:///Assets/ControllerGlyphs/PlayStation/ps_button_circle.svg",
+                _ => null
+            };
+        }
     }
 }

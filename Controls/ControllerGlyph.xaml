@@ -8,17 +8,28 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Border
-    Width="32"
-    Height="32"
-    CornerRadius="16"
-    BorderThickness="2"
-    BorderBrush="White">
-        <TextBlock
-            x:Name="GylphText"
-            Text="{x:Bind Glyph, Mode=OneWay}"
-            FontWeight="SemiBold"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"/>    
-    </Border>
+    <Grid
+        Width="32"
+        Height="32">
+        <Image
+            x:Name="GlyphImage"
+            Width="32"
+            Height="32"
+            Stretch="Uniform"
+            Visibility="Collapsed"/>
+        <Border
+            x:Name="FallbackGlyph"
+            Width="32"
+            Height="32"
+            CornerRadius="16"
+            BorderThickness="2"
+            BorderBrush="White">
+            <TextBlock
+                x:Name="GylphText"
+                Text="{x:Bind Glyph, Mode=OneWay}"
+                FontWeight="SemiBold"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"/>
+        </Border>
+    </Grid>
 </UserControl>
