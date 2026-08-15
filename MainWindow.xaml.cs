@@ -98,6 +98,8 @@ public sealed partial class MainWindow : Window {
 
         BackPrompt.Family = family;
 
+        ViewPrompt.Family = family;
+
         System.Diagnostics.Debug.WriteLine($"Controller family changed: {family}");
     }
 }

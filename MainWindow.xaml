@@ -23,6 +23,11 @@
                 x:Name="BackPrompt"
                 Button="Back"
                 Label="Back"/>
+            
+            <controls:ControllerPrompt
+                x:Name="ViewPrompt"
+                Button="View"
+                Label="View"/>
         </StackPanel>
        
         <StackPanel
