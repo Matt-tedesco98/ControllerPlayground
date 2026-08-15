@@ -12,6 +12,14 @@ using namespace GameInput::v3;
 
 static IGameInput* g_gameInput = nullptr;
 
+constexpr uint16_t SonyVendorId = 0x054C;
+constexpr uint16_t DualSenseProductId = 0x0CE6;
+
+constexpr uint8_t DualSensePsButton = 12;
+constexpr uint8_t DualSenseTouchpadButton = 13;
+constexpr uint8_t DualSenseMuteButton = 14;
+
+
 bool ControllerInput_Initialize() {
 	if (g_gameInput != nullptr)
 		return true; // Already initialized
@@ -64,6 +72,62 @@ bool ControllerInput_GetState(ControllerState* State) {
 		State->leftStickY = gamepadState.leftThumbstickY;
 		State->rightStickX = gamepadState.rightThumbstickX;
 		State->rightStickY = gamepadState.rightThumbstickY;
+	}
+
+	const GameInputDeviceInfo* deviceInfo = nullptr;
+	device->GetDeviceInfo(&deviceInfo);
+
+	bool isDualSense =
+		deviceInfo != nullptr &&
+		deviceInfo->vendorId == SonyVendorId &&
+		deviceInfo->productId == DualSenseProductId;
+
+	if (success && isDualSense)
+	{
+		uint32_t extraButtonCount = 0;
+
+		if (SUCCEEDED(device->GetExtraButtonCount(
+			GameInputKindGamepad,
+			&extraButtonCount)) &&
+			extraButtonCount > 0)
+		{
+			uint8_t* extraButtonIndexes =
+				new uint8_t[extraButtonCount];
+
+			if (SUCCEEDED(device->GetExtraButtonIndexes(
+				GameInputKindGamepad,
+				extraButtonCount,
+				extraButtonIndexes)))
+			{
+				uint32_t buttonCount =
+					reading->GetControllerButtonCount();
+
+				bool* buttonStates =
+					new bool[buttonCount];
+
+				reading->GetControllerButtonState(
+					buttonCount,
+					buttonStates);
+
+				for (uint32_t i = 0; i < extraButtonCount; i++)
+				{
+					uint8_t index = extraButtonIndexes[i];
+
+					if (index < buttonCount &&
+						index == DualSenseTouchpadButton &&
+						buttonStates[index])
+					{
+						State->buttons |=
+							static_cast<unsigned int>(
+								GameInputGamepadView);
+					}
+				}
+
+				delete[] buttonStates;
+			}
+
+			delete[] extraButtonIndexes;
+		}
 	}
 
 	device->Release(); // Release the device object

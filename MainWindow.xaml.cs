@@ -73,6 +73,12 @@ public sealed partial class MainWindow : Window {
             case ControllerAction.Back:
                 System.Diagnostics.Debug.WriteLine("Back Requested");
                 break;
+            case ControllerAction.Menu:
+                System.Diagnostics.Debug.WriteLine("Menu Requested");
+                break;
+            case ControllerAction.View:
+                System.Diagnostics.Debug.WriteLine("View Requested");
+                break;
 
         }
     }
