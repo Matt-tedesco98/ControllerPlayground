@@ -20,10 +20,12 @@
                 (ControllerFamily.Xbox, ControllerButton.Accept) => "ms-appx:///Assets/ControllerGlyphs/Xbox/xbox_button_a.svg",
                 (ControllerFamily.Xbox, ControllerButton.Back) => "ms-appx:///Assets/ControllerGlyphs/Xbox/xbox_button_b.svg",
                 (ControllerFamily.Xbox, ControllerButton.View) => "ms-appx:///Assets/ControllerGlyphs/Xbox/xbox_button_select.svg",
+                (ControllerFamily.Xbox, ControllerButton.Menu) => "ms-appx:///Assets/ControllerGlyphs/Xbox/xbox_button_start.svg",
 
                 (ControllerFamily.PlayStation, ControllerButton.Accept) => "ms-appx:///Assets/ControllerGlyphs/PlayStation/ps_button_x.svg",
                 (ControllerFamily.PlayStation, ControllerButton.Back) => "ms-appx:///Assets/ControllerGlyphs/PlayStation/ps_button_circle.svg",
                 (ControllerFamily.PlayStation, ControllerButton.View) => "ms-appx:///Assets/ControllerGlyphs/PlayStation/ps5_trackpad.svg",
+                (ControllerFamily.PlayStation, ControllerButton.Menu) => "ms-appx:///Assets/ControllerGlyphs/PlayStation/ps5_button_options.svg",
                 _ => null
             };
         }

@@ -28,6 +28,10 @@
                 x:Name="ViewPrompt"
                 Button="View"
                 Label="View"/>
+            <controls:ControllerPrompt
+                x:Name="MenuPrompt"
+                Button="Menu"
+                Label="Menu"/>
         </StackPanel>
        
         <StackPanel
