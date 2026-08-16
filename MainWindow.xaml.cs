@@ -7,6 +7,7 @@ using ControllerPlayground.Controls;
 using ControllerPlayground.Navigation;
 using ControllerPlayground.Views;
 using Microsoft.UI.Xaml.Controls;
+using ControllerPlayground.Overlays;
 
 namespace ControllerPlayground;
 
@@ -22,6 +23,8 @@ public sealed partial class MainWindow : Window {
 
         _homeView.NavigateRequested += NavigateTo;
         _settingsView.NavigateRequested += NavigateTo;
+
+        GuideMenu.NavigateRequested += GuideMenu_NavigationRequested;
 
         NavigateTo(AppScreen.Home);
 
@@ -101,8 +104,6 @@ public sealed partial class MainWindow : Window {
 
     private bool _isGuideOpen;
 
-    private Control? _focusBeforeGuide;
-
     private void ToggleGuide() {
         _isGuideOpen = !_isGuideOpen;
 
@@ -115,7 +116,12 @@ public sealed partial class MainWindow : Window {
         } else {
             OverlayLayer.Visibility = Visibility.Collapsed;
             _homeView.RestoreFocus();
-        }
-        ;
+        };
+    }
+
+    private void GuideMenu_NavigationRequested(AppScreen screen) {
+        _isGuideOpen = false;
+        OverlayLayer.Visibility = Visibility.Collapsed;
+        NavigateTo(screen);
     }
 }

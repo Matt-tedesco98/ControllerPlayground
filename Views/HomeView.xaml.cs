@@ -29,6 +29,16 @@ namespace ControllerPlayground.Views {
                 SearchRoot = HomeRoot
             };
 
+            if (_isContextMenuOpen) {
+                // If the context menu is open, we want to handle navigation within the context menu
+                if(action == ControllerAction.Back || action == ControllerAction.Menu) {
+                    CloseGameContextMenu();
+                    return;
+                }
+                GameMenu.HandleControllerAction(action);
+                return;
+            }
+
             switch (action) {
                 case ControllerAction.NavigateUp:
                     // Move focus up
@@ -85,7 +95,7 @@ namespace ControllerPlayground.Views {
 
                 case ControllerAction.Menu:
                     // Handle menu
-                    NavigateRequested?.Invoke(AppScreen.Settings);
+                    OpenContextMenu();
                     Debug.WriteLine("Menu requested");
                     break;
             }
@@ -116,6 +126,26 @@ namespace ControllerPlayground.Views {
             if (sender is GameTile gameTile) {
                 _lastFocusedTitle = gameTile;
             }
+        }
+
+        private bool _isContextMenuOpen;
+
+        private void OpenContextMenu() {
+            if (_lastFocusedTitle == null)
+                return;
+            _isContextMenuOpen = true;
+            GameMenu.GameTitle = _lastFocusedTitle.Title;
+            ContextMenuLayer.Visibility = Visibility.Visible;
+
+            DispatcherQueue.TryEnqueue(() => {
+                GameMenu.FocusFirstItem();
+            });
+        }
+
+        private void CloseGameContextMenu() {
+            _isContextMenuOpen = false;
+            ContextMenuLayer.Visibility = Visibility.Collapsed;
+            RestoreFocus();
         }
     }
 }

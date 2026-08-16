@@ -33,6 +33,7 @@
                     GotFocus="GuideButton_GotFocus"
                     LostFocus="GuideButton_LostFocus"/>
                 <Button 
+                    x:Name="SettingsButton"
                     Content="Settings" 
                     FontSize="22"
                     HorizontalAlignment="Stretch"

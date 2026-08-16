@@ -15,10 +15,13 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
+using ControllerPlayground.Navigation;
 
 
 namespace ControllerPlayground.Overlays {
     public sealed partial class GuideMenu : UserControl {
+
+        internal event Action<AppScreen>? NavigateRequested;
 
         public void FocusFirstItem() {
             (_lastFocusedButton ?? LibraryButton).Focus(FocusState.Programmatic);
@@ -55,6 +58,14 @@ namespace ControllerPlayground.Overlays {
                     FocusManager.TryMoveFocus(
                         FocusNavigationDirection.Down,
                         focusOptions);
+                    break;
+
+                case ControllerAction.Accept: {
+                        var focused = FocusManager.GetFocusedElement(GuideRoot.XamlRoot) as Button;
+                        if (focused == SettingsButton) {
+                            NavigateRequested?.Invoke(AppScreen.Settings);
+                        }
+                    }
                     break;
             }
         }
