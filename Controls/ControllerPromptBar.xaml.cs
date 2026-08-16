@@ -94,6 +94,65 @@ namespace ControllerPlayground.Controls {
             ViewPrompt.Visibility = ShowView ? Visibility.Visible : Visibility.Collapsed;
             MenuPrompt.Visibility = ShowMenu ? Visibility.Visible : Visibility.Collapsed;
         }
+
+        public static readonly DependencyProperty AcceptLabelProperty = DependencyProperty.Register(
+            nameof(AcceptLabel),
+            typeof(string),
+            typeof(ControllerPromptBar),
+            new PropertyMetadata("Select", OnPromptLabelChanged));
+
+        public static readonly DependencyProperty BackLabelProperty = DependencyProperty.Register(
+            nameof(BackLabel),
+            typeof(string),
+            typeof(ControllerPromptBar),
+            new PropertyMetadata("Back", OnPromptLabelChanged));
+
+        public static readonly DependencyProperty ViewLabelProperty = DependencyProperty.Register(
+            nameof(ViewLabel),
+            typeof(string),
+            typeof(ControllerPromptBar),
+            new PropertyMetadata("View", OnPromptLabelChanged));
+
+        public static readonly DependencyProperty MenuLabelProperty = DependencyProperty.Register(
+            nameof(MenuLabel),
+            typeof(string),
+            typeof(ControllerPromptBar),
+            new PropertyMetadata("Menu", OnPromptLabelChanged));
+
+        public string AcceptLabel {
+            get => (string)GetValue(AcceptLabelProperty);
+            set => SetValue(AcceptLabelProperty, value);
+        }
+
+        public string BackLabel {
+            get => (string)GetValue(BackLabelProperty);
+            set => SetValue(BackLabelProperty, value);
+        }
+
+        public string ViewLabel {
+            get => (string)GetValue(ViewLabelProperty);
+            set => SetValue(ViewLabelProperty, value);
+        }
+
+        public string MenuLabel {
+            get => (string)GetValue(MenuLabelProperty);
+            set => SetValue(MenuLabelProperty, value);
+        }
+
+        private static void OnPromptLabelChanged(
+            DependencyObject d,
+            DependencyPropertyChangedEventArgs e) {
+            if (d is ControllerPromptBar bar) {
+                bar.UpdatePromptLabels();
+            }
+        }
+
+        private void UpdatePromptLabels() {
+            AcceptPrompt.Label = AcceptLabel;
+            BackPrompt.Label = BackLabel;
+            ViewPrompt.Label = ViewLabel;
+            MenuPrompt.Label = MenuLabel;
+        }
     }
 }
-    
+
