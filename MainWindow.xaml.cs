@@ -94,13 +94,7 @@ public sealed partial class MainWindow : Window {
 
     private void ControllerService_ControllerFamilyChanged(ControllerFamily family) {
 
-        AcceptPrompt.Family = family;
-
-        BackPrompt.Family = family;
-
-        ViewPrompt.Family = family;
-
-        MenuPrompt.Family = family;
+        PromptBar.Family = family;
 
         System.Diagnostics.Debug.WriteLine($"Controller family changed: {family}");
     }

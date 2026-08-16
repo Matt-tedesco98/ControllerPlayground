@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="ControllerPlayground.Controls.ControllerPromptBar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ControllerPlayground.Controls"
+    xmlns:controls="using:ControllerPlayground.Controls">
+
+    <StackPanel
+        Orientation="Horizontal"
+        Spacing="20">
+        
+        <controls:ControllerPrompt
+            x:Name="AcceptPrompt"
+            Button="Accept"
+            Label="Select" />
+        <controls:ControllerPrompt
+            x:Name="BackPrompt"
+            Button="Back"
+            Label="Back" />
+        <controls:ControllerPrompt
+            x:Name="ViewPrompt"
+            Button="View"
+            Label="View" />
+        <controls:ControllerPrompt
+            x:Name="MenuPrompt"
+            Button="Menu"
+            Label="Menu" />
+    </StackPanel>
+</UserControl>

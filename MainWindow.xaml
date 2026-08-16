@@ -14,24 +14,12 @@
             Margin="24"
             Spacing="20">
             
-           <controls:ControllerPrompt
-               x:Name="AcceptPrompt"
-               Button="Accept"
-               Label="Select"/>
+           <controls:ControllerPromptBar
+               x:Name="PromptBar"
+               HorizontalAlignment="Right"
+               VerticalAlignment="Bottom"
+               Margin="24" />
             
-            <controls:ControllerPrompt
-                x:Name="BackPrompt"
-                Button="Back"
-                Label="Back"/>
-            
-            <controls:ControllerPrompt
-                x:Name="ViewPrompt"
-                Button="View"
-                Label="View"/>
-            <controls:ControllerPrompt
-                x:Name="MenuPrompt"
-                Button="Menu"
-                Label="Menu"/>
         </StackPanel>
        
         <StackPanel
