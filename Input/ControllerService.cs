@@ -11,6 +11,8 @@ internal sealed class ControllerService {
     public event Action<bool>? ConnectionChanged;
     private uint _previousButtons;
 
+    private uint _previousSystemButtons;
+
     //Controller Dpad handling variables
     private ControllerAction _heldDpadAction = ControllerAction.none;
     private long _nextDpadRepeatTime;
@@ -47,6 +49,16 @@ internal sealed class ControllerService {
 
         _previousButtons = state.Buttons;
 
+
+        ControllerSystemButtons currentSystemButtons = (ControllerSystemButtons)state.SystemButtons;
+
+        ControllerSystemButtons previousSystemButtons = (ControllerSystemButtons)_previousSystemButtons;
+
+        ControllerSystemButtons systemPressedThisFrame = currentSystemButtons & ~previousSystemButtons;
+
+        _previousSystemButtons = state.SystemButtons;
+
+
         ControllerAction dpadAction = ControllerAction.none;
 
         if ((currentButtons & ControllerButtons.DpadUp) != 0)
@@ -79,6 +91,8 @@ internal sealed class ControllerService {
         if ((pressedThisFrame & ControllerButtons.View) != 0)
             return ControllerAction.View;
 
+        if ((systemPressedThisFrame & ControllerSystemButtons.Guide) != 0)
+            return ControllerAction.Guide;
 
         const float pressThreshold = 0.65f;
         const float releaseThreshold = 0.30f;
@@ -184,5 +198,6 @@ internal sealed class ControllerService {
         _nextDpadRepeatTime = 0;
         _heldStickAction = ControllerAction.none;
         _nextStickRepeatTime = 0;
+        _previousSystemButtons = 0;
     }
 }

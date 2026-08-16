@@ -6,9 +6,12 @@ using ControllerPlayground.Input;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using ControllerPlayground.Navigation;
 
 namespace ControllerPlayground.Views {
     public sealed partial class HomeView : UserControl {
+
+        internal event Action<AppScreen>? NavigateRequested;
 
         private void GameTile_Activated(object sender, EventArgs e) {
             if (sender is GameTile gameTile) {
@@ -17,8 +20,8 @@ namespace ControllerPlayground.Views {
         }
 
         public ControllerFamily ControllerFamily {
-            get =>PromptBar.Family;
-            set =>PromptBar.Family = value;
+            get => PromptBar.Family;
+            set => PromptBar.Family = value;
         }
 
         internal void HandleControllerAction(ControllerAction action) {
@@ -41,23 +44,26 @@ namespace ControllerPlayground.Views {
                     break;
                 case ControllerAction.NavigateLeft:
                     // Move focus to the left
-                    FocusManager.TryMoveFocus(
+                    bool moved = FocusManager.TryMoveFocus(
                         FocusNavigationDirection.Left,
                         focusOptions);
+                    Debug.WriteLine($"NavigateLeft received - focus moved: {moved}");
                     break;
                 case ControllerAction.NavigateRight:
                     // Move focus to the right
-                    FocusManager.TryMoveFocus(
+                    bool _moved = FocusManager.TryMoveFocus(
                         FocusNavigationDirection.Right,
                         focusOptions);
+                    Debug.WriteLine($"NavigateRight received - focus moved: {_moved}");
                     break;
+
 
                 case ControllerAction.Accept:
                     // Handle accept
                     var focused = FocusManager.GetFocusedElement(HomeRoot.XamlRoot);
                     if (focused is DependencyObject element) {
                         DependencyObject? current = element;
-                        while (current != null) { 
+                        while (current != null) {
                             if (current is GameTile gameTile) {
                                 gameTile.Activate();
                                 break;
@@ -79,16 +85,37 @@ namespace ControllerPlayground.Views {
 
                 case ControllerAction.Menu:
                     // Handle menu
+                    NavigateRequested?.Invoke(AppScreen.Settings);
                     Debug.WriteLine("Menu requested");
                     break;
             }
         }
+
+        internal void RestoreFocus() {
+            // Restore focus to the last focused GameTile
+            DispatcherQueue.TryEnqueue(() => {
+                (_lastFocusedTitle ?? FirstGameTile).FocusTile();
+            });
+        }
+
+
         public HomeView() {
             InitializeComponent();
 
             Loaded += (_, _) => {
-                FirstGameTile.FocusTile();
+                DispatcherQueue.TryEnqueue(() => {
+                    // Set initial focus to the first GameTile
+                    FirstGameTile.FocusTile();
+                });
             };
+        }
+
+        private GameTile? _lastFocusedTitle;
+
+        private void GameTile_GotFocus(object sender, RoutedEventArgs e) {
+            if (sender is GameTile gameTile) {
+                _lastFocusedTitle = gameTile;
+            }
         }
     }
 }

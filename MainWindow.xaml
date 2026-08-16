@@ -3,13 +3,26 @@
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
         xmlns:controls="using:ControllerPlayground.Controls"
         xmlns:views="using:ControllerPlayground.Views"
+        xmlns:overlays="using:ControllerPlayground.Overlays"
 		Title="Controller Playground">
 
     <Grid
 		x:Name="PlayArea"
 		Background="#202020"
 		IsTabStop="True">
-        <views:HomeView x:Name="HomeScreen" />
+        
+        <ContentControl 
+            x:Name="ScreenHost" 
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch"/>
+        <Grid
+            x:Name="OverlayLayer"
+            Visibility="Collapsed">
+
+            <overlays:GuideMenu
+                x:Name="GuideMenu"/>
+        </Grid>
+        
     </Grid>
 
 </Window>

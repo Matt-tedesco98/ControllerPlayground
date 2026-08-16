@@ -5,6 +5,7 @@ namespace ControllerPlayground.Input;
 [StructLayout(LayoutKind.Sequential)]
 internal struct ControllerState {
     public uint Buttons;
+    public uint SystemButtons;
     public float LeftTrigger;
     public float RightTrigger;
     public float LeftThumbstickX;

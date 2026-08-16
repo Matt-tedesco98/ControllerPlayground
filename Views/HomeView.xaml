@@ -32,19 +32,23 @@
             <controls:GameTile
                 x:Name="FirstGameTile"
                 Title="Halo Infinite"
-                Activated="GameTile_Activated" />
+                Activated="GameTile_Activated"
+                GotFocus="GameTile_GotFocus"/>
 
             <controls:GameTile
                 Title="Forza Horizon 5"
-                Activated="GameTile_Activated" />
+                Activated="GameTile_Activated"
+                GotFocus="GameTile_GotFocus"/>
 
             <controls:GameTile
                 Title="Minecraft"
-                Activated="GameTile_Activated" />
+                Activated="GameTile_Activated"
+                GotFocus="GameTile_GotFocus"/>
 
             <controls:GameTile
                 Title="Steam"
-                Activated="GameTile_Activated" />
+                Activated="GameTile_Activated"
+                GotFocus="GameTile_GotFocus"/>
 
         </StackPanel>
 

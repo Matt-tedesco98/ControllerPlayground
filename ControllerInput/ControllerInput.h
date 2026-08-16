@@ -8,6 +8,7 @@
 
 struct ControllerState {
 	unsigned int buttons; // Bitmask for button states
+	unsigned int systemButtons; // Bitmask for system button states
 
 	float leftTrigger; // Value for the left trigger
 	float rightTrigger; // Value for the right trigger

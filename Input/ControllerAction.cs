@@ -10,5 +10,6 @@ internal enum ControllerAction {
     Back,
     Menu,
     View,
+    Guide,
 
 }

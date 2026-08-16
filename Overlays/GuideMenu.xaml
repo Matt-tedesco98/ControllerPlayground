@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="ControllerPlayground.Overlays.GuideMenu"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ControllerPlayground.Overlays"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid
+        x:Name="GuideRoot"
+        Background="#99000000">
+        <Border
+            Width="420"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Stretch"
+            Background="#202020"
+            Padding="32">
+
+            <StackPanel Spacing="24">
+                <TextBlock
+                    Text="Guide"
+                    FontSize="32"
+                    FontWeight="SemiBold"/>
+
+                <Button 
+                    x:Name="LibraryButton"
+                    Content="Library"
+                    FontSize="22"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    GotFocus="GuideButton_GotFocus"
+                    LostFocus="GuideButton_LostFocus"/>
+                <Button 
+                    Content="Settings" 
+                    FontSize="22"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    GotFocus="GuideButton_GotFocus"
+                    LostFocus="GuideButton_LostFocus"/>
+                <Button 
+                    Content="Discord" 
+                    FontSize="22"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left" 
+                    GotFocus="GuideButton_GotFocus"
+                    LostFocus="GuideButton_LostFocus"/>
+                <Button 
+                    Content="Power" 
+                    FontSize="22"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left" 
+                    GotFocus="GuideButton_GotFocus"
+                    LostFocus="GuideButton_LostFocus"/>
+
+            </StackPanel>
+            
+        </Border>
+        
+    </Grid>
+    
+</UserControl>

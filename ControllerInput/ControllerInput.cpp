@@ -19,6 +19,8 @@ constexpr uint8_t DualSensePsButton = 12;
 constexpr uint8_t DualSenseTouchpadButton = 13;
 constexpr uint8_t DualSenseMuteButton = 14;
 
+constexpr unsigned int ControllerSystemButtonGuide = 0x00000001;
+
 
 bool ControllerInput_Initialize() {
 	if (g_gameInput != nullptr)
@@ -32,6 +34,8 @@ bool ControllerInput_Initialize() {
 bool ControllerInput_GetState(ControllerState* State) {
 	if (g_gameInput == nullptr || State == nullptr)
 		return false; // Not initialized or invalid state pointer
+
+	*State = {}; // Clear the state structure
 
 	IGameInputReading* reading = nullptr;
 
@@ -61,6 +65,7 @@ bool ControllerInput_GetState(ControllerState* State) {
 	}
 
 	GameInputGamepadState gamepadState{};
+	State->systemButtons = 0; // Initialize system buttons to 0
 
 	bool success = reading->GetGamepadState(&gamepadState);
 
@@ -113,13 +118,16 @@ bool ControllerInput_GetState(ControllerState* State) {
 				{
 					uint8_t index = extraButtonIndexes[i];
 
-					if (index < buttonCount &&
-						index == DualSenseTouchpadButton &&
-						buttonStates[index])
+					if (index < buttonCount && buttonStates[index])
 					{
+						if (index == DualSenseTouchpadButton) {
 						State->buttons |=
 							static_cast<unsigned int>(
 								GameInputGamepadView);
+						}
+						if (index == DualSensePsButton) {
+							State->systemButtons |= ControllerSystemButtonGuide;
+						}
 					}
 				}
 
