@@ -16,6 +16,7 @@
 	  <None Remove="Controls\ControllerGlyph.xaml" />
 	  <None Remove="Controls\ControllerPrompt.xaml" />
 	  <None Remove="Controls\ControllerPromptBar.xaml" />
+	  <None Remove="Views\HomeView.xaml" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -95,6 +96,12 @@
 	<ItemGroup>
 	  <Folder Include="Assets\ControllerGlyphs\Playstation\" />
 	  <Folder Include="Assets\ControllerGlyphs\Xbox\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Views\HomeView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 
 	<ItemGroup>

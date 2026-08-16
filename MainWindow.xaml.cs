@@ -18,10 +18,6 @@ public sealed partial class MainWindow : Window {
 
         _controllerService.ControllerFamilyChanged += ControllerService_ControllerFamilyChanged;
 
-        PlayArea.Loaded += (_, _) => {
-            FirstGameTile.FocusTile();
-        };
-
         bool controllerInit = ControllerInputNative.ControllerInput_Initialize();
 
         System.Diagnostics.Debug.WriteLine(
@@ -36,65 +32,18 @@ public sealed partial class MainWindow : Window {
 
     private void ControllerTimer_Tick(object? sender, object e) {
         ControllerAction action = _controllerService.PollAction();
-
-        var focusOptions = new FindNextElementOptions {
-            SearchRoot = PlayArea
-        };
-
-        switch (action) {
-            case ControllerAction.NavigateUp:
-                FocusManager.TryMoveFocus(FocusNavigationDirection.Up, focusOptions);
-                break;
-            case ControllerAction.NavigateDown:
-                FocusManager.TryMoveFocus(FocusNavigationDirection.Down, focusOptions);
-                break;
-            case ControllerAction.NavigateLeft:
-                FocusManager.TryMoveFocus(FocusNavigationDirection.Left, focusOptions);
-                break;
-            case ControllerAction.NavigateRight:
-                FocusManager.TryMoveFocus(FocusNavigationDirection.Right, focusOptions);
-                break;
-            case ControllerAction.Accept: {
-                    var focused = FocusManager.GetFocusedElement(PlayArea.XamlRoot);
-
-                    if (focused is DependencyObject element) {
-                        DependencyObject? current = element;
-
-                        while (current != null) {
-                            if (current is GameTile gameTile) {
-                                gameTile.Activate();
-                                break;
-                            }
-                            current = VisualTreeHelper.GetParent(current);
-                        }
-                    }
-                    break;
-                }
-            case ControllerAction.Back:
-                System.Diagnostics.Debug.WriteLine("Back Requested");
-                break;
-            case ControllerAction.Menu:
-                System.Diagnostics.Debug.WriteLine("Menu Requested");
-                break;
-            case ControllerAction.View:
-                System.Diagnostics.Debug.WriteLine("View Requested");
-                break;
-
+        if(action != ControllerAction.none) {
+            HomeScreen.HandleControllerAction(action);
         }
     }
 
     private void ControllerService_ConnectionChanged(bool connected) {
         System.Diagnostics.Debug.WriteLine(connected ? "Controller connected" : "Controller disconnected");
     }
-    private void GameTile_Activated(object sender, EventArgs e) {
-        if (sender is GameTile gameTile) {
-            System.Diagnostics.Debug.WriteLine($"GameTile activated: {gameTile.Title}");
-        }
-    }
 
     private void ControllerService_ControllerFamilyChanged(ControllerFamily family) {
 
-        PromptBar.Family = family;
+        HomeScreen.ControllerFamily = family;
 
         System.Diagnostics.Debug.WriteLine($"Controller family changed: {family}");
     }
