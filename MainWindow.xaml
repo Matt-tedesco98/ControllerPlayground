@@ -18,7 +18,11 @@
                x:Name="PromptBar"
                HorizontalAlignment="Right"
                VerticalAlignment="Bottom"
-               Margin="24" />
+               Margin="24"
+               ShowAccept="True"
+               ShowBack="True"
+               ShowView="False"
+               ShowMenu="False"/>
             
         </StackPanel>
        
