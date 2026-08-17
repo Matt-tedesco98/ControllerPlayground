@@ -18,7 +18,6 @@
 	  <None Remove="Controls\ControllerPromptBar.xaml" />
 	  <None Remove="Overlays\GameContextMenu.xaml" />
 	  <None Remove="Overlays\GuideMenu.xaml" />
-	  <None Remove="Views\GameDetailsView.xaml" />
 	  <None Remove="Views\HomeView.xaml" />
 	  <None Remove="Views\SettingsView.xaml" />
 	</ItemGroup>
@@ -103,7 +102,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Page Update="Views\GameDetailsView.xaml">
+	  <Page Update="Views\GamePageView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
 	</ItemGroup>

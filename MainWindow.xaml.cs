@@ -8,6 +8,7 @@ using ControllerPlayground.Navigation;
 using ControllerPlayground.Views;
 using Microsoft.UI.Xaml.Controls;
 using ControllerPlayground.Overlays;
+using ControllerPlayground.Models;
 
 namespace ControllerPlayground;
 
@@ -15,16 +16,20 @@ public sealed partial class MainWindow : Window {
     private readonly DispatcherTimer _controllerTimer = new();
     private readonly ControllerService _controllerService = new();
 
+    // Views
     private readonly HomeView _homeView = new();
     private readonly SettingsView _settingsView = new();
+    private readonly GamePageView _GamePageView = new();
 
     public MainWindow() {
         InitializeComponent();
 
         _homeView.NavigateRequested += NavigateTo;
         _settingsView.NavigateRequested += NavigateTo;
+        _GamePageView.NavigateRequested += NavigateTo;
 
         GuideMenu.NavigateRequested += GuideMenu_NavigationRequested;
+        _homeView.GamePageRequested += HomeView_GamePageRequested;
 
         NavigateTo(AppScreen.Home);
 
@@ -71,6 +76,9 @@ public sealed partial class MainWindow : Window {
             case AppScreen.Settings:
                 _settingsView.HandleControllerAction(action);
                 break;
+            case AppScreen.GamePage:
+                _GamePageView.HandleControllerAction(action);
+                break;
         }
     }
 
@@ -82,6 +90,7 @@ public sealed partial class MainWindow : Window {
     private void ControllerService_ControllerFamilyChanged(ControllerFamily family) {
 
         _homeView.ControllerFamily = family;
+        _GamePageView.controllerFamily = family;
 
         System.Diagnostics.Debug.WriteLine($"Controller family changed: {family}");
     }
@@ -95,6 +104,9 @@ public sealed partial class MainWindow : Window {
 
             case AppScreen.Settings:
                 ScreenHost.Content = _settingsView;
+                break;
+            case AppScreen.GamePage:
+                ScreenHost.Content = _GamePageView;
                 break;
 
         }
@@ -123,5 +135,11 @@ public sealed partial class MainWindow : Window {
         _isGuideOpen = false;
         OverlayLayer.Visibility = Visibility.Collapsed;
         NavigateTo(screen);
+    }
+
+    private void HomeView_GamePageRequested(GameItem game, GamePageTab tab ) {
+        _GamePageView.Game = game;
+        _GamePageView.SelectedTab= tab;
+        NavigateTo(AppScreen.GamePage);
     }
 }

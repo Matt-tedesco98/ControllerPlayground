@@ -18,6 +18,8 @@ namespace ControllerPlayground.Views {
 
         private readonly Dictionary<GameTile, GameItem> _gamesByTile;
 
+        internal event Action<GameItem, GamePageTab>? GamePageRequested;
+
         private void GameTile_Activated(object sender, EventArgs e) {
             if (sender is GameTile gameTile) {
                 System.Diagnostics.Debug.WriteLine($"GameTile activated: {gameTile.Title}");
@@ -149,6 +151,11 @@ namespace ControllerPlayground.Views {
                     Debug.WriteLine($"Play requested: {_lastFocusedTitle?.Title}");
                     break;
                 case GameContextAction.GameDetails:
+                    if(_lastFocusedTitle!= null &&
+                        _gamesByTile.TryGetValue(_lastFocusedTitle, out GameItem? game)) {
+                        CloseGameContextMenu();
+                        GamePageRequested?.Invoke(game, GamePageTab.GameInfo);
+                    }
                     Debug.WriteLine($"GameDetails requested: {_lastFocusedTitle?.Title}");
                     break;
                 case GameContextAction.Manage:

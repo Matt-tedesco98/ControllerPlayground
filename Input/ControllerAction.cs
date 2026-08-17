@@ -11,5 +11,7 @@ internal enum ControllerAction {
     Menu,
     View,
     Guide,
+    PreviousTab,
+    NextTab,
 
 }

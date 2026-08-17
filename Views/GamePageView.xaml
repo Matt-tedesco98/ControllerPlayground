@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <UserControl
-    x:Class="ControllerPlayground.Views.GameDetailsView"
+    x:Class="ControllerPlayground.Views.GamePageView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ControllerPlayground.Views"
@@ -55,10 +55,10 @@
                     Spacing="28"
                     HorizontalAlignment="Center">
 
-                    <Button Content="Activity"/>
-                    <Button Content="Your Stuff"/>
-                    <Button Content="Community"/>
-                    <Button Content="Game Info"/>
+                    <Button x:Name="ActivityTabButton" Content="Activity"/>
+                    <Button x:Name="YourStuffTabButton" Content="Your Stuff"/>
+                    <Button x:Name="CommunityTabButton" Content="Community"/>
+                    <Button x:Name="GameInfoTabButton" Content="Game Info"/>
 
                 </StackPanel>
 

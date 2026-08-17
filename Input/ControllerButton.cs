@@ -4,5 +4,7 @@
         Back,
         Menu,
         View,
+        LeftShoulder,
+        RightShoulder,
     }
 }

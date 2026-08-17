@@ -91,6 +91,12 @@ internal sealed class ControllerService {
         if ((pressedThisFrame & ControllerButtons.View) != 0)
             return ControllerAction.View;
 
+        if((pressedThisFrame & ControllerButtons.LeftShoulder) != 0)
+            return ControllerAction.PreviousTab;
+
+        if((pressedThisFrame & ControllerButtons.RightShoulder) != 0)
+            return ControllerAction.NextTab;
+
         if ((systemPressedThisFrame & ControllerSystemButtons.Guide) != 0)
             return ControllerAction.Guide;
 

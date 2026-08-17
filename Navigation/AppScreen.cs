@@ -8,7 +8,7 @@ namespace ControllerPlayground.Navigation {
     internal enum AppScreen {
         Home,
         Settings,
-        GameDetails,
+        GamePage,
 
     }
 }
