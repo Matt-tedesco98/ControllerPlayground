@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using ControllerPlayground.Navigation;
+using ControllerPlayground.Overlays;
 
 namespace ControllerPlayground.Views {
     public sealed partial class HomeView : UserControl {
@@ -109,16 +110,6 @@ namespace ControllerPlayground.Views {
         }
 
 
-        public HomeView() {
-            InitializeComponent();
-
-            Loaded += (_, _) => {
-                DispatcherQueue.TryEnqueue(() => {
-                    // Set initial focus to the first GameTile
-                    FirstGameTile.FocusTile();
-                });
-            };
-        }
 
         private GameTile? _lastFocusedTitle;
 
@@ -146,6 +137,34 @@ namespace ControllerPlayground.Views {
             _isContextMenuOpen = false;
             ContextMenuLayer.Visibility = Visibility.Collapsed;
             RestoreFocus();
+        }
+
+        private void GameMenu_ActionRequested(GameContextAction action) {
+            switch (action) {
+                case GameContextAction.Play:
+                    Debug.WriteLine($"Play requested: {_lastFocusedTitle?.Title}");
+                    break;
+                case GameContextAction.GameDetails:
+                    Debug.WriteLine($"GameDetails requested: {_lastFocusedTitle?.Title}");
+                    break;
+                case GameContextAction.Manage:
+                    Debug.WriteLine($"Manage requested: {_lastFocusedTitle?.Title}");
+                    break;
+                case GameContextAction.Properties:
+                    Debug.WriteLine($"Properties requested: {_lastFocusedTitle?.Title}");
+                    break;
+            }
+        }
+        public HomeView() {
+            InitializeComponent();
+            GameMenu.ActionRequested += GameMenu_ActionRequested;
+
+            Loaded += (_, _) => {
+                DispatcherQueue.TryEnqueue(() => {
+                    // Set initial focus to the first GameTile
+                    FirstGameTile.FocusTile();
+                });
+            };
         }
     }
 }

@@ -13,12 +13,15 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using ControllerPlayground.Input;
+using Windows.UI;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace ControllerPlayground.Overlays {
     public sealed partial class GameContextMenu : UserControl {
+
+        internal event Action<GameContextAction>? ActionRequested;
 
         public static readonly DependencyProperty GameTitleProperty = DependencyProperty.Register(
             nameof(GameTitle),
@@ -46,6 +49,33 @@ namespace ControllerPlayground.Overlays {
                 case ControllerAction.NavigateDown:
                     FocusManager.TryMoveFocus(FocusNavigationDirection.Down, focusoptions);
                     break;
+
+                case ControllerAction.Accept: 
+                    {
+                        var focused = FocusManager.GetFocusedElement(MenuRoot.XamlRoot) as Button;
+
+                        if (focused == PlayButton)
+                            ActionRequested?.Invoke(GameContextAction.Play);
+                        else if (focused == DetailsButton)
+                            ActionRequested?.Invoke(GameContextAction.GameDetails);
+                        else if (focused == ManageButton)
+                            ActionRequested?.Invoke(GameContextAction.Manage);
+                        else if (focused == PropertiesButton)
+                            ActionRequested?.Invoke(GameContextAction.Properties);
+                    }
+                    break;
+            }
+        }
+
+        private void ContextButton_GotFocus(object sender, RoutedEventArgs e) {
+            if (sender is Button button) {
+                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(60, 255,255,255));
+            }
+        }
+
+        private void ContextButton_LostFocus(object sender, RoutedEventArgs e) {
+            if (sender is Button button) {
+                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(0, 255,255,255));
             }
         }
 

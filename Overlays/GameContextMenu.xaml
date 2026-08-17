@@ -29,28 +29,36 @@
                 Content="Play"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Left"
-                FontSize="20"/>
+                FontSize="20"
+                GotFocus="ContextButton_GotFocus"
+                LostFocus="ContextButton_LostFocus"/>
 
             <Button
                 x:Name="DetailsButton"
                 Content="Game Details"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Left"
-                FontSize="20"/>
+                FontSize="20"
+                GotFocus="ContextButton_GotFocus"
+                LostFocus="ContextButton_LostFocus"/>
             
             <Button
                 x:Name="ManageButton"
                 Content="Manage"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Left"
-                FontSize="20"/>
+                FontSize="20"
+                GotFocus="ContextButton_GotFocus"
+                LostFocus="ContextButton_LostFocus"/>
             
             <Button
                 x:Name="PropertiesButton"
                 Content="Properties"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Left"
-                FontSize="20"/>
+                FontSize="20"
+                GotFocus="ContextButton_GotFocus"
+                LostFocus="ContextButton_LostFocus"/>
 
         </StackPanel>
     </Border>
