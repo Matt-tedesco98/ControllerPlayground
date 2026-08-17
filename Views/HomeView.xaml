@@ -20,22 +20,25 @@
             XYFocusKeyboardNavigation="Enabled">
 
             <controls:GameTile
-                x:Name="FirstGameTile"
+                x:Name="HaloTile"
                 Title="Halo Infinite"
                 Activated="GameTile_Activated"
                 GotFocus="GameTile_GotFocus"/>
 
             <controls:GameTile
+                x:Name="ForzaTile"
                 Title="Forza Horizon 5"
                 Activated="GameTile_Activated"
                 GotFocus="GameTile_GotFocus"/>
 
             <controls:GameTile
+                x:Name="MinecraftTile"
                 Title="Minecraft"
                 Activated="GameTile_Activated"
                 GotFocus="GameTile_GotFocus"/>
 
             <controls:GameTile
+                x:Name="SteamTile"
                 Title="Steam"
                 Activated="GameTile_Activated"
                 GotFocus="GameTile_GotFocus"/>

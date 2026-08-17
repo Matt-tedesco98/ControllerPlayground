@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="ControllerPlayground.Views.GameDetailsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ControllerPlayground.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    xmlns:Control="using:ControllerPlayground.Controls">    
+
+    <Grid Background="#202020">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="3*"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="2*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Hero area -->
+        <Grid Grid.Row="0">
+            <TextBlock
+                Text="{x:Bind Game.Title, Mode=OneWay}"
+                FontSize="36"
+                Margin="48"
+                VerticalAlignment="Bottom"/>
+        </Grid>
+
+        <!-- Main action / metadata row -->
+        <StackPanel
+            Grid.Row="1"
+            Orientation="Horizontal"
+            Spacing="24"
+            Margin="48,24">
+
+            <Button
+                Content="Play"
+                Width="220"
+                Height="56"
+                FontSize="22"/>
+
+            <TextBlock
+                Text="{x:Bind Game.LastPlayed, Mode=OneWay}"
+                VerticalAlignment="Center"/>
+
+            <TextBlock
+                Text="{x:Bind Game.PlayTime, Mode=OneWay}"
+                VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Content area -->
+        <Grid Grid.Row="2" Margin="48">
+            <StackPanel Spacing="20">
+                <StackPanel
+                    Orientation="Horizontal"
+                    Spacing="28"
+                    HorizontalAlignment="Center">
+
+                    <Button Content="Activity"/>
+                    <Button Content="Your Stuff"/>
+                    <Button Content="Community"/>
+                    <Button Content="Game Info"/>
+
+                </StackPanel>
+
+                <TextBlock
+                Text="{x:Bind Game.Description, Mode=OneWay}"
+                FontSize="20"
+                TextWrapping="Wrap"/>
+            </StackPanel>
+
+        </Grid>
+
+        <Control:ControllerPromptBar
+        x:Name="PromptBar"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Bottom"
+        Margin="24"/>
+        
+    </Grid>
+</UserControl>

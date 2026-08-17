@@ -18,6 +18,7 @@
 	  <None Remove="Controls\ControllerPromptBar.xaml" />
 	  <None Remove="Overlays\GameContextMenu.xaml" />
 	  <None Remove="Overlays\GuideMenu.xaml" />
+	  <None Remove="Views\GameDetailsView.xaml" />
 	  <None Remove="Views\HomeView.xaml" />
 	  <None Remove="Views\SettingsView.xaml" />
 	</ItemGroup>
@@ -99,6 +100,12 @@
 	<ItemGroup>
 	  <Folder Include="Assets\ControllerGlyphs\Playstation\" />
 	  <Folder Include="Assets\ControllerGlyphs\Xbox\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Views\GameDetailsView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 
 	<ItemGroup>

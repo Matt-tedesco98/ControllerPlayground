@@ -8,11 +8,15 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using ControllerPlayground.Navigation;
 using ControllerPlayground.Overlays;
+using ControllerPlayground.Models;
+using System.Collections.Generic;
 
 namespace ControllerPlayground.Views {
     public sealed partial class HomeView : UserControl {
 
         internal event Action<AppScreen>? NavigateRequested;
+
+        private readonly Dictionary<GameTile, GameItem> _gamesByTile;
 
         private void GameTile_Activated(object sender, EventArgs e) {
             if (sender is GameTile gameTile) {
@@ -105,7 +109,7 @@ namespace ControllerPlayground.Views {
         internal void RestoreFocus() {
             // Restore focus to the last focused GameTile
             DispatcherQueue.TryEnqueue(() => {
-                (_lastFocusedTitle ?? FirstGameTile).FocusTile();
+                (_lastFocusedTitle ?? HaloTile).FocusTile();
             });
         }
 
@@ -157,12 +161,46 @@ namespace ControllerPlayground.Views {
         }
         public HomeView() {
             InitializeComponent();
+
+            _gamesByTile = new Dictionary<GameTile, GameItem> {
+                [HaloTile] = new GameItem {
+                    Title = "Halo Infinite",
+                    Genres = new()
+        {
+            "Action",
+            "Shooter"
+        }
+                },
+
+                [ForzaTile] = new GameItem {
+                    Title = "Forza Horizon 5",
+                    Genres = new()
+        {
+            "Racing",
+            "Open World"
+        }
+                },
+
+                [MinecraftTile] = new GameItem {
+                    Title = "Minecraft",
+                    Genres = new()
+        {
+            "Sandbox",
+            "Adventure"
+        }
+                },
+
+                [SteamTile] = new GameItem {
+                    Title = "Steam"
+                }
+            };
+
             GameMenu.ActionRequested += GameMenu_ActionRequested;
 
             Loaded += (_, _) => {
                 DispatcherQueue.TryEnqueue(() => {
                     // Set initial focus to the first GameTile
-                    FirstGameTile.FocusTile();
+                    HaloTile.FocusTile();
                 });
             };
         }
