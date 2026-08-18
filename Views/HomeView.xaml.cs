@@ -19,7 +19,6 @@ namespace ControllerPlayground.Views {
         private readonly Dictionary<GameTile, GameItem> _gamesByTile;
 
         internal event Action<GameItem, GamePageTab>? GamePageRequested;
-
         private void GameTile_Activated(object sender, EventArgs e) {
             if (sender is GameTile gameTile) {
                 System.Diagnostics.Debug.WriteLine($"GameTile activated: {gameTile.Title}");
@@ -181,6 +180,8 @@ namespace ControllerPlayground.Views {
 
                 [ForzaTile] = new GameItem {
                     Title = "Forza Horizon 5",
+                    HeroImagePath = "ms-appx:///Assets/Games/Forza/Hero.jpg",
+                    CoverImagePath = "ms-appx:///Assets/Games/Forza/Cover.jpg",
                     Genres = new()
         {
             "Racing",

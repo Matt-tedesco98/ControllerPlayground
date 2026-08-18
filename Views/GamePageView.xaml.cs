@@ -15,6 +15,7 @@ using Windows.Foundation.Collections;
 using ControllerPlayground.Models;
 using ControllerPlayground.Navigation;
 using ControllerPlayground.Input;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 
 // To learn more about WinUI, the WinUI project structure,
@@ -35,7 +36,7 @@ namespace ControllerPlayground.Views {
             }
         }
 
-        private void UpdateSelectedTab() { 
+        private void UpdateSelectedTab() {
             ActivityTabButton.Opacity = SelectedTab == GamePageTab.Activity ? 1.0 : 0.5;
             YourStuffTabButton.Opacity = SelectedTab == GamePageTab.YourStuff ? 1.0 : 0.5;
             CommunityTabButton.Opacity = SelectedTab == GamePageTab.Community ? 1.0 : 0.5;
@@ -51,18 +52,50 @@ namespace ControllerPlayground.Views {
             nameof(Game),
             typeof(GameItem),
             typeof(GamePageView),
-            new PropertyMetadata(null));
+            new PropertyMetadata(null, OnGameChanged));
 
         public GameItem? Game {
             get => (GameItem?)GetValue(GameProperty);
             set => SetValue(GameProperty, value);
         }
 
+        private static void OnGameChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            if (d is GamePageView view) {
+                view.UpdateGameVisuals();
+            }
+        }
+
+        private void UpdateGameVisuals() {
+            GameItem? game = Game;
+
+            if (game == null) {
+                HeroImage = null;
+                CoverImage = null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(game.HeroImagePath)) {
+                HeroImage.Source = new BitmapImage(new Uri(game.HeroImagePath));
+                
+            }else {
+                HeroImage.Source = null;
+            }
+            
+            if (!string.IsNullOrWhiteSpace(game.CoverImagePath)) {
+                CoverImage.Source = new BitmapImage(new Uri(game.CoverImagePath));
+            } else {
+                CoverImage.Source = null;
+            }
+        }
+
         internal event Action<AppScreen>? NavigateRequested;
 
         public ControllerFamily controllerFamily {
             get => PromptBar.Family;
-            set => PromptBar.Family = value;
+            set {
+                PromptBar.Family = value;
+                LeftShoulderGlyph.Family = value;
+                RightShoulderGlyph.Family = value;
+            }
         }
 
         internal void HandleControllerAction(ControllerAction action) {
