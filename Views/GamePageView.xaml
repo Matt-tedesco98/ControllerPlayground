@@ -9,185 +9,263 @@
     mc:Ignorable="d"
     xmlns:Control="using:ControllerPlayground.Controls">
 
-    <Grid Background="#202020">
+    <Grid 
+        x:Name="PageRoot"
+        Background="#202020">
+        
         <Grid.RowDefinitions>
-            <RowDefinition Height="320"/>
-            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Hero area -->
-        <Grid Grid.Row="0">
+        <ScrollViewer
+            x:Name="PageScrollViewer"
+            Grid.Row="0"
+            VerticalScrollBarVisibility="Auto"
+            HorizontalScrollBarVisibility="Disabled">
 
-            <Image
-                x:Name="HeroImage"
-                Stretch="UniformToFill"/>
+            <StackPanel>
 
-            <Rectangle>
-                <Rectangle.Fill>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#00000000" Offset="0.35"/>
-                        <GradientStop Color="#CC202020" Offset="1"/>
-                    </LinearGradientBrush>
-                </Rectangle.Fill>
-            </Rectangle>
+                <!-- Hero area -->
+                <Grid Grid.Row="0">
 
-            <TextBlock
-                Text="{x:Bind Game.Title, Mode=OneWay}"
-                FontSize="36"
-                Margin="48"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"/>
-        </Grid>
+                    <Image
+                        x:Name="HeroImage"
+                        Stretch="UniformToFill"
+                        MaxHeight="320"/>
 
-        <!-- Main action / metadata row -->
-        <StackPanel
-            Grid.Row="1"
-            Orientation="Horizontal"
-            Spacing="24"
-            Margin="48,24">
 
-            <Button
-                Content="Play"
-                Width="220"
-                Height="56"
-                FontSize="22"/>
+                    <Rectangle>
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#00000000" Offset="0.35"/>
+                                <GradientStop Color="#CC202020" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
 
-            <TextBlock
-                Text="{x:Bind Game.LastPlayed, Mode=OneWay}"
-                VerticalAlignment="Center"/>
+                    <TextBlock
+                        Text="{x:Bind Game.Title, Mode=OneWay}"
+                        FontSize="36"
+                        Margin="48"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom"/>
+                </Grid>
 
-            <TextBlock
-                Text="{x:Bind Game.PlayTime, Mode=OneWay}"
-                VerticalAlignment="Center"/>
-        </StackPanel>
-
-        <!-- Content area -->
-        <Grid Grid.Row="2">
-
-            <ScrollViewer
-        VerticalScrollBarVisibility="Auto"
-        HorizontalScrollBarVisibility="Disabled">
-
+                <!-- Main action / metadata row -->
                 <StackPanel
-            Spacing="20"
-            Margin="48">
-
-                    <!-- Tab strip -->
-                    <Grid HorizontalAlignment="Center">
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Control:ControllerGlyph
-                    x:Name="LeftShoulderGlyph"
-                    Grid.Column="0"
-                    Button="LeftShoulder"
-                    VerticalAlignment="Center"
-                    Margin="0,0,20,0"/>
-
-                        <StackPanel
-                    Grid.Column="1"
                     Orientation="Horizontal"
-                    Spacing="28">
+                    Spacing="24"
+                    Margin="48,24">
 
-                            <Button
-                        x:Name="ActivityTabButton"
-                        Content="Activity"/>
+                    <Button
+                        x:Name="PlayButton"
+                        Content="Play"
+                        Width="220"
+                        Height="56"
+                        FontSize="22"
+                        GotFocus="PlayButton_GotFocus"
+                        LostFocus="PlayButton_LostFocus"/>
 
-                            <Button
-                        x:Name="YourStuffTabButton"
-                        Content="Your Stuff"/>
+                    <TextBlock
+                        Text="{x:Bind Game.LastPlayed, Mode=OneWay}"
+                        VerticalAlignment="Center"/>
 
-                            <Button
-                        x:Name="CommunityTabButton"
-                        Content="Community"/>
+                    <TextBlock
+                        Text="{x:Bind Game.PlayTime, Mode=OneWay}"
+                        VerticalAlignment="Center"/>
+                </StackPanel>
 
-                            <Button
-                        x:Name="GameInfoTabButton"
-                        Content="Game Info"/>
+                <!-- Content area -->
+                <Grid>
 
-                        </StackPanel>
+                    <StackPanel
+                    Spacing="20"
+                    Margin="48">
 
-                        <Control:ControllerGlyph
-                    x:Name="RightShoulderGlyph"
-                    Grid.Column="2"
-                    Button="RightShoulder"
-                    VerticalAlignment="Center"
-                    Margin="20,0,0,0"/>
+                        <!-- Tab strip -->
+                        <Grid HorizontalAlignment="Center">
 
-                    </Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                    <!-- Game Info -->
-                    <Grid x:Name="GameInfoContent">
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="260"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Border
-                    Grid.Column="0"
-                    Width="220"
-                    Height="320"
-                    CornerRadius="8"
-                    Background="#303030"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top">
-
-                            <Image
-                        x:Name="CoverImage"
-                        Stretch="UniformToFill"/>
-
-                        </Border>
-
-                        <StackPanel
-                    Grid.Column="1"
-                    Margin="32,0,0,0"
-                    Spacing="16">
-
-                            <TextBlock
-                        Text="{x:Bind Game.Description, Mode=OneWay}"
-                        FontSize="18"
-                        TextWrapping="Wrap"
-                        MaxWidth="900"
-                        HorizontalAlignment="Left"/>
+                            <Control:ControllerGlyph
+                                x:Name="LeftShoulderGlyph"
+                                Grid.Column="0"
+                                Button="LeftShoulder"
+                                VerticalAlignment="Center"
+                                Margin="0,0,20,0"/>
 
                             <StackPanel
-                        Spacing="8"
-                        Margin="0,12,0,0">
+                                x:Name="TabBar"
+                                Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="28">
 
-                                <TextBlock
-                            Text="{x:Bind Game.Developer, Mode=OneWay}"
-                            FontSize="16"/>
+                                <Button
+                                    x:Name="ActivityTabButton"
+                                    Content="Activity"/>
 
-                                <TextBlock
-                            Text="{x:Bind Game.Publisher, Mode=OneWay}"
-                            FontSize="16"/>
+                                <Button
+                                    x:Name="YourStuffTabButton"
+                                    Content="Your Stuff"/>
 
-                                <TextBlock
-                            Text="{x:Bind Game.ReleaseDate, Mode=OneWay}"
-                            FontSize="16"/>
+                                <Button
+                                    x:Name="CommunityTabButton"
+                                    Content="Community"/>
+
+                                <Button
+                                    x:Name="GameInfoTabButton"
+                                    Content="Game Info"/>
 
                             </StackPanel>
 
-                        </StackPanel>
+                            <Control:ControllerGlyph
+                                x:Name="RightShoulderGlyph"
+                                Grid.Column="2"
+                                Button="RightShoulder"
+                                VerticalAlignment="Center"
+                                Margin="20,0,0,0"/>
 
-                    </Grid>
+                        </Grid>
 
-                </StackPanel>
+                        <!-- Activity -->
+                        <Grid
+                            x:Name="ActivityContent">
 
-            </ScrollViewer>
+                            <TextBlock
+                                Text="Activity"
+                                FontSize="24" />
 
-        </Grid>
+                        </Grid>
 
+                        <!-- Your Stuff -->
+                        <Grid
+                            x:Name="YourStuffContent"
+                            Visibility="Collapsed">
+
+                            <StackPanel Spacing="20">
+
+                                <TextBlock
+                                    Text="DLC"
+                                    FontSize="24"
+                                    FontWeight="SemiBold" />
+
+                                <TextBlock
+                                    Text="Missing DLC"
+                                    FontSize="24"
+                                    FontWeight="SemiBold" />
+
+                            </StackPanel>
+
+                        </Grid>
+
+                        <!-- Community -->
+                        <Grid
+                            x:Name="CommunityContent"
+                            Visibility="Collapsed">
+
+                            <StackPanel Spacing="12">
+
+                                <Button Content="Community Hub" />
+                                <Button Content="Discussions" />
+                                <Button Content="Guides" />
+
+                            </StackPanel>
+
+                        </Grid>
+
+                        <!-- Game Info -->
+                        <Grid
+                            x:Name="GameInfoContent"
+                            Visibility="Collapsed">
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="260"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border
+                                Grid.Column="0"
+                                Width="220"
+                                Height="320"
+                                CornerRadius="8"
+                                Background="#303030"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top">
+
+                                <Image
+                                    x:Name="CoverImage"
+                                    Stretch="UniformToFill"/>
+
+                            </Border>
+
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="32,0,0,0"
+                                Spacing="16">
+
+                                <TextBlock
+                                    Text="{x:Bind Game.Description, Mode=OneWay}"
+                                    FontSize="18"
+                                    TextWrapping="Wrap"
+                                    MaxWidth="900"
+                                    HorizontalAlignment="Left"/>
+
+                                <StackPanel
+                                    Spacing="8"
+                                    Margin="0,12,0,0">
+
+                                    <TextBlock
+                                        Text="{x:Bind Game.Developer, Mode=OneWay}"
+                                        FontSize="16"/>
+
+                                    <TextBlock
+                                        Text="{x:Bind Game.Publisher, Mode=OneWay}"
+                                        FontSize="16"/>
+
+                                    <TextBlock
+                                        Text="{x:Bind Game.ReleaseDate, Mode=OneWay}"
+                                        FontSize="16"/>
+
+                                </StackPanel>
+
+                                <StackPanel
+                                    Orientation="Horizontal"
+                                    Spacing="12"
+                                    Margin="0,16,0,0">
+
+                                    <Button 
+                                        x:Name="StorePageButton"
+                                        Content="Store Page"
+                                        GotFocus="PageActionButton_GotFocus"
+                                        LostFocus="PageActionButton_LostFocus"/>
+                                    <Button 
+                                        x:Name="SupportButton" 
+                                        Content="Support" 
+                                        GotFocus="PageActionButton_GotFocus"
+                                        LostFocus="PageActionButton_LostFocus"/>
+
+                                </StackPanel>
+
+                            </StackPanel>
+
+                        </Grid>
+
+                    </StackPanel>
+                    
+                </Grid>
+                
+            </StackPanel>
+            
+        </ScrollViewer>
+        
         <Control:ControllerPromptBar
             x:Name="PromptBar"
-            Grid.Row="3"
+            Grid.Row="1"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Margin="24"/>

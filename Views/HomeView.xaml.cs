@@ -20,7 +20,8 @@ namespace ControllerPlayground.Views {
 
         internal event Action<GameItem, GamePageTab>? GamePageRequested;
         private void GameTile_Activated(object sender, EventArgs e) {
-            if (sender is GameTile gameTile) {
+            if (sender is GameTile gameTile && _gamesByTile.TryGetValue(gameTile, out var game)) {
+                GamePageRequested?.Invoke(game, GamePageTab.Activity);
                 System.Diagnostics.Debug.WriteLine($"GameTile activated: {gameTile.Title}");
             }
         }

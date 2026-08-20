@@ -24,6 +24,16 @@ using Microsoft.UI.Xaml.Media.Imaging;
 namespace ControllerPlayground.Views {
     public sealed partial class GamePageView : UserControl {
 
+        internal void FocusInitialElement() {
+            DispatcherQueue.TryEnqueue(() => {
+                if (SelectedTab == GamePageTab.Activity) {
+                    PlayButton.Focus(FocusState.Programmatic);
+                } else {
+                    GetSelectedTabButton().Focus(FocusState.Programmatic);
+                }
+            });
+        }
+
         public static DependencyProperty SelectedTabProperty = DependencyProperty.Register(
             nameof(SelectedTab),
             typeof(GamePageTab),
@@ -41,6 +51,14 @@ namespace ControllerPlayground.Views {
             YourStuffTabButton.Opacity = SelectedTab == GamePageTab.YourStuff ? 1.0 : 0.5;
             CommunityTabButton.Opacity = SelectedTab == GamePageTab.Community ? 1.0 : 0.5;
             GameInfoTabButton.Opacity = SelectedTab == GamePageTab.GameInfo ? 1.0 : 0.5;
+
+            ActivityContent.Visibility = SelectedTab == GamePageTab.Activity ? Visibility.Visible : Visibility.Collapsed;
+
+            YourStuffContent.Visibility = SelectedTab == GamePageTab.YourStuff ? Visibility.Visible : Visibility.Collapsed;
+
+            CommunityContent.Visibility = SelectedTab == GamePageTab.Community ? Visibility.Visible : Visibility.Collapsed;
+
+            GameInfoContent.Visibility = SelectedTab == GamePageTab.GameInfo ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public GamePageTab SelectedTab {
@@ -75,11 +93,11 @@ namespace ControllerPlayground.Views {
 
             if (!string.IsNullOrWhiteSpace(game.HeroImagePath)) {
                 HeroImage.Source = new BitmapImage(new Uri(game.HeroImagePath));
-                
-            }else {
+
+            } else {
                 HeroImage.Source = null;
             }
-            
+
             if (!string.IsNullOrWhiteSpace(game.CoverImagePath)) {
                 CoverImage.Source = new BitmapImage(new Uri(game.CoverImagePath));
             } else {
@@ -100,29 +118,131 @@ namespace ControllerPlayground.Views {
 
         internal void HandleControllerAction(ControllerAction action) {
             switch (action) {
-                case ControllerAction.PreviousTab:
-                    SelectedTab = SelectedTab switch {
-                        GamePageTab.YourStuff => GamePageTab.Activity,
-                        GamePageTab.Community => GamePageTab.YourStuff,
-                        GamePageTab.GameInfo => GamePageTab.Community,
-                        _ => SelectedTab
-                    };
-                    break;
-                case ControllerAction.NextTab:
-                    SelectedTab = SelectedTab switch {
-                        GamePageTab.Activity => GamePageTab.YourStuff,
-                        GamePageTab.YourStuff => GamePageTab.Community,
-                        GamePageTab.Community => GamePageTab.GameInfo,
-                        _ => SelectedTab
-                    };
-                    break;
+                case ControllerAction.PreviousTab: {
+                        SelectedTab = SelectedTab switch {
+                            GamePageTab.YourStuff => GamePageTab.Activity,
+                            GamePageTab.Community => GamePageTab.YourStuff,
+                            GamePageTab.GameInfo => GamePageTab.Community,
+                            _ => GamePageTab.Activity
+                        };
+
+                        GetSelectedTabButton()
+                            .Focus(FocusState.Programmatic);
+
+                        break;
+                    }
+
+                case ControllerAction.NextTab: {
+                        SelectedTab = SelectedTab switch {
+                            GamePageTab.Activity => GamePageTab.YourStuff,
+                            GamePageTab.YourStuff => GamePageTab.Community,
+                            GamePageTab.Community => GamePageTab.GameInfo,
+                            _ => GamePageTab.GameInfo
+                        };
+
+                        GetSelectedTabButton()
+                            .Focus(FocusState.Programmatic);
+
+                        break;
+                    }
                 case ControllerAction.Back:
                     NavigateRequested?.Invoke(AppScreen.Home);
                     break;
+                case ControllerAction.NavigateDown: {
+                        FocusManager.TryMoveFocus(FocusNavigationDirection.Down, new FindNextElementOptions {
+                            SearchRoot = PageRoot
+                        });
+                    }
+                    break;
+                case ControllerAction.NavigateUp: {
+                        FocusManager.TryMoveFocus(FocusNavigationDirection.Up, new FindNextElementOptions {
+                            SearchRoot = PageRoot
+                        });
+                    }
+                    break;
+                case ControllerAction.NavigateRight: {
+                        FocusManager.TryMoveFocus(FocusNavigationDirection.Right, new FindNextElementOptions {
+                            SearchRoot = PageRoot
+                        });
+                    }
+                    break;
+                case ControllerAction.NavigateLeft: {
+                        FocusManager.TryMoveFocus(FocusNavigationDirection.Left, new FindNextElementOptions {
+                            SearchRoot = PageRoot
+                        });
+                    }
+                    break;
+
+
             }
         }
+        private Button GetSelectedTabButton() {
+            return SelectedTab switch {
+                GamePageTab.Activity => ActivityTabButton,
+                GamePageTab.YourStuff => YourStuffTabButton,
+                GamePageTab.Community => CommunityTabButton,
+                GamePageTab.GameInfo => GameInfoTabButton,
+                _ => ActivityTabButton
+            };
+        }
+
+        private bool IsTabButton(Control control) {
+            return control == ActivityTabButton || control == YourStuffTabButton || control == CommunityTabButton || control == GameInfoTabButton;
+        }
+
+        private void PlayButton_GotFocus(object sender, RoutedEventArgs e) {
+            if (sender is Button button) {
+                button.Opacity = 1.0;
+                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(60, 255, 255, 255));
+            }
+        }
+
+        private void PlayButton_LostFocus(object sender, RoutedEventArgs e) {
+            if (sender is Button button) {
+                button.Opacity = 0.8;
+                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(0, 255, 255, 255));
+            }
+        }
+
+        private void GamePageView_Loaded(object sender, RoutedEventArgs e) {
+            if (SelectedTab == GamePageTab.Activity) {
+                PlayButton.Focus(FocusState.Programmatic);
+            } else {
+                GetSelectedTabButton().Focus(FocusState.Programmatic);
+            }
+        }
+
+        private void PageActionButton_GotFocus(object sender, RoutedEventArgs e) {
+            if (sender is Button button) {
+                button.Opacity = 1.0;
+                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(60, 255, 255, 255));
+            }
+        }
+
+        private void PageActionButton_LostFocus(object sender, RoutedEventArgs e) {
+            if (sender is Button button) {
+                button.Opacity = 0.8;
+                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(0, 255, 255, 255));
+            }
+        }
+
+        private void UpdateSelectedTabFromFocus() {
+            var focused = FocusManager.GetFocusedElement(XamlRoot) as Control;
+            if (focused == ActivityTabButton) {
+                SelectedTab = GamePageTab.Activity;
+            } else if (focused == YourStuffTabButton) {
+                SelectedTab = GamePageTab.YourStuff;
+            } else if (focused == CommunityTabButton) {
+                SelectedTab = GamePageTab.Community;
+            } else if (focused == GameInfoTabButton) {
+                SelectedTab = GamePageTab.GameInfo;
+            }
+        }
+
         public GamePageView() {
             InitializeComponent();
+
+            Loaded += GamePageView_Loaded;
         }
     }
 }
