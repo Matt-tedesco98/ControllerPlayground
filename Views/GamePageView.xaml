@@ -136,9 +136,147 @@
                         <Grid
                             x:Name="ActivityContent">
 
-                            <TextBlock
-                                Text="Activity"
-                                FontSize="24" />
+                            <StackPanel Spacing="16">
+                                
+                                <!--Friends Activity-->
+                                <TextBlock
+                                    Text="Friends"
+                                    FontSize="24"
+                                    FontWeight="SemiBold"/>
+                                
+                                <TextBlock
+                                    Text="2 friends have played this game recently"
+                                    FontSize="18"
+                                    Opacity="0.6"/>
+                                
+                                <Border
+                                    Background="#303030"
+                                    Padding="16">
+
+                                    <StackPanel
+                                        Orientation="Horizontal"
+                                        Spacing="24">
+
+                                        <Button
+                                            Width="220"
+                                            Height="64"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12">
+
+                                            <StackPanel
+                                                Orientation="Horizontal"
+                                                Spacing="12">
+
+                                                <Border
+                                                    Width="40"
+                                                    Height="40"
+                                                    Background="#505050"
+                                                    CornerRadius="4" />
+
+                                                <StackPanel VerticalAlignment="Center">
+
+                                                    <TextBlock
+                                                        Text="Friend 1"
+                                                        FontSize="16" />
+
+                                                    <TextBlock
+                                                        Text="11.5 hrs played recently"
+                                                        FontSize="13"
+                                                        Opacity="0.6" />                        
+
+                                                </StackPanel>
+
+                                            </StackPanel>
+
+                                        </Button>
+
+                                        <Button
+                                            Width="220"
+                                            Height="64"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12">       
+
+                                            <StackPanel
+                                                Orientation="Horizontal"
+                                                Spacing="12">
+
+                                                <Border
+                                                    Width="40"
+                                                    Height="40"
+                                                    Background="#505050"
+                                                    CornerRadius="4" />
+
+                                                <StackPanel VerticalAlignment="Center">
+
+                                                    <TextBlock
+                                                        Text="Friend 2"
+                                                        FontSize="16" />
+
+                                                    <TextBlock
+                                                        Text="7.5 hrs played recently"
+                                                        FontSize="13"
+                                                        Opacity="0.6" />
+
+                                                </StackPanel>
+
+                                            </StackPanel>
+
+                                        </Button>
+
+                                    </StackPanel>
+
+                                </Border>
+                                
+                                <TextBlock
+                                    Text="Played Previously"
+                                    FontSize="14"
+                                    Opacity="0.6"
+                                    Margin="0,12,0,0"/>
+
+                                <Border
+                                    Background="#303030"
+                                    Padding="16"/>
+
+                            </StackPanel>
+                            
+                            <!--Activity feed-->
+                            <StackPanel Spacing="16">
+
+                                <Border
+                                    Background="#303030"
+                                    Padding="16">
+                                    
+                                    <TextBlock
+                                        Text="Say something about this game to your friends"
+                                        FontFamily="Italic"
+                                        Opacity="0.5"/>
+                                        
+                                </Border>
+                                
+                                <TextBlock
+                                    Text="TODAY"
+                                    FontSize="14"
+                                    Opacity="0.6"
+                                    Margin="0,12,0,0"/>
+
+                                <Button
+                                    HorizontalContentAlignment="Stretch"
+                                    Padding="20">
+                                    
+                                    <StackPanel Spacing="6">
+                                        
+                                        <TextBlock
+                                            Text="SMALL UPDATE / PATCH NOTES"
+                                            FontSize="14"
+                                            Opacity="0.6"/>
+                                        
+                                        <TextBlock
+                                            Text="Game Update"
+                                            FontSize="20"/>
+                                        
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
 
                         </Grid>
 
