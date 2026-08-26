@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="ControllerPlayground.Views.GameActivityView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ControllerPlayground.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:ControllerPlayground.Models"
+    xmlns:Control="using:ControllerPlayground.Controls"    
+    mc:Ignorable="d">
+
+    <StackPanel
+        x:Name="ActivityContent"
+        Spacing="28">
+
+        <StackPanel Spacing="16">
+
+            <!--Friends Activity-->
+            <TextBlock
+            Text="Friends"
+            FontSize="24"
+            FontWeight="SemiBold"/>
+
+            <TextBlock
+            Text="2 friends have played this game recently"
+            FontSize="18"
+            Opacity="0.6"/>
+
+            <Border
+            Background="#303030"
+            Padding="16">
+
+                <ItemsControl ItemsSource="{x:Bind RecentFriends, Mode=OneWay}">
+
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel
+                            x:Name="RecentFriendsPanel"
+                            Orientation="Horizontal"
+                            Spacing="24"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:FriendActivityItem">
+
+                            <Control:FriendActivityCard
+                            Item="{x:Bind}"/>
+
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+
+                </ItemsControl>
+
+            </Border>
+
+            <ItemsControl
+            ItemsSource="{x:Bind PlayedPreviouslyFriends, Mode=OneWay}">
+
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel
+                        Orientation="Horizontal"
+                        Spacing="8"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:FriendActivityItem">
+
+                        <Control:PlayedFriendAvatar
+                        Item="{x:Bind}"/>
+
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+
+            </ItemsControl>
+
+            <Border
+            Background="#303030"
+            Padding="16"/>
+
+        </StackPanel>
+
+        <!--Activity feed-->
+        <StackPanel Spacing="16">
+
+            <Border
+            Background="#303030"
+            Padding="16">
+
+                <TextBlock
+                Text="Say something about this game to your friends"
+                FontStyle="Italic"
+                Opacity="0.5"/>
+
+            </Border>
+
+            <TextBlock
+            Text="TODAY"
+            FontSize="14"
+            Opacity="0.6"
+            Margin="0,12,0,0"/>
+
+            <ItemsControl
+            ItemsSource="{x:Bind ActivityFeed, Mode=OneWay}">
+
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="12"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:ActivityFeedItem">
+
+                        <Control:ActivityFeedCard
+                        Item="{x:Bind}"/>
+
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+
+    </StackPanel>
+
+</UserControl>

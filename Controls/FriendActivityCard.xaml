@@ -33,11 +33,11 @@
             <StackPanel VerticalAlignment="Center">
 
                 <TextBlock
-                    Text="{x:Bind FriendName, Mode=OneWay}"
+                    x:Name="FriendNameText"
                     FontSize="16" />
 
                 <TextBlock
-                    Text="{x:Bind PlayTimeText, Mode=OneWay}"
+                    x:Name="PlayTimeText"
                     FontSize="13"
                     Opacity="0.6" />
 

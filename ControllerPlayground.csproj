@@ -13,12 +13,15 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
+	  <None Remove="Controls\ActivityFeedCard.xaml" />
 	  <None Remove="Controls\ControllerGlyph.xaml" />
 	  <None Remove="Controls\ControllerPrompt.xaml" />
 	  <None Remove="Controls\ControllerPromptBar.xaml" />
 	  <None Remove="Controls\FriendActivityCard.xaml" />
+	  <None Remove="Controls\PlayedFriendAvatar.xaml" />
 	  <None Remove="Overlays\GameContextMenu.xaml" />
 	  <None Remove="Overlays\GuideMenu.xaml" />
+	  <None Remove="Views\GameActivityView.xaml" />
 	  <None Remove="Views\HomeView.xaml" />
 	  <None Remove="Views\SettingsView.xaml" />
 	</ItemGroup>
@@ -100,6 +103,24 @@
 	<ItemGroup>
 	  <Folder Include="Assets\ControllerGlyphs\Playstation\" />
 	  <Folder Include="Assets\ControllerGlyphs\Xbox\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Views\GameActivityView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Controls\ActivityFeedCard.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Controls\PlayedFriendAvatar.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 
 	<ItemGroup>

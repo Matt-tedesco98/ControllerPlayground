@@ -13,9 +13,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.UI.Xaml.Media.Imaging;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using ControllerPlayground.Models;
 
 namespace ControllerPlayground.Controls {
     public sealed partial class FriendActivityCard : UserControl {
@@ -23,46 +21,41 @@ namespace ControllerPlayground.Controls {
             InitializeComponent();
         }
 
-        public string FriendName { 
-            get => (string)GetValue(FriendNameProperty);
-            set => SetValue(FriendNameProperty, value);
+        public FriendActivityItem? Item {
+            get => (FriendActivityItem?)GetValue(ItemProperty);
+            set => SetValue(ItemProperty, value);
         }
 
-        public static readonly DependencyProperty FriendNameProperty = DependencyProperty.Register(
-            nameof(FriendName),
-            typeof(string),
+        public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(
+            nameof(Item),
+            typeof(FriendActivityItem),
             typeof(FriendActivityCard),
-            new PropertyMetadata(string.Empty)
+            new PropertyMetadata(null, OnItemChanged)
         );
 
-        public string PlayTimeText {
-            get => (string)GetValue(PlayTimeTextProperty);
-            set => SetValue(PlayTimeTextProperty, value);
-        }
-
-        public static readonly DependencyProperty PlayTimeTextProperty = DependencyProperty.Register(
-            nameof(PlayTimeText),
-            typeof(string),
-            typeof(FriendActivityCard),
-            new PropertyMetadata(string.Empty)
-        );
-
-        public string AvatarUrl {
-            get => (string)GetValue(AvatarUrlProperty);
-            set => SetValue(AvatarUrlProperty, value);
-        }
-
-        public static readonly DependencyProperty AvatarUrlProperty = DependencyProperty.Register(
-            nameof(AvatarUrl),
-            typeof(string),
-            typeof(FriendActivityCard),
-            new PropertyMetadata(string.Empty)
-        );
-
-        private static void OnAvatarUrlChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
-            if (d is FriendActivityCard card && e.NewValue is string url && !string.IsNullOrWhiteSpace(url)) {
-                card.AvatarImage.Source = new BitmapImage(new Uri(url));
+        private static void OnItemChanged( DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            if (d is FriendActivityCard card) {
+                card.UpdateVisuals();
             }
+        }
+
+        private void UpdateVisuals() {
+            FriendActivityItem? item = Item;
+            if (item == null) { 
+                FriendNameText.Text = string.Empty;
+                PlayTimeText.Text = string.Empty;
+                AvatarImage.Source = null;
+                return;
+            }
+
+            FriendNameText.Text = item.DisplayName;
+            double hours = item.RecentPlayTimeMinutes / 60.0;
+
+            PlayTimeText.Text = $"{hours:F1} hours played recently";
+
+            AvatarImage.Source = string.IsNullOrWhiteSpace(item.AvatarUrl)
+                ? null 
+                : new BitmapImage(new Uri(item.AvatarUrl));
         }
     }
 }

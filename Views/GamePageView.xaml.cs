@@ -16,6 +16,7 @@ using ControllerPlayground.Models;
 using ControllerPlayground.Navigation;
 using ControllerPlayground.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
+using System.Collections.ObjectModel;
 
 
 // To learn more about WinUI, the WinUI project structure,
@@ -23,6 +24,11 @@ using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace ControllerPlayground.Views {
     public sealed partial class GamePageView : UserControl {
+        public GamePageView() {
+            InitializeComponent();
+
+            Loaded += GamePageView_Loaded;
+        }
 
         internal void FocusInitialElement() {
             DispatcherQueue.TryEnqueue(() => {
@@ -239,10 +245,11 @@ namespace ControllerPlayground.Views {
             }
         }
 
-        public GamePageView() {
-            InitializeComponent();
+        public ObservableCollection<FriendActivityItem> RecentFriends { get; } = new();
 
-            Loaded += GamePageView_Loaded;
-        }
+        public ObservableCollection<FriendActivityItem> PlayedPreviouslyFriends { get; } = new();
+
+        public ObservableCollection<ActivityFeedItem> ActivityFeed { get; } = new();
+
     }
 }
