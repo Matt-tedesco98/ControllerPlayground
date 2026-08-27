@@ -24,6 +24,7 @@ namespace ControllerPlayground.Models {
         public bool SupportsXboxController { get; set; }
         public bool SupportsDualShock { get; set; }
         public bool SupportsDualSense { get; set; }
+        public GameActivityData ActivityData { get; set; } = new();
 
     }
 }

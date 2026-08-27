@@ -204,6 +204,31 @@ namespace ControllerPlayground.Views {
                 }
             };
 
+            GameItem forza = _gamesByTile[ForzaTile];
+
+            forza.ActivityData.RecentFriends.Add(new FriendActivityItem {
+                SteamId = "1",
+                DisplayName = "Friend 1",
+                RecentPlayTimeMinutes = 690
+            });
+
+            forza.ActivityData.RecentFriends.Add(new FriendActivityItem {
+                SteamId = "2",
+                DisplayName = "Friend 2",
+                RecentPlayTimeMinutes = 450
+            });
+
+            forza.ActivityData.PlayedPreviouslyFriends.Add(new FriendActivityItem {
+                SteamId = "3",
+                DisplayName = "Friend 3"
+            });
+
+            forza.ActivityData.ActivityFeed.Add(new ActivityFeedItem {
+                Title = "Game Update",
+                Subtitle = "SMALL UPDATE / PATCH NOTES",
+                PublishedAt = DateTimeOffset.Now
+            });
+
             GameMenu.ActionRequested += GameMenu_ActionRequested;
 
             Loaded += (_, _) => {

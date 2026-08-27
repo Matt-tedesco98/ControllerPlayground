@@ -31,7 +31,7 @@
             Background="#303030"
             Padding="16">
 
-                <ItemsControl ItemsSource="{x:Bind RecentFriends, Mode=OneWay}">
+                <ItemsControl ItemsSource="{x:Bind Data.RecentFriends, Mode=OneWay}">
 
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -56,7 +56,7 @@
             </Border>
 
             <ItemsControl
-            ItemsSource="{x:Bind PlayedPreviouslyFriends, Mode=OneWay}">
+            ItemsSource="{x:Bind Data.PlayedPreviouslyFriends, Mode=OneWay}">
 
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -104,7 +104,7 @@
             Margin="0,12,0,0"/>
 
             <ItemsControl
-            ItemsSource="{x:Bind ActivityFeed, Mode=OneWay}">
+            ItemsSource="{x:Bind Data.ActivityFeed, Mode=OneWay}">
 
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

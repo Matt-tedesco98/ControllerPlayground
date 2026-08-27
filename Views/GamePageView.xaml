@@ -135,7 +135,8 @@
 
                         <!-- Activity -->
                         <local:GameActivityView
-                            x:Name="ActivityContent"/>
+                            x:Name="ActivityContent"
+                            Data="{x:Bind Game.ActivityData, Mode=OneWay}"/>
 
                         <!-- Your Stuff -->
                         <Grid
