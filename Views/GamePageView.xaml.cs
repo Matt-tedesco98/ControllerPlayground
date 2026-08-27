@@ -16,7 +16,9 @@ using ControllerPlayground.Models;
 using ControllerPlayground.Navigation;
 using ControllerPlayground.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
-using System.Collections.ObjectModel;
+using ControllerPlayground.Services;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 
 // To learn more about WinUI, the WinUI project structure,
@@ -29,6 +31,8 @@ namespace ControllerPlayground.Views {
 
             Loaded += GamePageView_Loaded;
         }
+
+        public readonly ISteamService _steamService = new SteamService();
 
         internal void FocusInitialElement() {
             DispatcherQueue.TryEnqueue(() => {
@@ -95,6 +99,7 @@ namespace ControllerPlayground.Views {
             if (game == null) {
                 HeroImage = null;
                 CoverImage = null;
+                return;
             }
 
             if (!string.IsNullOrWhiteSpace(game.HeroImagePath)) {
@@ -216,6 +221,7 @@ namespace ControllerPlayground.Views {
             } else {
                 GetSelectedTabButton().Focus(FocusState.Programmatic);
             }
+            _ = LoadSteamServiceAsync();
         }
 
         private void PageActionButton_GotFocus(object sender, RoutedEventArgs e) {
@@ -245,11 +251,22 @@ namespace ControllerPlayground.Views {
             }
         }
 
-        public ObservableCollection<FriendActivityItem> RecentFriends { get; } = new();
+        private async Task LoadSteamServiceAsync() { 
+            uint? appId = Game?.SteamAppId;
 
-        public ObservableCollection<FriendActivityItem> PlayedPreviouslyFriends { get; } = new();
+            if (appId == null) 
+                return;
 
-        public ObservableCollection<ActivityFeedItem> ActivityFeed { get; } = new();
+            var items = await _steamService.GetGameActivityAsync(appId.Value);
+
+            Game.ActivityData.ActivityFeed.Clear();
+
+            foreach (ActivityFeedItem item in items) {
+                Game.ActivityData.ActivityFeed.Add(item);
+            }
+
+            Debug.WriteLine($"Steam returned {items.Count} news items.");
+        }
 
     }
 }

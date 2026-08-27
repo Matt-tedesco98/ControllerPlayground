@@ -25,6 +25,7 @@ namespace ControllerPlayground.Models {
         public bool SupportsDualShock { get; set; }
         public bool SupportsDualSense { get; set; }
         public GameActivityData ActivityData { get; set; } = new();
+        public uint? SteamAppId { get; set; }
 
     }
 }

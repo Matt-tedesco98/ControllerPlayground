@@ -181,6 +181,7 @@ namespace ControllerPlayground.Views {
 
                 [ForzaTile] = new GameItem {
                     Title = "Forza Horizon 5",
+                    SteamAppId = 1551360,
                     HeroImagePath = "ms-appx:///Assets/Games/Forza/Hero.jpg",
                     CoverImagePath = "ms-appx:///Assets/Games/Forza/Cover.jpg",
                     Genres = new()
@@ -221,12 +222,6 @@ namespace ControllerPlayground.Views {
             forza.ActivityData.PlayedPreviouslyFriends.Add(new FriendActivityItem {
                 SteamId = "3",
                 DisplayName = "Friend 3"
-            });
-
-            forza.ActivityData.ActivityFeed.Add(new ActivityFeedItem {
-                Title = "Game Update",
-                Subtitle = "SMALL UPDATE / PATCH NOTES",
-                PublishedAt = DateTimeOffset.Now
             });
 
             GameMenu.ActionRequested += GameMenu_ActionRequested;
