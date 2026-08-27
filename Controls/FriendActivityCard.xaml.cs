@@ -33,15 +33,15 @@ namespace ControllerPlayground.Controls {
             new PropertyMetadata(null, OnItemChanged)
         );
 
-        private static void OnItemChanged( DependencyObject d, DependencyPropertyChangedEventArgs e) {
+        private static void OnItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             if (d is FriendActivityCard card) {
                 card.UpdateVisuals();
             }
         }
 
-        private void UpdateVisuals() {
+        private async void UpdateVisuals() {
             FriendActivityItem? item = Item;
-            if (item == null) { 
+            if (item == null) {
                 FriendNameText.Text = string.Empty;
                 PlayTimeText.Text = string.Empty;
                 AvatarImage.Source = null;
@@ -53,9 +53,25 @@ namespace ControllerPlayground.Controls {
 
             PlayTimeText.Text = $"{hours:F1} hours played recently";
 
-            AvatarImage.Source = string.IsNullOrWhiteSpace(item.AvatarUrl)
-                ? null 
-                : new BitmapImage(new Uri(item.AvatarUrl));
-        }
+            if (string.IsNullOrWhiteSpace(item.AvatarUrl)) {
+                AvatarImage.Source = null;
+            } else if (File.Exists(item.AvatarUrl)) {
+                using FileStream stream = File.OpenRead(item.AvatarUrl);
+
+                BitmapImage bitmap = new();
+
+                await bitmap.SetSourceAsync(
+                    stream.AsRandomAccessStream());
+
+                AvatarImage.Source = bitmap;
+            } else if (Uri.TryCreate(
+                           item.AvatarUrl,
+                           UriKind.Absolute,
+                           out Uri? avatarUri)) {
+                AvatarImage.Source = new BitmapImage(avatarUri);
+            } else {
+                AvatarImage.Source = null;
+            }
+        } 
     }
 }

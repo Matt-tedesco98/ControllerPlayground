@@ -22,7 +22,18 @@
             <overlays:GuideMenu
                 x:Name="GuideMenu"/>
         </Grid>
-        
+
+        <Grid
+            x:Name="FriendsOverlayLayer"
+            Visibility="Collapsed"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
+
+            <overlays:FriendsOverlay
+                x:Name="FriendsOverlay" />
+
+        </Grid>
+
     </Grid>
 
 </Window>

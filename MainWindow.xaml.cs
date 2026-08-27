@@ -9,18 +9,12 @@ using ControllerPlayground.Views;
 using Microsoft.UI.Xaml.Controls;
 using ControllerPlayground.Overlays;
 using ControllerPlayground.Models;
+using ControllerPlayground.Services;
+using System.Threading.Tasks;
 
 namespace ControllerPlayground;
 
 public sealed partial class MainWindow : Window {
-    private readonly DispatcherTimer _controllerTimer = new();
-    private readonly ControllerService _controllerService = new();
-
-    // Views
-    private readonly HomeView _homeView = new();
-    private readonly SettingsView _settingsView = new();
-    private readonly GamePageView _GamePageView = new();
-
     public MainWindow() {
         InitializeComponent();
 
@@ -48,20 +42,33 @@ public sealed partial class MainWindow : Window {
         _controllerTimer.Start();
 
         Activated += (_, _) => { PlayArea.Focus(FocusState.Programmatic); };
+
+        _ = LoadFriendsAsync();
     }
+
+    private readonly DispatcherTimer _controllerTimer = new();
+    private readonly ControllerService _controllerService = new();
+
+    private bool _isFriendsOpen;
+
+    // Views
+    private readonly HomeView _homeView = new();
+    private readonly SettingsView _settingsView = new();
+    private readonly GamePageView _GamePageView = new();
 
     private void ControllerTimer_Tick(object? sender, object e) {
         ControllerAction action = _controllerService.PollAction();
         if (action == ControllerAction.none) {
             return;
         }
+        // guide button overlay
         if (action == ControllerAction.Guide) {
             System.Diagnostics.Debug.WriteLine("Guide requested");
             ToggleGuide();
             return;
         }
         if (_isGuideOpen) {
-            if (action == ControllerAction.Back) {
+            if (action == ControllerAction.Back || action == ControllerAction.Guide) {
                 ToggleGuide();
                 return;
             }
@@ -69,6 +76,19 @@ public sealed partial class MainWindow : Window {
             GuideMenu.HandleControllerAction(action);
             return;
         }
+        // friends overlay
+        if (action == ControllerAction.View) {
+            ToggleFriendsOverlay();
+            return;
+        }
+        if(_isFriendsOpen) {
+            if (action == ControllerAction.Back || action == ControllerAction.View) {
+                CloseFriendsOverlay();
+                return;
+            }
+        }
+
+
         switch (_currentScreen) {
             case AppScreen.Home:
                 _homeView.HandleControllerAction(action);
@@ -141,5 +161,28 @@ public sealed partial class MainWindow : Window {
         _GamePageView.Game = game;
         _GamePageView.SelectedTab= tab;
         NavigateTo(AppScreen.GamePage);
+    }
+
+    private readonly ISteamLocalService _steamLocalService = new SteamLocalService();
+
+    private async Task LoadFriendsAsync() { 
+        var friends = await _steamLocalService.GetFriendsAsync();
+
+        FriendsOverlay.Friends.Clear();
+
+        foreach (var friend in friends) { 
+            FriendsOverlay.Friends.Add(friend);
+        }
+    }
+
+    private void ToggleFriendsOverlay() {
+        _isFriendsOpen = !_isFriendsOpen;
+
+        FriendsOverlayLayer.Visibility = _isFriendsOpen ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void CloseFriendsOverlay() { 
+        _isFriendsOpen = false;
+        FriendsOverlayLayer.Visibility = Visibility.Collapsed;
     }
 }

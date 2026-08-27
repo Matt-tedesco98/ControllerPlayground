@@ -215,13 +215,58 @@ namespace ControllerPlayground.Views {
             }
         }
 
-        private void GamePageView_Loaded(object sender, RoutedEventArgs e) {
+        private async void GamePageView_Loaded(object sender, RoutedEventArgs e) {
             if (SelectedTab == GamePageTab.Activity) {
                 PlayButton.Focus(FocusState.Programmatic);
             } else {
                 GetSelectedTabButton().Focus(FocusState.Programmatic);
             }
             _ = LoadSteamServiceAsync();
+
+            SteamLocalService localSteam = new();
+
+            Debug.WriteLine($"Steam install path: {localSteam.GetSteamInstallPath()}");
+
+            Debug.WriteLine($"Steam active user: {localSteam.GetActiveUserId()}");
+
+            string? configPath = localSteam.GetActiveUserConfigPath();
+
+            Debug.WriteLine($"Steam local config: {configPath}");
+            Debug.WriteLine($"Config exists: {File.Exists(configPath)}");
+
+            Debug.WriteLine($"SteamID64: {localSteam.GetActiveSteamId64()}");
+
+
+            if (configPath != null && File.Exists(configPath)) {
+                VdfNode root = VdfParser.ParseFile(configPath);
+
+                foreach (string key in root.Children.Keys) {
+                    Debug.WriteLine($"VDF root: {key}");
+                }
+
+                if (root.TryGetChild("UserLocalConfigStore", out VdfNode? userConfig) &&
+    userConfig != null &&
+    userConfig.TryGetChild("friends", out VdfNode? friends1) && friends1 != null) {
+                    Debug.WriteLine($"Friend entries: {friends1.Children.Count}");
+
+                    foreach (var friend in friends1.Children.Take(3)) {
+                        Debug.WriteLine($"Friend ID: {friend.Key}");
+
+                        foreach (string field in friend.Value.Children.Keys) {
+                            Debug.WriteLine($"  Field: {field}");
+                        }
+                    }
+                }
+            }
+
+            var friends = await localSteam.GetFriendsAsync();
+
+            Debug.WriteLine($"Local Steam friends: {friends.Count}");
+
+            foreach (SteamFriend friend in friends.Take(5)) {
+                Debug.WriteLine($"Friend: {friend.DisplayName} ({friend.SteamId})");
+                Debug.WriteLine($"Friend: {friend.DisplayName} | Avatar: {friend.AvatarUrl}");
+            }
         }
 
         private void PageActionButton_GotFocus(object sender, RoutedEventArgs e) {
@@ -251,10 +296,10 @@ namespace ControllerPlayground.Views {
             }
         }
 
-        private async Task LoadSteamServiceAsync() { 
+        private async Task LoadSteamServiceAsync() {
             uint? appId = Game?.SteamAppId;
 
-            if (appId == null) 
+            if (appId == null)
                 return;
 
             var items = await _steamService.GetGameActivityAsync(appId.Value);
