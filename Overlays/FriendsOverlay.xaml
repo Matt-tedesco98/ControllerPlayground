@@ -11,6 +11,7 @@
     mc:Ignorable="d">
 
     <Grid
+        x:Name="OverlayRoot"
         Background="#111820"
         Width="420"
         HorizontalAlignment="Right">
@@ -23,6 +24,7 @@
                 FontWeight="SemiBold"/>
 
             <ItemsControl
+                x:Name="FriendsList"
                 ItemsSource="{x:Bind Friends, Mode=OneWay}">
 
                 <ItemsControl.ItemTemplate>

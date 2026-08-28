@@ -86,6 +86,8 @@ public sealed partial class MainWindow : Window {
                 CloseFriendsOverlay();
                 return;
             }
+            FriendsOverlay.HandleControllerAction(action);
+            return;
         }
 
 
@@ -178,11 +180,18 @@ public sealed partial class MainWindow : Window {
     private void ToggleFriendsOverlay() {
         _isFriendsOpen = !_isFriendsOpen;
 
-        FriendsOverlayLayer.Visibility = _isFriendsOpen ? Visibility.Visible : Visibility.Collapsed;
+        if (_isFriendsOpen) {
+            FriendsOverlayLayer.Visibility = Visibility.Visible;
+            FriendsOverlay.FocusFirstItem();
+        } else { 
+            FriendsOverlayLayer.Visibility = Visibility.Collapsed;
+            _homeView.RestoreFocus();
+        }
     }
 
     private void CloseFriendsOverlay() { 
         _isFriendsOpen = false;
         FriendsOverlayLayer.Visibility = Visibility.Collapsed;
+        _homeView.RestoreFocus();
     }
 }

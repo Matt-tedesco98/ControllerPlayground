@@ -14,6 +14,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using ControllerPlayground.Models;
 using System.Collections.ObjectModel;
+using ControllerPlayground.Input;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -25,5 +26,32 @@ namespace ControllerPlayground.Overlays {
         }
 
         public ObservableCollection<SteamFriend> Friends { get; } = new();
+
+        internal void FocusFirstItem() { 
+            void OnLayoutUpdated(Object? sender, Object e) { 
+                FriendsList.LayoutUpdated -= OnLayoutUpdated;
+
+                if (FocusManager.FindFirstFocusableElement(FriendsList) is Control control) {
+                    control.Focus(FocusState.Keyboard);
+                }
+            }
+            FriendsList.LayoutUpdated += OnLayoutUpdated;
+        }
+
+        internal void HandleControllerAction(ControllerAction action) { 
+            FocusNavigationDirection? direction = action switch {
+                ControllerAction.NavigateUp => FocusNavigationDirection.Up,
+                ControllerAction.NavigateDown => FocusNavigationDirection.Down,
+                ControllerAction.NavigateLeft => FocusNavigationDirection.Left,
+                ControllerAction.NavigateRight => FocusNavigationDirection.Right,
+                _ => null
+            };
+
+            if (direction == null) { 
+                return; 
+            }
+
+            FocusManager.TryMoveFocus(direction.Value, new FindNextElementOptions { SearchRoot = OverlayRoot });
+        }
     }
 }
