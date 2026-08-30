@@ -14,6 +14,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using ControllerPlayground.Models;
+using System.Collections.ObjectModel;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -22,7 +23,23 @@ namespace ControllerPlayground.Overlays {
     public sealed partial class FriendChatPane : UserControl {
         public FriendChatPane() {
             InitializeComponent();
+
+            Messages.Add(new SteamChatMessage {
+                SteamId = "friend",
+                Text = "Hey, want to play something?",
+                Timestamp = DateTimeOffset.Now,
+                IsFromCurrentUser = false
+            });
+
+            Messages.Add(new SteamChatMessage {
+                SteamId = "me",
+                Text = "Yeah, give me a minute.",
+                Timestamp = DateTimeOffset.Now,
+                IsFromCurrentUser = true
+            });
         }
+
+        public ObservableCollection<SteamChatMessage> Messages { get; } = new();
 
         public SteamFriend? Friend { 
             get => (SteamFriend?)GetValue(FriendProperty);
@@ -53,6 +70,24 @@ namespace ControllerPlayground.Overlays {
             AvatarImage.Source = string.IsNullOrWhiteSpace(friend.AvatarUrl)
                 ? null
                 : new BitmapImage(new Uri(friend.AvatarUrl));
+        }
+
+        private void SendButton_Click(object sender, RoutedEventArgs e) { 
+            string text = MessageInput.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(text)) {
+                return;
+            }
+
+            Messages.Add(new SteamChatMessage 
+            {
+                SteamId = "me",
+                Text = text,
+                Timestamp = DateTimeOffset.Now,
+                IsFromCurrentUser = true
+            });
+
+            MessageInput.Text = string.Empty;
         }
     }
 }
