@@ -9,6 +9,7 @@
     mc:Ignorable="d">
 
     <Button
+        x:Name="FriendButton"
         Width="260"
         Height="72"
         Padding="12"

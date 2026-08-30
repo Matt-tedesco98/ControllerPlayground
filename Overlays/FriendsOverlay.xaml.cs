@@ -15,6 +15,7 @@ using Windows.Foundation.Collections;
 using ControllerPlayground.Models;
 using System.Collections.ObjectModel;
 using ControllerPlayground.Input;
+using ControllerPlayground.Controls;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -38,7 +39,15 @@ namespace ControllerPlayground.Overlays {
             FriendsList.LayoutUpdated += OnLayoutUpdated;
         }
 
-        internal void HandleControllerAction(ControllerAction action) { 
+        internal void HandleControllerAction(ControllerAction action) {
+
+            if (action == ControllerAction.Accept) { 
+                DependencyObject? focused = FocusManager.GetFocusedElement(XamlRoot) as DependencyObject;
+                SteamFriendCard? card = FindAncestor<SteamFriendCard>(focused);
+                card?.Activate();
+                return;
+            }
+
             FocusNavigationDirection? direction = action switch {
                 ControllerAction.NavigateUp => FocusNavigationDirection.Up,
                 ControllerAction.NavigateDown => FocusNavigationDirection.Down,
@@ -52,6 +61,23 @@ namespace ControllerPlayground.Overlays {
             }
 
             FocusManager.TryMoveFocus(direction.Value, new FindNextElementOptions { SearchRoot = OverlayRoot });
+        }
+
+        internal event Action<SteamFriend>? FriendSelected;
+
+        private void FriendCard_Activated(object? sender, EventArgs e) { 
+            if(sender is SteamFriendCard card && card.Item is SteamFriend friend) {
+                FriendSelected?.Invoke(friend);
+            }
+        }
+
+        private static T? FindAncestor<T>(DependencyObject? element) where T : DependencyObject {
+            while (element != null) {
+                if (element is T match)
+                    return match;
+                element = VisualTreeHelper.GetParent(element);
+            }
+            return null;
         }
     }
 }

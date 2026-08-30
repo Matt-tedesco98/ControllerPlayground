@@ -31,7 +31,8 @@
                     <DataTemplate x:DataType="models:SteamFriend">
 
                         <Control:SteamFriendCard
-                            Item="{x:Bind}"/>
+                            Item="{x:Bind}"
+                            Activated="FriendCard_Activated"/>
 
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

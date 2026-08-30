@@ -55,5 +55,11 @@ namespace ControllerPlayground.Controls {
 
             AvatarImage.Source = string.IsNullOrWhiteSpace(item.AvatarUrl) ?null : new BitmapImage(new Uri(item.AvatarUrl));
         }
-     }
+
+        public event EventHandler? Activated;
+
+        public void Activate() { 
+            Activated?.Invoke(this, EventArgs.Empty);
+        }
+    }
 }
