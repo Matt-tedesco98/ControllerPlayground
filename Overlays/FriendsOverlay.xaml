@@ -15,8 +15,18 @@
         Background="#111820"
         Width="420"
         HorizontalAlignment="Right">
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="420"/>
+            <ColumnDefinition Width="420"/>
+        </Grid.ColumnDefinitions>
         
-        <StackPanel Margin="24" Spacing="16">
+        
+        <!-- Friends List -->
+        <StackPanel 
+            Grid.Column="0"
+            Margin="24" 
+            Spacing="16">
 
             <TextBlock
                 Text="Friends"
@@ -33,13 +43,20 @@
                         <Control:SteamFriendCard
                             Item="{x:Bind}"
                             Activated="FriendCard_Activated"/>
-
+                        
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
 
             </ItemsControl>
 
+
         </StackPanel>
+        
+        <!-- Chat Pane -->
+            <local:FriendChatPane
+                x:Name="ChatPane"
+                Grid.Column="1"
+                Visibility="Collapsed"/>
         
     </Grid>
     

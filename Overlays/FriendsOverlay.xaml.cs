@@ -67,6 +67,14 @@ namespace ControllerPlayground.Overlays {
 
         private void FriendCard_Activated(object? sender, EventArgs e) { 
             if(sender is SteamFriendCard card && card.Item is SteamFriend friend) {
+
+                _lastFocusedCard = card;
+
+                ChatPane.Friend = friend;
+                ChatPane.Visibility = Visibility.Visible;
+
+                OverlayRoot.Width = 840;
+
                 FriendSelected?.Invoke(friend);
             }
         }
@@ -78,6 +86,20 @@ namespace ControllerPlayground.Overlays {
                 element = VisualTreeHelper.GetParent(element);
             }
             return null;
+        }
+
+        internal bool IsChatOpen => ChatPane.Visibility == Visibility.Visible;
+
+        internal void CloseChatPane() { 
+            ChatPane.Visibility = Visibility.Collapsed;
+            ChatPane.Friend = null;
+            OverlayRoot.Width = 420;
+        }
+
+        private SteamFriendCard? _lastFocusedCard;
+
+        internal void RestoreFriendFocus() { 
+            _lastFocusedCard?.Focus(FocusState.Keyboard);
         }
     }
 }

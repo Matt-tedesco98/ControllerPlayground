@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="ControllerPlayground.Overlays.FriendChatPane"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ControllerPlayground.Overlays"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid
+        Width="420"
+        Background="#18222C">
+        
+        <StackPanel
+            Margin="24"
+            Spacing="16">
+            
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="12">
+
+                <Border
+                    Width="48"
+                    Height="48"
+                    CornerRadius="6"
+                    Background="#505050">
+                    
+                    <Image
+                        x:Name="AvatarImage"
+                        Stretch="UniformToFill"/>
+                    
+                </Border>
+                
+                <TextBlock
+                    x:Name="FriendNameText"
+                    FontSize="22"
+                    FontWeight="SemiBold"
+                    VerticalAlignment="Center"/>
+
+            </StackPanel>
+            
+            <TextBlock
+                Text="Chat"
+                FontSize="18"
+                Opacity="0.6"/>
+
+        </StackPanel>
+        
+    </Grid>
+    
+</UserControl>

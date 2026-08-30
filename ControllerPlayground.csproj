@@ -20,6 +20,7 @@
 	  <None Remove="Controls\FriendActivityCard.xaml" />
 	  <None Remove="Controls\PlayedFriendAvatar.xaml" />
 	  <None Remove="Controls\SteamFriendCard.xaml" />
+	  <None Remove="Overlays\FriendChatPane.xaml" />
 	  <None Remove="Overlays\FriendsOverlay.xaml" />
 	  <None Remove="Overlays\GameContextMenu.xaml" />
 	  <None Remove="Overlays\GuideMenu.xaml" />
@@ -106,6 +107,12 @@
 	<ItemGroup>
 	  <Folder Include="Assets\ControllerGlyphs\Playstation\" />
 	  <Folder Include="Assets\ControllerGlyphs\Xbox\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Overlays\FriendChatPane.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 
 	<ItemGroup>

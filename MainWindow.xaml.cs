@@ -82,8 +82,19 @@ public sealed partial class MainWindow : Window {
             return;
         }
         if(_isFriendsOpen) {
-            if (action == ControllerAction.Back || action == ControllerAction.View) {
-                CloseFriendsOverlay();
+            if (action == ControllerAction.Back) {
+                if (FriendsOverlay.IsChatOpen) {
+                    FriendsOverlay.CloseChatPane();
+                    FriendsOverlay.RestoreFriendFocus();
+
+                } else { 
+                    CloseFriendsOverlay();
+                }
+                return;
+            }
+
+            if (action == ControllerAction.View) {
+                ToggleFriendsOverlay();
                 return;
             }
             FriendsOverlay.HandleControllerAction(action);
