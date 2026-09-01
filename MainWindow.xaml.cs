@@ -44,10 +44,13 @@ public sealed partial class MainWindow : Window {
         Activated += (_, _) => { PlayArea.Focus(FocusState.Programmatic); };
 
         _ = LoadFriendsAsync();
+
+        _steamSessionService.Connect();
     }
 
     private readonly DispatcherTimer _controllerTimer = new();
     private readonly ControllerService _controllerService = new();
+    private readonly ISteamSessionService _steamSessionService = new SteamSessionService();
 
     private bool _isFriendsOpen;
 

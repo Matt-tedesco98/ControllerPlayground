@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace ControllerPlayground.Services {
     public interface ISteamSessionService {
@@ -10,7 +11,13 @@ namespace ControllerPlayground.Services {
         bool IsConnected { get; }
         bool IsAuthenticated { get; }
 
+        event Action<string> QrChallengeChanged;
+        event Action? Connected;
+
         void Connect();
         void Disconnect();
+
+        Task BeginQrAuthenticationAsync(CancellationToken cancellationToken = default);
+
     }
 }
