@@ -16,6 +16,7 @@ using ControllerPlayground.Models;
 using System.Collections.ObjectModel;
 using ControllerPlayground.Input;
 using ControllerPlayground.Controls;
+using ControllerPlayground.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -24,6 +25,7 @@ namespace ControllerPlayground.Overlays {
     public sealed partial class FriendsOverlay : UserControl {
         public FriendsOverlay() {
             InitializeComponent();
+            ChatPane.SendRequested += ChatPane_SendRequested;
         }
 
         public ObservableCollection<SteamFriend> Friends { get; } = new();
@@ -100,6 +102,15 @@ namespace ControllerPlayground.Overlays {
 
         internal void RestoreFriendFocus() { 
             _lastFocusedCard?.Focus(FocusState.Keyboard);
+        }
+
+        private readonly ISteamChatService _chatService = new SteamChatService();
+
+        private async void ChatPane_SendRequested(SteamFriend friend, string text) { 
+            bool sent = await _chatService.SendMessageAsync(friend.SteamId, text);
+            if (sent) { 
+                ChatPane.ConfirmMessageSent(text);
+            }
         }
     }
 }

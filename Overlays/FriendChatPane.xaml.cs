@@ -21,6 +21,8 @@ using System.Collections.ObjectModel;
 
 namespace ControllerPlayground.Overlays {
     public sealed partial class FriendChatPane : UserControl {
+
+        internal event Action<SteamFriend, string>? SendRequested;
         public FriendChatPane() {
             InitializeComponent();
 
@@ -73,15 +75,24 @@ namespace ControllerPlayground.Overlays {
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e) { 
+            SteamFriend? friend = Friend;
             string text = MessageInput.Text.Trim();
 
-            if (string.IsNullOrWhiteSpace(text)) {
+            if (friend == null || string.IsNullOrWhiteSpace(text)) {
                 return;
             }
 
-            Messages.Add(new SteamChatMessage 
-            {
-                SteamId = "me",
+            SendRequested?.Invoke(friend, text);
+        }
+
+        internal void ConfirmMessageSent(string text) { 
+            SteamFriend? friend = Friend;
+
+            if (friend == null)
+                return;
+
+            Messages.Add(new SteamChatMessage {
+                SteamId = friend.SteamId,
                 Text = text,
                 Timestamp = DateTimeOffset.Now,
                 IsFromCurrentUser = true
