@@ -13,6 +13,7 @@ namespace ControllerPlayground.Services {
 
         event Action<string> QrChallengeChanged;
         event Action? Connected;
+        event Action? Authenticated;
 
         void Connect();
         void Disconnect();

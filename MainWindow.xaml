@@ -34,6 +34,17 @@
 
         </Grid>
 
+        <Grid
+            x:Name="SteamQrOverlayLayer"
+            Visibility="Collapsed"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
+            
+            <overlays:SteamQrLoginOverlay
+                x:Name="SteamQrLoginOverlay" />
+
+        </Grid>
+
     </Grid>
 
 </Window>

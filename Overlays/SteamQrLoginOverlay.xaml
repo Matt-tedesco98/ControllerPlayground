@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="ControllerPlayground.Overlays.SteamQrLoginOverlay"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ControllerPlayground.Overlays"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="#CC101820">
+
+        <Border
+            Width="420"
+            Padding="32"
+            CornerRadius="12"
+            Background="#18222C"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+
+            <StackPanel
+                Spacing="20"
+                HorizontalAlignment="Center">
+
+                <TextBlock
+                    Text="Sign In to Steam"
+                    FontSize="28"
+                    FontWeight="SemiBold"
+                    HorizontalAlignment="Center"/>
+
+                <Image
+                    x:Name="QrImage"
+                    Width="260"
+                    Height="260"/>
+                
+                <TextBlock
+                    Text="Scan the QR code with your Steam mobile app to sign in."
+                    FontSize="16"
+                    HorizontalAlignment="Center"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap"/>
+
+                <TextBlock
+                    x:Name="StatusText"
+                    Text="Waiting for Steam..."
+                    FontSize="14"
+                    HorizontalAlignment="Center"/>
+
+            </StackPanel>
+            
+        </Border>
+
+    </Grid>
+    
+</UserControl>

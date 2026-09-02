@@ -11,6 +11,7 @@ using ControllerPlayground.Overlays;
 using ControllerPlayground.Models;
 using ControllerPlayground.Services;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace ControllerPlayground;
 
@@ -44,6 +45,12 @@ public sealed partial class MainWindow : Window {
         Activated += (_, _) => { PlayArea.Focus(FocusState.Programmatic); };
 
         _ = LoadFriendsAsync();
+
+        _steamSessionService.Connected += SteamSessionService_Connected;
+
+        _steamSessionService.QrChallengeChanged += SteamSessionService_QrChallengeChanged;
+
+        _steamSessionService.Authenticated += SteamSessionService_Authenticated;
 
         _steamSessionService.Connect();
     }
@@ -207,5 +214,27 @@ public sealed partial class MainWindow : Window {
         _isFriendsOpen = false;
         FriendsOverlayLayer.Visibility = Visibility.Collapsed;
         _homeView.RestoreFocus();
+    }
+
+    private async void SteamSessionService_Connected() {
+        try {
+            await _steamSessionService.BeginQrAuthenticationAsync();
+        } catch(Exception ex) { 
+            Debug.WriteLine($"Steam QR Authentication failed: {ex}");
+        }
+    }
+
+    private void SteamSessionService_QrChallengeChanged(string challangeUrl) {
+        DispatcherQueue.TryEnqueue(async () => {
+            SteamQrOverlayLayer.Visibility = Visibility.Visible;
+            await SteamQrLoginOverlay.SetChallangeUrlAsync(challangeUrl);
+        });
+        Debug.WriteLine($"Steam QR Challenge changed: {challangeUrl}");
+    }
+
+    private void SteamSessionService_Authenticated() {
+        DispatcherQueue.TryEnqueue(() => {
+            SteamQrOverlayLayer.Visibility = Visibility.Collapsed;
+        });
     }
 }

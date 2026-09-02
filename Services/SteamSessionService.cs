@@ -1,12 +1,13 @@
-﻿using System;
+﻿using SteamKit2;
+using SteamKit2.Authentication;
+using SteamKit2.Internal;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
-using SteamKit2;
-using SteamKit2.Authentication;
-using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace ControllerPlayground.Services {
     public sealed class SteamSessionService : ISteamSessionService {
@@ -22,6 +23,7 @@ namespace ControllerPlayground.Services {
 
         public event Action? Connected;
         public event Action<string>? QrChallengeChanged;
+        public event Action? Authenticated;
 
         public SteamSessionService() {
             _steamClient = new SteamClient();
@@ -77,7 +79,10 @@ namespace ControllerPlayground.Services {
             IsConnected = false;
             IsAuthenticated = false;
 
-            Debug.WriteLine("SteamKit disconnected");
+            Debug.WriteLine($"SteamKit disconnected. User initiated: {callback.UserInitiated}");
+
+            if (!callback.UserInitiated)
+                _ = ReconnectAsync();
         }
 
         public async Task BeginQrAuthenticationAsync(CancellationToken cancellationToken = default) {
@@ -104,8 +109,10 @@ namespace ControllerPlayground.Services {
             _steamUser.LogOn(
                 new SteamUser.LogOnDetails {
                     Username = result.AccountName,
-                    AccessToken = result.AccessToken,
+                    AccessToken = result.RefreshToken,
                     ShouldRememberPassword = true,
+                    // Unique Steam session ID for ControllerPlayground.
+                    LoginID = 0x435047
                 });
 
         }
@@ -114,10 +121,21 @@ namespace ControllerPlayground.Services {
             if (callback.Result == EResult.OK) {
                 IsAuthenticated = true;
                 Debug.WriteLine($"SteamKit logged on as {_steamClient.SteamID}");
+                Authenticated?.Invoke();
             } else {
                 IsAuthenticated = false;
                 Debug.WriteLine($"SteamKit logon failed: {callback.Result}");
             }
+        }
+
+        private async Task ReconnectAsync() { 
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            if (!IsConnected) {
+                Debug.WriteLine("SteamKit Reconnecting to another CM...");
+                _steamClient.Connect();
+            }
+
         }
     }
 }
