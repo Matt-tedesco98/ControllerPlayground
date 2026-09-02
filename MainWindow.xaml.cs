@@ -53,12 +53,16 @@ public sealed partial class MainWindow : Window {
         _steamSessionService.Authenticated += SteamSessionService_Authenticated;
 
         _steamSessionService.Connect();
+
+        _steamChatService = new SteamChatService(_steamSessionService);
+
+        FriendsOverlay.ChatService = _steamChatService;
     }
 
     private readonly DispatcherTimer _controllerTimer = new();
     private readonly ControllerService _controllerService = new();
-    private readonly ISteamSessionService _steamSessionService = new SteamSessionService();
-
+    private readonly SteamSessionService _steamSessionService = new();
+    private readonly ISteamChatService _steamChatService;
     private bool _isFriendsOpen;
 
     // Views

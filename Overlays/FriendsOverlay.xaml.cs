@@ -1,3 +1,7 @@
+using ControllerPlayground.Controls;
+using ControllerPlayground.Input;
+using ControllerPlayground.Models;
+using ControllerPlayground.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -7,16 +11,13 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using ControllerPlayground.Models;
-using System.Collections.ObjectModel;
-using ControllerPlayground.Input;
-using ControllerPlayground.Controls;
-using ControllerPlayground.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -104,13 +105,37 @@ namespace ControllerPlayground.Overlays {
             _lastFocusedCard?.Focus(FocusState.Keyboard);
         }
 
-        private readonly ISteamChatService _chatService = new SteamChatService();
+        private ISteamChatService? _chatService;
+        internal ISteamChatService? ChatService {
+            get => _chatService;
+
+            set {
+                if (_chatService != null) { 
+                    _chatService.MessageReceived -= ChatService_MessageReceived;
+                }
+                _chatService = value;
+                if (_chatService != null) { 
+                    _chatService.MessageReceived += ChatService_MessageReceived;
+                }
+            }
+        }
 
         private async void ChatPane_SendRequested(SteamFriend friend, string text) { 
-            bool sent = await _chatService.SendMessageAsync(friend.SteamId, text);
+            if (ChatService == null)
+                return;
+            bool sent = await ChatService.SendMessageAsync(friend.SteamId, text);
             if (sent) { 
                 ChatPane.ConfirmMessageSent(text);
             }
+        }
+
+        private void ChatService_MessageReceived(SteamChatMessage message) {
+            Debug.WriteLine($"FriendsOverlay received message from {message.SteamId}");
+
+            DispatcherQueue.TryEnqueue(() => {
+                Debug.WriteLine("FriendsOverlay dispatching message to chat pane");
+                ChatPane.AddReceivedMessage(message);
+            });
         }
     }
 }

@@ -15,6 +15,7 @@ namespace ControllerPlayground.Services {
         private readonly SteamClient _steamClient;
         private readonly CallbackManager _callbackManager;
         private readonly SteamUser _steamUser;
+        private readonly SteamFriends _steamFriends;
 
         private CancellationTokenSource _callbackCancellation;
 
@@ -25,10 +26,15 @@ namespace ControllerPlayground.Services {
         public event Action<string>? QrChallengeChanged;
         public event Action? Authenticated;
 
+        internal SteamFriends FriendsHandler => _steamFriends;
+        internal CallbackManager CallbackManager => _callbackManager;
+
         public SteamSessionService() {
             _steamClient = new SteamClient();
 
             _steamUser = _steamClient.GetHandler<SteamUser>() ?? throw new InvalidOperationException("SteamUser handler was not found");
+
+            _steamFriends = _steamClient.GetHandler<SteamFriends>() ?? throw new InvalidOperationException("SteamFriends handler was not found");
 
             _callbackManager = new CallbackManager(_steamClient);
 
@@ -38,8 +44,6 @@ namespace ControllerPlayground.Services {
 
             _callbackManager.Subscribe<SteamUser.LoggedOnCallback>(OnLoggedOn);
         }
-
-
 
         public void Connect() {
             if (IsConnected)
