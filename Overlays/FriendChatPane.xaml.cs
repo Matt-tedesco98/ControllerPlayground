@@ -86,19 +86,7 @@ namespace ControllerPlayground.Overlays {
             SendRequested?.Invoke(friend, text);
         }
 
-        internal void ConfirmMessageSent(string text) {
-            SteamFriend? friend = Friend;
-
-            if (friend == null)
-                return;
-
-            Messages.Add(new SteamChatMessage {
-                SteamId = friend.SteamId,
-                Text = text,
-                Timestamp = DateTimeOffset.Now,
-                IsFromCurrentUser = true
-            });
-
+        internal void ConfirmMessageSent() {
             MessageInput.Text = string.Empty;
         }
 
@@ -113,6 +101,13 @@ namespace ControllerPlayground.Overlays {
             }
 
             Messages.Add(message);
+        }
+
+        internal void ScrollToLastest() {
+            DispatcherQueue.TryEnqueue(() => {
+                MessagesScrollViewer.UpdateLayout();
+                MessagesScrollViewer.ChangeView(null, MessagesScrollViewer.ScrollableHeight, null, true);
+            });
         }
     }
 }

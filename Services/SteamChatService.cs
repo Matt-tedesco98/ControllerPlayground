@@ -15,12 +15,15 @@ namespace ControllerPlayground.Services {
             _session = session;
             _steamFriends = session.FriendsHandler;
             _session.CallbackManager.Subscribe<SteamFriends.FriendMsgCallback>(OnFriendMessage);
+            _session.CallbackManager.Subscribe<SteamFriends.FriendMsgHistoryCallback>(OnFriendMessageHistory);
         }
 
         private readonly SteamSessionService _session;
         private readonly SteamFriends _steamFriends;
+        private readonly Dictionary<string, List<SteamChatMessage>> _messagesByFriend = new();
 
         public event Action<SteamChatMessage>? MessageReceived;
+        public event Action<string>? MessageHistoryUpdated;
 
 
         public Task<bool> SendMessageAsync(
@@ -43,6 +46,13 @@ namespace ControllerPlayground.Services {
                 EChatEntryType.ChatMsg,
                 message);
 
+            StoreMessage(new SteamChatMessage {
+                SteamId = steamId,
+                Text = message,
+                Timestamp = DateTimeOffset.Now,
+                IsFromCurrentUser = true
+            });
+
             return Task.FromResult(true);
         }
 
@@ -61,7 +71,74 @@ namespace ControllerPlayground.Services {
 
             Debug.WriteLine($"Steam message received from {message.SteamId}: {message.Text}");
 
+            StoreMessage(message);
+
             MessageReceived?.Invoke(message);
+        }
+
+        public IReadOnlyList<SteamChatMessage> GetMessages(string steamId) { 
+            if(_messagesByFriend.TryGetValue(steamId, out List<SteamChatMessage>? messages)) {
+                return messages;
+            }
+            return Array.Empty<SteamChatMessage>();
+        }
+
+        private void StoreMessage(SteamChatMessage message) {
+            if (!_messagesByFriend.TryGetValue(message.SteamId, out List<SteamChatMessage>? messages)) { 
+                messages = new List<SteamChatMessage>();
+                _messagesByFriend[message.SteamId] = messages;
+            }
+            messages.Add(message);
+        }
+
+        public void RequestMessageHistory(string steamId) {
+            if (!_session.IsAuthenticated)
+                return;
+
+            if (!ulong.TryParse(steamId, out ulong steamId64))
+                return;
+
+            _steamFriends.RequestMessageHistory(new SteamID(steamId64));
+        }
+
+        private void OnFriendMessageHistory(SteamFriends.FriendMsgHistoryCallback callback) {
+
+            Debug.WriteLine(
+        $"Steam history result: {callback.Result}");
+
+            Debug.WriteLine(
+                $"Steam history friend: {callback.SteamID.ConvertToUInt64()}");
+
+            Debug.WriteLine(
+                $"Steam history messages: {callback.Messages.Count}");
+
+            foreach (var historyMessage in callback.Messages) {
+                Debug.WriteLine(
+                    $"History: {historyMessage.Timestamp} | " +
+                    $"{historyMessage.SteamID.ConvertToUInt64()} | " +
+                    $"{historyMessage.Message}");
+            }
+
+            if (callback.Result != EResult.OK)
+                return;
+
+            string friendSteamId = callback.SteamID.ConvertToUInt64().ToString();
+
+            List<SteamChatMessage> messages = new();
+
+            foreach (SteamFriends.FriendMsgHistoryCallback.FriendMessage historyMessage in callback.Messages) { 
+                string senderSteamId = historyMessage.SteamID.ConvertToUInt64().ToString();
+
+                messages.Add(new SteamChatMessage {
+                    SteamId = friendSteamId,
+                    Text = historyMessage.Message,
+                    Timestamp = new DateTimeOffset(historyMessage.Timestamp).ToLocalTime(),
+                    IsFromCurrentUser = senderSteamId != friendSteamId
+                });
+            }
+
+            _messagesByFriend[friendSteamId] = messages;
+            MessageHistoryUpdated?.Invoke(friendSteamId);
         }
     }
 }

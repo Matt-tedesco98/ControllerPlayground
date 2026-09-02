@@ -9,10 +9,15 @@ using System.Threading;
 namespace ControllerPlayground.Services {
     public interface ISteamChatService {
         event Action<SteamChatMessage> MessageReceived;
+        event Action<string>? MessageHistoryUpdated;
 
         Task<bool> SendMessageAsync(
             string steamId,
             string message,
             CancellationToken cancellationToken = default);
+
+        IReadOnlyList<SteamChatMessage> GetMessages(string steamId);
+
+        void RequestMessageHistory(string steamId);
     }
 }

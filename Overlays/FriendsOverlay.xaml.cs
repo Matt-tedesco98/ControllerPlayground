@@ -74,6 +74,17 @@ namespace ControllerPlayground.Overlays {
                 _lastFocusedCard = card;
 
                 ChatPane.Friend = friend;
+
+                ChatService?.RequestMessageHistory(friend.SteamId);
+
+                ChatPane.Messages.Clear();
+
+                if (ChatService != null) { 
+                    foreach (SteamChatMessage message in ChatService.GetMessages(friend.SteamId)) {
+                        ChatPane.Messages.Add(message);
+                    }
+                }
+
                 ChatPane.Visibility = Visibility.Visible;
 
                 OverlayRoot.Width = 840;
@@ -112,10 +123,12 @@ namespace ControllerPlayground.Overlays {
             set {
                 if (_chatService != null) { 
                     _chatService.MessageReceived -= ChatService_MessageReceived;
+                    _chatService.MessageHistoryUpdated -= ChatService_MessageHistoryUpdated;
                 }
                 _chatService = value;
                 if (_chatService != null) { 
                     _chatService.MessageReceived += ChatService_MessageReceived;
+                    _chatService.MessageHistoryUpdated += ChatService_MessageHistoryUpdated;
                 }
             }
         }
@@ -123,9 +136,18 @@ namespace ControllerPlayground.Overlays {
         private async void ChatPane_SendRequested(SteamFriend friend, string text) { 
             if (ChatService == null)
                 return;
+
             bool sent = await ChatService.SendMessageAsync(friend.SteamId, text);
-            if (sent) { 
-                ChatPane.ConfirmMessageSent(text);
+
+            if (!sent)
+                return;
+
+            ChatPane.ConfirmMessageSent();
+
+            ChatPane.Messages.Clear();
+
+            foreach (SteamChatMessage message in ChatService.GetMessages(friend.SteamId)) {
+                ChatPane.Messages.Add(message);
             }
         }
 
@@ -134,7 +156,36 @@ namespace ControllerPlayground.Overlays {
 
             DispatcherQueue.TryEnqueue(() => {
                 Debug.WriteLine("FriendsOverlay dispatching message to chat pane");
-                ChatPane.AddReceivedMessage(message);
+                SteamFriend? currentFriend = ChatPane.Friend;
+
+                if (currentFriend == null || currentFriend.SteamId != message.SteamId || ChatService == null) {
+                    return;
+                }
+
+                ChatPane.Messages.Clear();
+
+                foreach (SteamChatMessage storeMessage in ChatService.GetMessages(currentFriend.SteamId)) {
+                    ChatPane.Messages.Add(storeMessage);
+                }
+                ChatPane.ScrollToLastest();
+            });
+        }
+
+        private void ChatService_MessageHistoryUpdated(string steamId) {
+            DispatcherQueue.TryEnqueue(() => { 
+                SteamFriend? currentFriend = ChatPane.Friend;
+
+                if (currentFriend == null || currentFriend.SteamId != steamId || ChatService == null) {
+                    return;
+                }
+
+                ChatPane.Messages.Clear();
+
+                foreach (SteamChatMessage message in ChatService.GetMessages(currentFriend.SteamId)) {
+                    ChatPane.Messages.Add(message);
+                }
+
+                ChatPane.ScrollToLastest();
             });
         }
     }

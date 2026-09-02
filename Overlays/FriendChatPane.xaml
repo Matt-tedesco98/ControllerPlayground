@@ -42,25 +42,32 @@
 
             </StackPanel>
 
-            <ItemsControl
+            <ScrollViewer
+                x:Name="MessagesScrollViewer"
+                VerticalScrollBarVisibility="Auto"
+                HorizontalScrollBarVisibility="Disabled">
+
+                <ItemsControl
                 ItemsSource="{x:Bind Messages, Mode=OneWay}">
 
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Spacing="8"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="8"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
 
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="models:SteamChatMessage">
-                        
-                        <Control:SteamChatMessageBubble
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:SteamChatMessage">
+
+                            <Control:SteamChatMessageBubble
                             Item="{x:Bind}"/>
 
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+
+                </ItemsControl>
                 
-            </ItemsControl>
+            </ScrollViewer>
 
             <StackPanel
                 Orientation="Horizontal"
