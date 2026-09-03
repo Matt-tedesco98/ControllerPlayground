@@ -16,6 +16,10 @@ namespace ControllerPlayground.Services {
         private readonly CallbackManager _callbackManager;
         private readonly SteamUser _steamUser;
         private readonly SteamFriends _steamFriends;
+        private readonly SteamCredentialStore _credentialStore = new();
+
+        private bool _usingSavedCredentials;
+        public event Action? SavedAuthenticationFailed;
 
         private CancellationTokenSource _callbackCancellation;
 
@@ -90,6 +94,7 @@ namespace ControllerPlayground.Services {
         }
 
         public async Task BeginQrAuthenticationAsync(CancellationToken cancellationToken = default) {
+            _usingSavedCredentials = false;
             if (!IsConnected) { 
                 throw new InvalidOperationException("Steam must be connected before starting authentication");
             }
@@ -110,6 +115,8 @@ namespace ControllerPlayground.Services {
 
             Debug.WriteLine($"Steam QR approved for: {result.AccountName}");
 
+            _credentialStore.Save(result.AccountName, result.RefreshToken);
+
             _steamUser.LogOn(
                 new SteamUser.LogOnDetails {
                     Username = result.AccountName,
@@ -124,12 +131,23 @@ namespace ControllerPlayground.Services {
         private void OnLoggedOn(SteamUser.LoggedOnCallback callback) {
             if (callback.Result == EResult.OK) {
                 IsAuthenticated = true;
+                _usingSavedCredentials = false;
                 Debug.WriteLine($"SteamKit logged on as {_steamClient.SteamID}");
                 Authenticated?.Invoke();
-            } else {
-                IsAuthenticated = false;
-                Debug.WriteLine($"SteamKit logon failed: {callback.Result}");
+                return;
+            } 
+
+            IsAuthenticated = false;
+
+            Debug.WriteLine($"SteamKit logon failed: {callback.Result}");
+
+            if (_usingSavedCredentials) {
+                Debug.WriteLine($"SteamKit saved authentication failed, clearing saved credentials");
+                _credentialStore.Clear();
+                SavedAuthenticationFailed?.Invoke();
             }
+
+            
         }
 
         private async Task ReconnectAsync() { 
@@ -139,7 +157,32 @@ namespace ControllerPlayground.Services {
                 Debug.WriteLine("SteamKit Reconnecting to another CM...");
                 _steamClient.Connect();
             }
+        }
 
+        public Task<bool> TrySavedAuthenticationAsync(CancellationToken cancellationToken = default) { 
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if(!IsConnected)
+                return Task.FromResult(false);
+
+            var credential = _credentialStore.Load();
+
+            if (credential == null || string.IsNullOrWhiteSpace(credential.UserName) || string.IsNullOrWhiteSpace(credential.Password)) { 
+                return Task.FromResult(false);
+            }
+
+            Debug.WriteLine($"SteamKit attempting to log on with saved credentials for {credential.UserName}");
+
+            _usingSavedCredentials = true;
+
+            _steamUser.LogOn(new SteamUser.LogOnDetails { 
+                Username = credential.UserName,
+                AccessToken = credential.Password,
+                ShouldRememberPassword = true,
+                // Unique Steam session ID for ControllerPlayground.
+                LoginID = 0x435047
+            });
+            return Task.FromResult(true);
         }
     }
 }

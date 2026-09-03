@@ -14,11 +14,12 @@ namespace ControllerPlayground.Services {
         event Action<string> QrChallengeChanged;
         event Action? Connected;
         event Action? Authenticated;
+        event Action? SavedAuthenticationFailed;
 
         void Connect();
         void Disconnect();
 
+        Task<bool> TrySavedAuthenticationAsync(CancellationToken cancellationToken = default);
         Task BeginQrAuthenticationAsync(CancellationToken cancellationToken = default);
-
     }
 }

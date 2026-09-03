@@ -14,11 +14,21 @@
         Padding="12"
         CornerRadius="8"
         Background="#303B46">
-        
-        <TextBlock
+
+        <StackPanel
+            Spacing="4">
+
+            <TextBlock
             x:Name="MessageText"
             FontSize="16"
             TextWrapping="Wrap"/>
+
+            <TextBlock
+            x:Name="TimestampText"
+            FontSize="11"
+            Opacity="0.55"/>
+
+        </StackPanel>
 
     </Border>
     

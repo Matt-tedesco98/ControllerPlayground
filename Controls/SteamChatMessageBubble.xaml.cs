@@ -50,10 +50,15 @@ public sealed partial class SteamChatMessageBubble : UserControl
 
         if (item == null) { 
             MessageText.Text = string.Empty;
+            TimestampText.Text = string.Empty;
             return;
         }
 
         MessageText.Text = item.Text;
+
+        DateTimeOffset localTime = item.Timestamp.ToLocalTime();
+
+        TimestampText.Text = localTime.Date == DateTimeOffset.Now.Date ? localTime.ToString("h:mm tt") : localTime.ToString("M/d/yyyy h:mm tt");
 
         BubbleBorder.HorizontalAlignment = item.IsFromCurrentUser ? HorizontalAlignment.Right : HorizontalAlignment.Left;
     }

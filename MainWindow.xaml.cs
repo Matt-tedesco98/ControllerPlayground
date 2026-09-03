@@ -52,6 +52,8 @@ public sealed partial class MainWindow : Window {
 
         _steamSessionService.Authenticated += SteamSessionService_Authenticated;
 
+        _steamSessionService.SavedAuthenticationFailed += SteamSessionService_SavedAuthenticationFailed;
+
         _steamSessionService.Connect();
 
         _steamChatService = new SteamChatService(_steamSessionService);
@@ -222,7 +224,10 @@ public sealed partial class MainWindow : Window {
 
     private async void SteamSessionService_Connected() {
         try {
-            await _steamSessionService.BeginQrAuthenticationAsync();
+            bool startedSavedLogin = await _steamSessionService.TrySavedAuthenticationAsync();
+            if (!startedSavedLogin) {
+                await _steamSessionService.BeginQrAuthenticationAsync();
+            }
         } catch(Exception ex) { 
             Debug.WriteLine($"Steam QR Authentication failed: {ex}");
         }
@@ -240,5 +245,16 @@ public sealed partial class MainWindow : Window {
         DispatcherQueue.TryEnqueue(() => {
             SteamQrOverlayLayer.Visibility = Visibility.Collapsed;
         });
+    }
+
+    private async void SteamSessionService_SavedAuthenticationFailed() {
+        try {
+            if (_steamSessionService.IsConnected) { 
+                await _steamSessionService.BeginQrAuthenticationAsync();
+            }
+        }
+        catch (Exception ex) {
+            Debug.WriteLine($"Steam QR fallback failed: {ex}");
+        }
     }
 }
