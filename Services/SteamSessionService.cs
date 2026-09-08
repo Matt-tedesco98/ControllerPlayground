@@ -17,6 +17,7 @@ namespace ControllerPlayground.Services {
         private readonly SteamUser _steamUser;
         private readonly SteamFriends _steamFriends;
         private readonly SteamCredentialStore _credentialStore = new();
+        private readonly SteamApps _steamApps;
 
         private bool _usingSavedCredentials;
         public event Action? SavedAuthenticationFailed;
@@ -31,6 +32,8 @@ namespace ControllerPlayground.Services {
         public event Action? Authenticated;
 
         internal SteamFriends FriendsHandler => _steamFriends;
+        internal SteamUser UserHandler => _steamUser;
+        internal SteamApps AppsHandler => _steamApps;
         internal CallbackManager CallbackManager => _callbackManager;
 
         public SteamSessionService() {
@@ -39,6 +42,8 @@ namespace ControllerPlayground.Services {
             _steamUser = _steamClient.GetHandler<SteamUser>() ?? throw new InvalidOperationException("SteamUser handler was not found");
 
             _steamFriends = _steamClient.GetHandler<SteamFriends>() ?? throw new InvalidOperationException("SteamFriends handler was not found");
+
+            _steamApps = _steamClient.GetHandler<SteamApps>() ?? throw new InvalidOperationException("SteamApps handler was not found");
 
             _callbackManager = new CallbackManager(_steamClient);
 

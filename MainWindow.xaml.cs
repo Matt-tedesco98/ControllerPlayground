@@ -47,6 +47,8 @@ public sealed partial class MainWindow : Window {
 
         _steamChatService = new SteamChatService(_steamSessionService);
 
+        _steamLibraryService = new SteamLibraryService(_steamSessionService);
+
         FriendsOverlay.ChatService = _steamChatService;
 
         _steamChatService.UnreadCountChanged += SteamChatService_UnreadCountChanged;
@@ -69,6 +71,7 @@ public sealed partial class MainWindow : Window {
     private readonly ControllerService _controllerService = new();
     private readonly SteamSessionService _steamSessionService = new();
     private readonly ISteamChatService _steamChatService;
+    private readonly SteamLibraryService _steamLibraryService;
     private bool _isFriendsOpen;
     private int _totalUnreadMessages;
 
