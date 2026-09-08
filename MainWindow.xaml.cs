@@ -12,6 +12,7 @@ using ControllerPlayground.Models;
 using ControllerPlayground.Services;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Linq;
 
 namespace ControllerPlayground;
 
@@ -44,6 +45,12 @@ public sealed partial class MainWindow : Window {
 
         Activated += (_, _) => { PlayArea.Focus(FocusState.Programmatic); };
 
+        _steamChatService = new SteamChatService(_steamSessionService);
+
+        FriendsOverlay.ChatService = _steamChatService;
+
+        _steamChatService.UnreadCountChanged += SteamChatService_UnreadCountChanged;
+
         _ = LoadFriendsAsync();
 
         _steamSessionService.Connected += SteamSessionService_Connected;
@@ -56,9 +63,6 @@ public sealed partial class MainWindow : Window {
 
         _steamSessionService.Connect();
 
-        _steamChatService = new SteamChatService(_steamSessionService);
-
-        FriendsOverlay.ChatService = _steamChatService;
     }
 
     private readonly DispatcherTimer _controllerTimer = new();
@@ -66,6 +70,7 @@ public sealed partial class MainWindow : Window {
     private readonly SteamSessionService _steamSessionService = new();
     private readonly ISteamChatService _steamChatService;
     private bool _isFriendsOpen;
+    private int _totalUnreadMessages;
 
     // Views
     private readonly HomeView _homeView = new();
@@ -202,6 +207,14 @@ public sealed partial class MainWindow : Window {
         foreach (var friend in friends) { 
             FriendsOverlay.Friends.Add(friend);
         }
+//#if DEBUG
+//        if (_steamChatService is SteamChatService steamChatService &&
+//            FriendsOverlay.Friends.Count > 0) {
+//            steamChatService.SimulateIncomingMessage(
+//                FriendsOverlay.Friends[0].SteamId,
+//                "Global unread badge test");
+//        }
+//#endif
     }
 
     private void ToggleFriendsOverlay() {
@@ -256,5 +269,17 @@ public sealed partial class MainWindow : Window {
         catch (Exception ex) {
             Debug.WriteLine($"Steam QR fallback failed: {ex}");
         }
+    }
+
+    private void SteamChatService_UnreadCountChanged(string steamId, int unreadCount) {
+        DispatcherQueue.TryEnqueue(() => {
+            _totalUnreadMessages = FriendsOverlay.Friends.Sum(friend => friend.UnreadCount);
+
+            SteamUnreadCountText.Text = _totalUnreadMessages.ToString();
+
+            SteamUnreadBadge.Visibility = _totalUnreadMessages > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            Debug.WriteLine($"Total unread messages: {_totalUnreadMessages}");
+        });
     }
 }

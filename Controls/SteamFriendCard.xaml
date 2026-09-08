@@ -15,11 +15,15 @@
         Padding="12"
         HorizontalAlignment="Left">
 
-        <StackPanel
-            Orientation="Horizontal"
-            Spacing="12">
-            
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="48"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
             <Border
+                Grid.Column="0"
                 Width="48"
                 Height="48"
                 CornerRadius="6"
@@ -31,11 +35,35 @@
             </Border>
 
             <TextBlock
-                x:Name="DisplayNameText"
-                FontSize="18"
-                VerticalAlignment="Center"/>
-            
-        </StackPanel>
+                    x:Name="DisplayNameText"
+                    Grid.Column="1"
+                    Margin="12,0,0,0"
+                    FontSize="18"
+                    VerticalAlignment="Center"
+                    TextTrimming="CharacterEllipsis"
+                    MaxLines="1"/>
+
+            <Border
+                    x:Name="UnreadBadge"
+                    Grid.Column="2"
+                    MinWidth="24"
+                    Height="24"
+                    Padding="6,0"
+                    Margin="12,0,0,0"
+                    CornerRadius="12"
+                    Background="#505050"
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed">
+
+                <TextBlock
+                        x:Name="UnreadCountText"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="12"/>
+
+            </Border>
+
+        </Grid>
 
     </Button>
     

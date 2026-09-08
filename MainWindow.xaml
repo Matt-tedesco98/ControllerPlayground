@@ -15,6 +15,28 @@
             x:Name="ScreenHost" 
             HorizontalContentAlignment="Stretch"
             VerticalContentAlignment="Stretch"/>
+
+        <Border
+            x:Name="SteamUnreadBadge"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Margin="0,24,24,0"
+            MinWidth="36"
+            Height="36"
+            Padding="10,0"
+            CornerRadius="18"
+            Background="#505050"
+            Visibility="Collapsed">
+            
+            <TextBlock
+                x:Name="SteamUnreadCountText"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="16"
+                FontWeight="SemiBold"/>
+            
+        </Border>
+        
         <Grid
             x:Name="OverlayLayer"
             Visibility="Collapsed">

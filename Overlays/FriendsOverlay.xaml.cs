@@ -75,6 +75,8 @@ namespace ControllerPlayground.Overlays {
 
                 ChatPane.Friend = friend;
 
+                ChatService?.MarkConversationRead(friend.SteamId);
+
                 ChatService?.RequestMessageHistory(friend.SteamId);
 
                 ChatPane.Messages.Clear();
@@ -124,11 +126,13 @@ namespace ControllerPlayground.Overlays {
                 if (_chatService != null) { 
                     _chatService.MessageReceived -= ChatService_MessageReceived;
                     _chatService.MessageHistoryUpdated -= ChatService_MessageHistoryUpdated;
+                    _chatService.UnreadCountChanged -= ChatService_UnreadCountChanged;
                 }
                 _chatService = value;
                 if (_chatService != null) { 
                     _chatService.MessageReceived += ChatService_MessageReceived;
                     _chatService.MessageHistoryUpdated += ChatService_MessageHistoryUpdated;
+                    _chatService.UnreadCountChanged += ChatService_UnreadCountChanged;
                 }
             }
         }
@@ -186,6 +190,15 @@ namespace ControllerPlayground.Overlays {
                 }
 
                 ChatPane.ScrollToLastest();
+            });
+        }
+
+        private void ChatService_UnreadCountChanged(string steamId, int unreadCount) {
+            DispatcherQueue.TryEnqueue(() => {
+                SteamFriend? friend = Friends.FirstOrDefault(f => f.SteamId == steamId);
+                if (friend != null) { 
+                    friend.UnreadCount = unreadCount;
+                }
             });
         }
     }

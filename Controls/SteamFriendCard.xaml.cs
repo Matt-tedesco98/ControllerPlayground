@@ -14,6 +14,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.UI.Xaml.Media.Imaging;
+using System.ComponentModel;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -37,8 +38,20 @@ namespace ControllerPlayground.Controls {
                 new PropertyMetadata(null, OnItemChanged));
 
         private static void OnItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
-            if (d is SteamFriendCard card) {
-                card.UpdateVisuals();
+            var card = (SteamFriendCard)d;
+            if (e.OldValue is SteamFriend oldFriend) {
+                oldFriend.PropertyChanged -= card.Friend_PropertyChanged;
+            }
+            if (e.NewValue is SteamFriend newFriend) { 
+                newFriend.PropertyChanged += card.Friend_PropertyChanged;
+            }
+
+            card.UpdateVisuals();
+        }
+
+        private void Friend_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
+            if (e.PropertyName == nameof(SteamFriend.UnreadCount)) {
+                UpdateVisuals();
             }
         }
 
@@ -48,7 +61,16 @@ namespace ControllerPlayground.Controls {
             if(item == null) {
                 DisplayNameText.Text = string.Empty;
                 AvatarImage.Source = null;
+                UnreadBadge.Visibility = Visibility.Collapsed;
                 return;
+            }
+
+            if (item.UnreadCount > 0) {
+                UnreadCountText.Text = item.UnreadCount.ToString();
+                UnreadBadge.Visibility = Visibility.Visible;
+            } else {
+                UnreadCountText.Text = string.Empty;
+                UnreadBadge.Visibility = Visibility.Collapsed;
             }
 
             DisplayNameText.Text = item.DisplayName;

@@ -24,6 +24,7 @@ namespace ControllerPlayground.Services {
 
         public event Action<SteamChatMessage>? MessageReceived;
         public event Action<string>? MessageHistoryUpdated;
+        public event Action<string, int>? UnreadCountChanged;
 
 
         public Task<bool> SendMessageAsync(
@@ -72,6 +73,12 @@ namespace ControllerPlayground.Services {
             Debug.WriteLine($"Steam message received from {message.SteamId}: {message.Text}");
 
             StoreMessage(message);
+
+            int unreadCount = GetUnreadCount(message.SteamId) + 1;
+
+            _unreadCounts[message.SteamId] = unreadCount;
+
+            UnreadCountChanged?.Invoke(message.SteamId, unreadCount);
 
             MessageReceived?.Invoke(message);
         }
@@ -140,5 +147,45 @@ namespace ControllerPlayground.Services {
             _messagesByFriend[friendSteamId] = messages;
             MessageHistoryUpdated?.Invoke(friendSteamId);
         }
+
+        private readonly Dictionary<string, int> _unreadCounts = new();
+
+        public int GetUnreadCount(string steamId) {
+            return _unreadCounts.TryGetValue(steamId, out int count) ? count : 0;
+        }
+
+        public void MarkConversationRead(string steamId) { 
+            if (!_unreadCounts.TryGetValue(steamId, out int count) || count == 0)
+                return;
+
+            _unreadCounts[steamId] = 0;
+            UnreadCountChanged?.Invoke(steamId, 0);
+        }
+
+#if DEBUG
+        public void SimulateIncomingMessage(
+            string steamId,
+            string text = "Test incoming message") {
+            var message = new SteamChatMessage {
+                SteamId = steamId,
+                Text = text,
+                Timestamp = DateTimeOffset.Now,
+                IsFromCurrentUser = false
+            };
+
+            StoreMessage(message);
+
+            int unreadCount =
+                GetUnreadCount(steamId) + 1;
+
+            _unreadCounts[steamId] = unreadCount;
+
+            UnreadCountChanged?.Invoke(
+                steamId,
+                unreadCount);
+
+            MessageReceived?.Invoke(message);
+        }
+#endif
     }
 }

@@ -10,6 +10,7 @@ namespace ControllerPlayground.Services {
     public interface ISteamChatService {
         event Action<SteamChatMessage> MessageReceived;
         event Action<string>? MessageHistoryUpdated;
+        event Action<string, int>? UnreadCountChanged;
 
         Task<bool> SendMessageAsync(
             string steamId,
@@ -19,5 +20,10 @@ namespace ControllerPlayground.Services {
         IReadOnlyList<SteamChatMessage> GetMessages(string steamId);
 
         void RequestMessageHistory(string steamId);
+
+
+        int GetUnreadCount(string steamId);
+
+        void MarkConversationRead(string steamId);
     }
 }
