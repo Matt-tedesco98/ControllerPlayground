@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using SteamKit2;
-using SteamKit2.Internal;
-using System.Diagnostics;
+
+using ControllerPlayground.Models;
 
 namespace ControllerPlayground.Services.Steam.SteamKit {
     public sealed class SteamAppInfoService {
@@ -15,13 +12,15 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
             _session = session;
         }
 
-        public async Task GetAppInfoAsync(IEnumerable<uint> appIds) {
+        public async Task<IReadOnlyList<SteamAppInfo>> GetAppInfoAsync(IEnumerable<uint> appIds) {
             var requests = new List<SteamApps.PICSRequest>();
             foreach(uint appId in appIds) {
                 requests.Add(new SteamApps.PICSRequest(appId));
             }
 
             var results = await _session.AppsHandler.PICSGetProductInfo(requests, new List<SteamApps.PICSRequest>());
+
+            List<SteamAppInfo> apps = new();
 
             foreach(var result in results.Results) {
                 foreach(var app in result.Apps.Values) {
@@ -30,9 +29,14 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
 
                     string type = app.KeyValues["common"]["type"].AsString();
 
-                    Debug.WriteLine($"Steam App: {app.ID} | {name} | Type: {type}");
+                    apps.Add(new SteamAppInfo{
+                        AppId = app.ID,
+                        Name = name,
+                        Type = type
+                    });
                 }
             }
+            return apps;
         }
     }
 }

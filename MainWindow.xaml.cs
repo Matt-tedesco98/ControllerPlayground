@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Linq;
 using ControllerPlayground.Services.Steam.SteamKit;
+using System.Collections.Generic;
 
 namespace ControllerPlayground;
 
@@ -297,10 +298,13 @@ public sealed partial class MainWindow : Window {
             Debug.WriteLine(
                 $"Loading Steam metadata for {appCount} app IDs...");
 
-            await _steamAppInfoService.GetAppInfoAsync(
-                _steamLibraryService.OwnedAppIds);
+           IReadOnlyList<SteamAppInfo> apps = await _steamAppInfoService.GetAppInfoAsync(_steamLibraryService.OwnedAppIds);
 
-            Debug.WriteLine("Steam app metadata load completed.");
+            Debug.WriteLine(
+                $"Steam App metadata loaded: {apps.Count}");
+
+            int gameCount = apps.Count(app => string.Equals(app.Type, "game", StringComparison.OrdinalIgnoreCase));
+            Debug.WriteLine($"Steam games found: {gameCount}");
         } catch (Exception ex) {
             Debug.WriteLine(
                 $"Steam app metadata load failed: {ex}");
