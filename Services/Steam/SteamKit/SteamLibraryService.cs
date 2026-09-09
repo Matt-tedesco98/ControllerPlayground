@@ -6,13 +6,17 @@ using System.Threading.Tasks;
 using SteamKit2;
 using System.Diagnostics;
 using SteamKit2.Internal;
+using ControllerPlayground.Models;
 
 namespace ControllerPlayground.Services.Steam.SteamKit {
     public sealed class SteamLibraryService {
         private readonly SteamSessionService _session;
+        private readonly SteamAppInfoService _appInfoService;
 
-        public SteamLibraryService(SteamSessionService session) {
+        public SteamLibraryService(SteamSessionService session, SteamAppInfoService appInfoService) {
+
             _session = session;
+            _appInfoService = appInfoService;
 
             _session.CallbackManager.Subscribe<SteamApps.LicenseListCallback>(OnLicenseList);
         }
@@ -21,7 +25,10 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
         public IReadOnlyList<SteamApps.LicenseListCallback.License> Licenses => _licenses;
         private IReadOnlyCollection<uint> _ownedAppIds = Array.Empty<uint>();
         public IReadOnlyCollection<uint> OwnedAppIds => _ownedAppIds;
+        private IReadOnlyList<SteamLibraryGame> _games = Array.Empty<SteamLibraryGame>();
+        public IReadOnlyList<SteamLibraryGame> Games => _games;
 
+        public event Action<int>? LibraryLoaded;
         public event Action<int>? LicenseListReceived;
         public event Action<int>? OwnedAppIdsLoaded;
 
@@ -45,6 +52,7 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
             _ownedAppIds = appIds;
             Debug.WriteLine($"Steam app IDs from licenses: {_ownedAppIds.Count}");
             OwnedAppIdsLoaded?.Invoke(_ownedAppIds.Count);
+            await LoadLibraryGamesAsync();
         }
 
         private void OnLicenseList(SteamApps.LicenseListCallback callback) {
@@ -56,6 +64,17 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
             Debug.WriteLine($"Steam licenses received: {_licenses.Count}");
             LicenseListReceived?.Invoke(callback.LicenseList.Count);
             _ = LoadOwnedAppIdsAsync();
+        }
+
+        private async Task LoadLibraryGamesAsync() { 
+            IReadOnlyList<SteamAppInfo> apps = await _appInfoService.GetAppInfoAsync(_ownedAppIds);
+            _games = apps.Where(app => string.Equals(app.Type, "game", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(app.Name)).Select(app => new SteamLibraryGame {
+                AppId = app.AppId,
+                Name = app.Name
+            }).OrderBy(game => game.Name).ToList();
+
+            Debug.WriteLine($"Steam library games loaded: {_games.Count}");
+            LibraryLoaded?.Invoke(_games.Count);
         }
     }
 }

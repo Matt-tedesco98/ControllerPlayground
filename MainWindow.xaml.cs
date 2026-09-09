@@ -49,11 +49,11 @@ public sealed partial class MainWindow : Window {
 
         _steamChatService = new SteamChatService(_steamSessionService);
 
-        _steamLibraryService = new SteamLibraryService(_steamSessionService);
-
         _steamAppInfoService = new SteamAppInfoService(_steamSessionService);
 
-        _steamLibraryService.OwnedAppIdsLoaded += SteamLibraryService_OwnedAppIdsLoaded;
+        _steamLibraryService = new SteamLibraryService(_steamSessionService, _steamAppInfoService);
+
+        _steamLibraryService.LibraryLoaded += SteamLibraryService_LibraryLoaded;
 
         FriendsOverlay.ChatService = _steamChatService;
 
@@ -293,21 +293,7 @@ public sealed partial class MainWindow : Window {
         });
     }
 
-    private async void SteamLibraryService_OwnedAppIdsLoaded(int appCount) {
-        try {
-            Debug.WriteLine(
-                $"Loading Steam metadata for {appCount} app IDs...");
-
-           IReadOnlyList<SteamAppInfo> apps = await _steamAppInfoService.GetAppInfoAsync(_steamLibraryService.OwnedAppIds);
-
-            Debug.WriteLine(
-                $"Steam App metadata loaded: {apps.Count}");
-
-            int gameCount = apps.Count(app => string.Equals(app.Type, "game", StringComparison.OrdinalIgnoreCase));
-            Debug.WriteLine($"Steam games found: {gameCount}");
-        } catch (Exception ex) {
-            Debug.WriteLine(
-                $"Steam app metadata load failed: {ex}");
-        }
+    private async void SteamLibraryService_LibraryLoaded(int gameCount) {
+        Debug.WriteLine($"ControllerPlayground Steam library ready: {gameCount} games");
     }
 }
