@@ -13,10 +13,16 @@ using System.Collections.Generic;
 
 namespace ControllerPlayground.Views {
     public sealed partial class HomeView : UserControl {
+        public HomeView() {
+            InitializeComponent();
+
+            GameMenu.ActionRequested += GameMenu_ActionRequested;
+
+        }
 
         internal event Action<AppScreen>? NavigateRequested;
 
-        private readonly Dictionary<GameTile, GameItem> _gamesByTile;
+        private readonly Dictionary<GameTile, GameItem> _gamesByTile = new();
 
         internal event Action<GameItem, GamePageTab>? GamePageRequested;
         private void GameTile_Activated(object sender, EventArgs e) {
@@ -38,7 +44,7 @@ namespace ControllerPlayground.Views {
 
             if (_isContextMenuOpen) {
                 // If the context menu is open, we want to handle navigation within the context menu
-                if(action == ControllerAction.Back || action == ControllerAction.Menu) {
+                if (action == ControllerAction.Back || action == ControllerAction.Menu) {
                     CloseGameContextMenu();
                     return;
                 }
@@ -111,7 +117,13 @@ namespace ControllerPlayground.Views {
         internal void RestoreFocus() {
             // Restore focus to the last focused GameTile
             DispatcherQueue.TryEnqueue(() => {
-                (_lastFocusedTitle ?? HaloTile).FocusTile();
+                if (_lastFocusedTitle != null) {
+                    _lastFocusedTitle.FocusTile();
+                    return;
+                }
+                if (GameTitlePanel.Children.Count > 0 && GameTitlePanel.Children[0] is GameTile firstTile) {
+                    firstTile.FocusTile();
+                }
             });
         }
 
@@ -151,7 +163,7 @@ namespace ControllerPlayground.Views {
                     Debug.WriteLine($"Play requested: {_lastFocusedTitle?.Title}");
                     break;
                 case GameContextAction.GameDetails:
-                    if(_lastFocusedTitle!= null &&
+                    if (_lastFocusedTitle != null &&
                         _gamesByTile.TryGetValue(_lastFocusedTitle, out GameItem? game)) {
                         CloseGameContextMenu();
                         GamePageRequested?.Invoke(game, GamePageTab.GameInfo);
@@ -166,72 +178,37 @@ namespace ControllerPlayground.Views {
                     break;
             }
         }
-        public HomeView() {
-            InitializeComponent();
 
-            _gamesByTile = new Dictionary<GameTile, GameItem> {
-                [HaloTile] = new GameItem {
-                    Title = "Halo Infinite",
-                    Genres = new()
-        {
-            "Action",
-            "Shooter"
-        }
-                },
+        internal void SetSteamLibraryGames(IReadOnlyList<SteamLibraryGame> steamGames) {
+            GameTitlePanel.Children.Clear();
+            _gamesByTile.Clear();
+            _lastFocusedTitle = null;
 
-                [ForzaTile] = new GameItem {
-                    Title = "Forza Horizon 5",
-                    SteamAppId = 1551360,
-                    HeroImagePath = "ms-appx:///Assets/Games/Forza/Hero.jpg",
-                    CoverImagePath = "ms-appx:///Assets/Games/Forza/Cover.jpg",
-                    Genres = new()
-        {
-            "Racing",
-            "Open World"
-        }
-                },
+            foreach (SteamLibraryGame steamGame in steamGames) {
+                GameItem game = new() {
+                    Title = steamGame.Name,
+                    SteamAppId = steamGame.AppId
+                };
 
-                [MinecraftTile] = new GameItem {
-                    Title = "Minecraft",
-                    Genres = new()
-        {
-            "Sandbox",
-            "Adventure"
-        }
-                },
+                GameTile tile = new() {
+                    Title = game.Title
+                };
 
-                [SteamTile] = new GameItem {
-                    Title = "Steam"
+                tile.Activated += GameTile_Activated;
+                tile.GotFocus += GameTile_GotFocus;
+
+                _gamesByTile[tile] = game;
+
+                GameTitlePanel.Children.Add(tile);
+            }
+
+            DispatcherQueue.TryEnqueue(() => {
+                if (GameTitlePanel.Children.Count > 0 && GameTitlePanel.Children[0] is GameTile firstTile) {
+                    _lastFocusedTitle = firstTile;
+                    firstTile.FocusTile();
                 }
-            };
-
-            GameItem forza = _gamesByTile[ForzaTile];
-
-            forza.ActivityData.RecentFriends.Add(new FriendActivityItem {
-                SteamId = "1",
-                DisplayName = "Friend 1",
-                RecentPlayTimeMinutes = 690
             });
-
-            forza.ActivityData.RecentFriends.Add(new FriendActivityItem {
-                SteamId = "2",
-                DisplayName = "Friend 2",
-                RecentPlayTimeMinutes = 450
-            });
-
-            forza.ActivityData.PlayedPreviouslyFriends.Add(new FriendActivityItem {
-                SteamId = "3",
-                DisplayName = "Friend 3"
-            });
-
-            GameMenu.ActionRequested += GameMenu_ActionRequested;
-
-            Loaded += (_, _) => {
-                DispatcherQueue.TryEnqueue(() => {
-                    // Set initial focus to the first GameTile
-                    HaloTile.FocusTile();
-                });
-            };
+            Debug.WriteLine($"HomeView loaded {steamGames.Count} Steam games.");
         }
     }
 }

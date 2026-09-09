@@ -295,5 +295,9 @@ public sealed partial class MainWindow : Window {
 
     private async void SteamLibraryService_LibraryLoaded(int gameCount) {
         Debug.WriteLine($"ControllerPlayground Steam library ready: {gameCount} games");
+
+        DispatcherQueue.TryEnqueue(() => { 
+            _homeView.SetSteamLibraryGames(_steamLibraryService.Games);
+        });
     }
 }
