@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Windows.System.UserProfile;
 using System.Collections.Generic;
 
-namespace ControllerPlayground.Services {
+namespace ControllerPlayground.Services.steam {
     public class SteamService : ISteamService {
 
         private readonly HttpClient HttpClient = new();
