@@ -6,6 +6,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.System.UserProfile;
+using System;
+using Windows.Media.Capture;
 
 namespace ControllerPlayground.Services {
     public sealed class SteamLocalService : ISteamLocalService {
@@ -127,6 +129,135 @@ namespace ControllerPlayground.Services {
                 $"{steamId64}.jpg");
 
             return File.Exists(avatarPath) ? avatarPath : null;
+        }
+
+        public Task<IReadOnlyDictionary<uint, DateTimeOffset>>
+    GetLastPlayedByAppIdAsync(
+        CancellationToken cancellationToken = default) {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            Dictionary<uint, DateTimeOffset> results = new();
+
+            string? configPath = GetActiveUserConfigPath();
+
+            if (configPath == null ||
+                !File.Exists(configPath)) {
+                Debug.WriteLine(
+                    "Steam LastPlayed: localconfig.vdf was not found.");
+
+                return Task.FromResult<
+                    IReadOnlyDictionary<uint, DateTimeOffset>>(results);
+            }
+
+            VdfNode root =
+                VdfParser.ParseFile(configPath);
+
+            if (!root.TryGetChild(
+                    "UserLocalConfigStore",
+                    out VdfNode? userConfig) ||
+                userConfig == null) {
+                Debug.WriteLine(
+                    "Steam LastPlayed: UserLocalConfigStore not found.");
+
+                return Task.FromResult<
+                    IReadOnlyDictionary<uint, DateTimeOffset>>(results);
+            }
+
+            if (!userConfig.TryGetChild(
+                    "Software",
+                    out VdfNode? software) ||
+                software == null) {
+                Debug.WriteLine(
+                    "Steam LastPlayed: Software node not found.");
+
+                Debug.WriteLine(
+                    $"UserLocalConfigStore children: " +
+                    $"{string.Join(", ", userConfig.Children.Keys)}");
+
+                return Task.FromResult<
+                    IReadOnlyDictionary<uint, DateTimeOffset>>(results);
+            }
+
+            if (!software.TryGetChild(
+                    "Valve",
+                    out VdfNode? valve) ||
+                valve == null) {
+                Debug.WriteLine(
+                    "Steam LastPlayed: Valve node not found.");
+
+                return Task.FromResult<
+                    IReadOnlyDictionary<uint, DateTimeOffset>>(results);
+            }
+
+            if (!valve.TryGetChild(
+                    "Steam",
+                    out VdfNode? steam) ||
+                steam == null) {
+                Debug.WriteLine(
+                    "Steam LastPlayed: Steam node not found.");
+
+                return Task.FromResult<
+                    IReadOnlyDictionary<uint, DateTimeOffset>>(results);
+            }
+
+            if (!steam.TryGetChild(
+                    "apps",
+                    out VdfNode? apps) ||
+                apps == null) {
+                Debug.WriteLine(
+                    "Steam LastPlayed: apps node not found.");
+
+                Debug.WriteLine(
+                    $"Steam node children: " +
+                    $"{string.Join(", ", steam.Children.Keys)}");
+
+                return Task.FromResult<
+                    IReadOnlyDictionary<uint, DateTimeOffset>>(results);
+            }
+
+            int sampleCount = 0;
+
+            foreach (var entry in apps.Children) {
+                if (sampleCount >= 5)
+                    break;
+
+                sampleCount++;
+            }
+
+            int appsWithLastPlayed = 0;
+
+            foreach (var entry in apps.Children) {
+                if (!uint.TryParse(
+                        entry.Key,
+                        out uint appId)) {
+                    continue;
+                }
+
+                if (!entry.Value.TryGetChild(
+                        "LastPlayed",
+                        out VdfNode? lastPlayedNode)) {
+                    continue;
+                }
+
+                appsWithLastPlayed++;
+
+                if (!long.TryParse(
+                        lastPlayedNode?.Value,
+                        out long unixSeconds) ||
+                    unixSeconds <= 0) {
+                    continue;
+                }
+
+                results[appId] =
+                    DateTimeOffset.FromUnixTimeSeconds(
+                        unixSeconds);
+            }
+
+            Debug.WriteLine(
+                $"Steam valid LastPlayed timestamps: {results.Count}");
+
+            return Task.FromResult<
+                IReadOnlyDictionary<uint, DateTimeOffset>>(results);
         }
     }
 }

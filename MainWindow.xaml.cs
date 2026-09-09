@@ -112,13 +112,13 @@ public sealed partial class MainWindow : Window {
             ToggleFriendsOverlay();
             return;
         }
-        if(_isFriendsOpen) {
+        if (_isFriendsOpen) {
             if (action == ControllerAction.Back) {
                 if (FriendsOverlay.IsChatOpen) {
                     FriendsOverlay.CloseChatPane();
                     FriendsOverlay.RestoreFriendFocus();
 
-                } else { 
+                } else {
                     CloseFriendsOverlay();
                 }
                 return;
@@ -192,7 +192,8 @@ public sealed partial class MainWindow : Window {
         } else {
             OverlayLayer.Visibility = Visibility.Collapsed;
             _homeView.RestoreFocus();
-        };
+        }
+        ;
     }
 
     private void GuideMenu_NavigationRequested(AppScreen screen) {
@@ -201,30 +202,30 @@ public sealed partial class MainWindow : Window {
         NavigateTo(screen);
     }
 
-    private void HomeView_GamePageRequested(GameItem game, GamePageTab tab ) {
+    private void HomeView_GamePageRequested(GameItem game, GamePageTab tab) {
         _GamePageView.Game = game;
-        _GamePageView.SelectedTab= tab;
+        _GamePageView.SelectedTab = tab;
         NavigateTo(AppScreen.GamePage);
     }
 
     private readonly ISteamLocalService _steamLocalService = new SteamLocalService();
 
-    private async Task LoadFriendsAsync() { 
+    private async Task LoadFriendsAsync() {
         var friends = await _steamLocalService.GetFriendsAsync();
 
         FriendsOverlay.Friends.Clear();
 
-        foreach (var friend in friends) { 
+        foreach (var friend in friends) {
             FriendsOverlay.Friends.Add(friend);
         }
-//#if DEBUG
-//        if (_steamChatService is SteamChatService steamChatService &&
-//            FriendsOverlay.Friends.Count > 0) {
-//            steamChatService.SimulateIncomingMessage(
-//                FriendsOverlay.Friends[0].SteamId,
-//                "Global unread badge test");
-//        }
-//#endif
+        //#if DEBUG
+        //        if (_steamChatService is SteamChatService steamChatService &&
+        //            FriendsOverlay.Friends.Count > 0) {
+        //            steamChatService.SimulateIncomingMessage(
+        //                FriendsOverlay.Friends[0].SteamId,
+        //                "Global unread badge test");
+        //        }
+        //#endif
     }
 
     private void ToggleFriendsOverlay() {
@@ -233,13 +234,13 @@ public sealed partial class MainWindow : Window {
         if (_isFriendsOpen) {
             FriendsOverlayLayer.Visibility = Visibility.Visible;
             FriendsOverlay.FocusFirstItem();
-        } else { 
+        } else {
             FriendsOverlayLayer.Visibility = Visibility.Collapsed;
             _homeView.RestoreFocus();
         }
     }
 
-    private void CloseFriendsOverlay() { 
+    private void CloseFriendsOverlay() {
         _isFriendsOpen = false;
         FriendsOverlayLayer.Visibility = Visibility.Collapsed;
         _homeView.RestoreFocus();
@@ -251,7 +252,7 @@ public sealed partial class MainWindow : Window {
             if (!startedSavedLogin) {
                 await _steamSessionService.BeginQrAuthenticationAsync();
             }
-        } catch(Exception ex) { 
+        } catch (Exception ex) {
             Debug.WriteLine($"Steam QR Authentication failed: {ex}");
         }
     }
@@ -272,11 +273,10 @@ public sealed partial class MainWindow : Window {
 
     private async void SteamSessionService_SavedAuthenticationFailed() {
         try {
-            if (_steamSessionService.IsConnected) { 
+            if (_steamSessionService.IsConnected) {
                 await _steamSessionService.BeginQrAuthenticationAsync();
             }
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             Debug.WriteLine($"Steam QR fallback failed: {ex}");
         }
     }
@@ -294,10 +294,28 @@ public sealed partial class MainWindow : Window {
     }
 
     private async void SteamLibraryService_LibraryLoaded(int gameCount) {
-        Debug.WriteLine($"ControllerPlayground Steam library ready: {gameCount} games");
+        try {
+            Debug.WriteLine($"ControllerPlayground Steam library ready: {gameCount} games");
 
-        DispatcherQueue.TryEnqueue(() => { 
-            _homeView.SetSteamLibraryGames(_steamLibraryService.Games);
-        });
+            IReadOnlyDictionary<uint, DateTimeOffset> lastPlayedByAppId = await _steamLocalService.GetLastPlayedByAppIdAsync();
+
+            DateTimeOffset cutoff = DateTimeOffset.Now.AddDays(-30);
+
+            List<SteamLibraryGame> recentGames = _steamLibraryService.Games.Where(game => lastPlayedByAppId.TryGetValue(game.AppId, out DateTimeOffset lastPlayed) && lastPlayed >= cutoff).OrderByDescending(game => lastPlayedByAppId[game.AppId]).ToList();
+
+            Debug.WriteLine($"Steam games played in last 30 days: {recentGames.Count}");
+
+            foreach (SteamLibraryGame game in recentGames) {
+                Debug.WriteLine($"Recent: {game.Name} | " +
+                $"{lastPlayedByAppId[game.AppId].LocalDateTime}");
+            }
+
+            DispatcherQueue.TryEnqueue(() => {
+                _homeView.SetSteamLibraryGames(recentGames);
+            });
+        } catch (Exception ex) {
+            Debug.WriteLine(
+            $"Failed loading recent Steam games: {ex}");
+        }
     }
 }
