@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Security.Credentials;
 
-namespace ControllerPlayground.Services {
+namespace ControllerPlayground.Services.Steam.SteamKit {
     public sealed class SteamCredentialStore {
         private const string ResourceName = "ControllerPlayground.Steam";
         private readonly PasswordVault _vault = new();

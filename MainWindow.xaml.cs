@@ -13,6 +13,7 @@ using ControllerPlayground.Services;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Linq;
+using ControllerPlayground.Services.Steam.SteamKit;
 
 namespace ControllerPlayground;
 
@@ -49,6 +50,10 @@ public sealed partial class MainWindow : Window {
 
         _steamLibraryService = new SteamLibraryService(_steamSessionService);
 
+        _steamAppInfoService = new SteamAppInfoService(_steamSessionService);
+
+        _steamLibraryService.OwnedAppIdsLoaded += SteamLibraryService_OwnedAppIdsLoaded;
+
         FriendsOverlay.ChatService = _steamChatService;
 
         _steamChatService.UnreadCountChanged += SteamChatService_UnreadCountChanged;
@@ -72,6 +77,7 @@ public sealed partial class MainWindow : Window {
     private readonly SteamSessionService _steamSessionService = new();
     private readonly ISteamChatService _steamChatService;
     private readonly SteamLibraryService _steamLibraryService;
+    private readonly SteamAppInfoService _steamAppInfoService;
     private bool _isFriendsOpen;
     private int _totalUnreadMessages;
 
@@ -284,5 +290,20 @@ public sealed partial class MainWindow : Window {
 
             Debug.WriteLine($"Total unread messages: {_totalUnreadMessages}");
         });
+    }
+
+    private async void SteamLibraryService_OwnedAppIdsLoaded(int appCount) {
+        try {
+            Debug.WriteLine(
+                $"Loading Steam metadata for {appCount} app IDs...");
+
+            await _steamAppInfoService.GetAppInfoAsync(
+                _steamLibraryService.OwnedAppIds);
+
+            Debug.WriteLine("Steam app metadata load completed.");
+        } catch (Exception ex) {
+            Debug.WriteLine(
+                $"Steam app metadata load failed: {ex}");
+        }
     }
 }

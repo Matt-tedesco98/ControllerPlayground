@@ -7,7 +7,7 @@ using SteamKit2;
 using System.Diagnostics;
 using SteamKit2.Internal;
 
-namespace ControllerPlayground.Services {
+namespace ControllerPlayground.Services.Steam.SteamKit {
     public sealed class SteamLibraryService {
         private readonly SteamSessionService _session;
 
@@ -23,6 +23,7 @@ namespace ControllerPlayground.Services {
         public IReadOnlyCollection<uint> OwnedAppIds => _ownedAppIds;
 
         public event Action<int>? LicenseListReceived;
+        public event Action<int>? OwnedAppIdsLoaded;
 
         private async Task LoadOwnedAppIdsAsync() {
             var packagedRequests = _licenses.Select(License => new SteamApps.PICSRequest(License.PackageID, License.AccessToken)).ToList();
@@ -43,6 +44,7 @@ namespace ControllerPlayground.Services {
             }
             _ownedAppIds = appIds;
             Debug.WriteLine($"Steam app IDs from licenses: {_ownedAppIds.Count}");
+            OwnedAppIdsLoaded?.Invoke(_ownedAppIds.Count);
         }
 
         private void OnLicenseList(SteamApps.LicenseListCallback callback) {

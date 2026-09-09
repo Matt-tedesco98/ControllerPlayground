@@ -19,7 +19,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using ControllerPlayground.Services;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using ControllerPlayground.Services.steam;
+using ControllerPlayground.Services.Steam;
 
 
 // To learn more about WinUI, the WinUI project structure,

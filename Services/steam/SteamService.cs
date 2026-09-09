@@ -1,14 +1,12 @@
 ﻿using ControllerPlayground.Models;
-using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.System.UserProfile;
 using System.Collections.Generic;
 
-namespace ControllerPlayground.Services.steam {
+namespace ControllerPlayground.Services.Steam {
     public class SteamService : ISteamService {
 
         private readonly HttpClient HttpClient = new();

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 
-namespace ControllerPlayground.Services {
+namespace ControllerPlayground.Services.Steam.SteamKit {
     public interface ISteamSessionService {
 
         bool IsConnected { get; }

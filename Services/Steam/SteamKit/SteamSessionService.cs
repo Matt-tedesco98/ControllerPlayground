@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ControllerPlayground.Services {
+namespace ControllerPlayground.Services.Steam.SteamKit {
     public sealed class SteamSessionService : ISteamSessionService {
 
         private readonly SteamClient _steamClient;
@@ -22,7 +22,7 @@ namespace ControllerPlayground.Services {
         private bool _usingSavedCredentials;
         public event Action? SavedAuthenticationFailed;
 
-        private CancellationTokenSource _callbackCancellation;
+        private CancellationTokenSource? _callbackCancellation;
 
         public bool IsConnected { get; private set; }
         public bool IsAuthenticated { get; private set; }
