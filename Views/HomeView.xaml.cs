@@ -187,11 +187,13 @@ namespace ControllerPlayground.Views {
             foreach (SteamLibraryGame steamGame in steamGames) {
                 GameItem game = new() {
                     Title = steamGame.Name,
-                    SteamAppId = steamGame.AppId
+                    SteamAppId = steamGame.AppId,
+                    CoverImagePath = steamGame.LibraryCapsuleUrl
                 };
 
                 GameTile tile = new() {
-                    Title = game.Title
+                    Title = game.Title,
+                    CoverImageUrl = game.CoverImagePath
                 };
 
                 tile.Activated += GameTile_Activated;

@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using ControllerPlayground.Models;
 using SteamKit2;
-
-using ControllerPlayground.Models;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace ControllerPlayground.Services.Steam.SteamKit {
     public sealed class SteamAppInfoService {
@@ -14,7 +14,7 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
 
         public async Task<IReadOnlyList<SteamAppInfo>> GetAppInfoAsync(IEnumerable<uint> appIds) {
             var requests = new List<SteamApps.PICSRequest>();
-            foreach(uint appId in appIds) {
+            foreach (uint appId in appIds) {
                 requests.Add(new SteamApps.PICSRequest(appId));
             }
 
@@ -22,17 +22,32 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
 
             List<SteamAppInfo> apps = new();
 
-            foreach(var result in results.Results) {
-                foreach(var app in result.Apps.Values) {
+            foreach (var result in results.Results) {
+                foreach (var app in result.Apps.Values) {
 
                     string name = app.KeyValues["common"]["name"].AsString();
 
                     string type = app.KeyValues["common"]["type"].AsString();
 
-                    apps.Add(new SteamAppInfo{
+                    string libraryCapsulePath = app.KeyValues["common"]
+                        ["library_assets_full"]
+                        ["library_capsule"]
+                        ["image2x"]
+                        ["english"].AsString();
+
+                    if (string.IsNullOrWhiteSpace(libraryCapsulePath)) {
+                        libraryCapsulePath = app.KeyValues["common"]
+                            ["library_assets_full"]
+                            ["library_capsule"]
+                            ["image"]
+                            ["english"].AsString();
+                    }
+
+                    apps.Add(new SteamAppInfo {
                         AppId = app.ID,
                         Name = name,
-                        Type = type
+                        Type = type,
+                        LibraryCapsulePath = libraryCapsulePath
                     });
                 }
             }

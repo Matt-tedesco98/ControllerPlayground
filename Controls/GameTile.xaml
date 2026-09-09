@@ -15,9 +15,42 @@
         LostFocus="TileButton_LostFocus">
 
         <Grid>
+            
+            <!-- FallBack background-->
             <Border
                 Background="#343434"
                 CornerRadius="18" />
+
+            <Border
+                CornerRadius="13">
+                
+                <Image
+                    x:Name="CoverImage"
+                    Stretch="UniformToFill"
+                    ImageFailed="CoverImage_ImageFailed" />
+                
+            </Border>
+
+            <Border
+                CornerRadius="18">
+
+                <Border.Background>
+                    <LinearGradientBrush
+                        StartPoint="0.5,0"
+                        EndPoint="0.5,1">
+                        
+                        <GradientStop
+                            Color="#00000000"
+                            Offset="0.35" />
+                        
+                        <GradientStop
+                            Color="#E6000000"
+                            Offset="1" />
+                        
+                    </LinearGradientBrush>
+                </Border.Background>
+                
+            </Border>
 
             <StackPanel
                 VerticalAlignment="Bottom"

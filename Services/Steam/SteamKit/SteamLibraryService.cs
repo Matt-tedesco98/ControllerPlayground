@@ -41,10 +41,10 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
 
             foreach (var result in results.Results) {
                 foreach (var package in result.Packages.Values) {
-                    foreach (var appIdValue in package.KeyValues["appids"].Children) { 
+                    foreach (var appIdValue in package.KeyValues["appids"].Children) {
                         uint appId = appIdValue.AsUnsignedInteger();
-                        if (appId != 0) { 
-                        appIds.Add(appId);
+                        if (appId != 0) {
+                            appIds.Add(appId);
                         }
                     }
                 }
@@ -56,7 +56,7 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
         }
 
         private void OnLicenseList(SteamApps.LicenseListCallback callback) {
-            if(callback.Result != EResult.OK) {
+            if (callback.Result != EResult.OK) {
                 Debug.WriteLine($"Steam license list failed: {callback.Result}");
                 return;
             }
@@ -66,14 +66,18 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
             _ = LoadOwnedAppIdsAsync();
         }
 
-        private async Task LoadLibraryGamesAsync() { 
+        private async Task LoadLibraryGamesAsync() {
             IReadOnlyList<SteamAppInfo> apps = await _appInfoService.GetAppInfoAsync(_ownedAppIds);
             _games = apps.Where(app => string.Equals(app.Type, "game", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(app.Name)).Select(app => new SteamLibraryGame {
                 AppId = app.AppId,
-                Name = app.Name
+                Name = app.Name,
+                LibraryCapsuleUrl = !string.IsNullOrWhiteSpace(app.LibraryCapsulePath)
+                ? $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/{app.LibraryCapsulePath}"
+                : $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/library_600x900_2x.jpg"
             }).OrderBy(game => game.Name).ToList();
 
             Debug.WriteLine($"Steam library games loaded: {_games.Count}");
+            
             LibraryLoaded?.Invoke(_games.Count);
         }
     }
