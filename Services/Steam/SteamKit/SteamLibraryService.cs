@@ -52,7 +52,6 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
             _ownedAppIds = appIds;
             Debug.WriteLine($"Steam app IDs from licenses: {_ownedAppIds.Count}");
             OwnedAppIdsLoaded?.Invoke(_ownedAppIds.Count);
-            await LoadLibraryGamesAsync();
         }
 
         private void OnLicenseList(SteamApps.LicenseListCallback callback) {
@@ -63,22 +62,36 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
             _licenses = callback.LicenseList;
             Debug.WriteLine($"Steam licenses received: {_licenses.Count}");
             LicenseListReceived?.Invoke(callback.LicenseList.Count);
-            _ = LoadOwnedAppIdsAsync();
         }
 
-        private async Task LoadLibraryGamesAsync() {
-            IReadOnlyList<SteamAppInfo> apps = await _appInfoService.GetAppInfoAsync(_ownedAppIds);
-            _games = apps.Where(app => string.Equals(app.Type, "game", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(app.Name)).Select(app => new SteamLibraryGame {
-                AppId = app.AppId,
-                Name = app.Name,
-                LibraryCapsuleUrl = !string.IsNullOrWhiteSpace(app.LibraryCapsulePath)
-                ? $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/{app.LibraryCapsulePath}"
-                : $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/library_600x900_2x.jpg"
-            }).OrderBy(game => game.Name).ToList();
+        private async Task LoadFullLibraryAsync() {
+            if (_licenses.Count == 0) {
+                Debug.WriteLine("Steam full library requested before liceses were received.");
+                return;
+            }
+
+            if (_ownedAppIds.Count == 0) {
+                await LoadOwnedAppIdsAsync();
+            }
+
+            _games = (await GetGamesAsync(OwnedAppIds)).OrderBy(game => game.Name).ToList();
 
             Debug.WriteLine($"Steam library games loaded: {_games.Count}");
             
             LibraryLoaded?.Invoke(_games.Count);
+        }
+
+        public async Task<IReadOnlyList<SteamLibraryGame>> GetGamesAsync(IEnumerable<uint> appIds) {
+            IReadOnlyList<SteamAppInfo> apps = await _appInfoService.GetAppInfoAsync(appIds);
+
+            return apps.Where(app => string.Equals(app.Type, "game", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(app.Name)).Select(app => new SteamLibraryGame {
+                AppId = app.AppId,
+                Name = app.Name,
+                LibraryCapsuleUrl =
+                !string.IsNullOrWhiteSpace(app.LibraryCapsulePath)
+                    ? $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/{app.LibraryCapsulePath}"
+                    : $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/library_600x900_2x.jpg"
+            }).ToList();
         }
     }
 }

@@ -53,8 +53,6 @@ public sealed partial class MainWindow : Window {
 
         _steamLibraryService = new SteamLibraryService(_steamSessionService, _steamAppInfoService);
 
-        _steamLibraryService.LibraryLoaded += SteamLibraryService_LibraryLoaded;
-
         FriendsOverlay.ChatService = _steamChatService;
 
         _steamChatService.UnreadCountChanged += SteamChatService_UnreadCountChanged;
@@ -269,6 +267,7 @@ public sealed partial class MainWindow : Window {
         DispatcherQueue.TryEnqueue(() => {
             SteamQrOverlayLayer.Visibility = Visibility.Collapsed;
         });
+        _ = LoadRecentSteamGamesAsync();
     }
 
     private async void SteamSessionService_SavedAuthenticationFailed() {
@@ -293,17 +292,21 @@ public sealed partial class MainWindow : Window {
         });
     }
 
-    private async void SteamLibraryService_LibraryLoaded(int gameCount) {
+    private async Task LoadRecentSteamGamesAsync() {
         try {
-            Debug.WriteLine($"ControllerPlayground Steam library ready: {gameCount} games");
-
             IReadOnlyDictionary<uint, DateTimeOffset> lastPlayedByAppId = await _steamLocalService.GetLastPlayedByAppIdAsync();
 
             DateTimeOffset cutoff = DateTimeOffset.Now.AddDays(-30);
 
-            List<SteamLibraryGame> recentGames = _steamLibraryService.Games.Where(game => lastPlayedByAppId.TryGetValue(game.AppId, out DateTimeOffset lastPlayed) && lastPlayed >= cutoff).OrderByDescending(game => lastPlayedByAppId[game.AppId]).ToList();
+            List<uint> recentAppIds = lastPlayedByAppId.Where(entry => entry.Value >= cutoff).OrderByDescending(entry => entry.Value).Select(entry => entry.Key).ToList();
 
-            Debug.WriteLine($"Steam games played in last 30 days: {recentGames.Count}");
+            Debug.WriteLine($"Recent Steam app IDs in the last 30 days: {recentAppIds.Count}");
+
+            IReadOnlyList<SteamLibraryGame> games = await _steamLibraryService.GetGamesAsync(recentAppIds);
+
+            List<SteamLibraryGame> recentGames = games.OrderByDescending(game => lastPlayedByAppId[game.AppId]).ToList();
+
+            Debug.WriteLine($"Recent Steam Games loaded: {recentGames.Count}");
 
             foreach (SteamLibraryGame game in recentGames) {
                 Debug.WriteLine($"Recent: {game.Name} | " +
@@ -313,9 +316,9 @@ public sealed partial class MainWindow : Window {
             DispatcherQueue.TryEnqueue(() => {
                 _homeView.SetSteamLibraryGames(recentGames);
             });
+
         } catch (Exception ex) {
-            Debug.WriteLine(
-            $"Failed loading recent Steam games: {ex}");
+            Debug.WriteLine($"Failed to load recent Steam games: {ex}");
         }
     }
 }

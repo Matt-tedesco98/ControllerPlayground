@@ -45,7 +45,9 @@ namespace ControllerPlayground.Controls {
 
             try {
                 tile.CoverImage.Visibility = Visibility.Visible;
-                tile.CoverImage.Source = new BitmapImage(new Uri(url));
+                tile.CoverImage.Source = new BitmapImage(new Uri(url)) {
+                    DecodePixelWidth = 440
+                };
             }
             catch {
                 tile.CoverImage.Source = null;
