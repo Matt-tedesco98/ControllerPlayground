@@ -58,6 +58,30 @@ internal sealed class ControllerService {
 
         _previousSystemButtons = state.SystemButtons;
 
+        // System buttons get highest priority.
+        if ((systemPressedThisFrame & ControllerSystemButtons.Guide) != 0)
+            return ControllerAction.Guide;
+
+        // One-shot buttons should be handled before held navigation.
+        // Otherwise a D-pad repeat can consume this poll and the button edge is lost.
+        if ((pressedThisFrame & ControllerButtons.Accept) != 0)
+            return ControllerAction.Accept;
+
+        if ((pressedThisFrame & ControllerButtons.Back) != 0)
+            return ControllerAction.Back;
+
+        if ((pressedThisFrame & ControllerButtons.Menu) != 0)
+            return ControllerAction.Menu;
+
+        if ((pressedThisFrame & ControllerButtons.View) != 0)
+            return ControllerAction.View;
+
+        if ((pressedThisFrame & ControllerButtons.LeftShoulder) != 0)
+            return ControllerAction.PreviousTab;
+
+        if ((pressedThisFrame & ControllerButtons.RightShoulder) != 0)
+            return ControllerAction.NextTab;
+
 
         ControllerAction dpadAction = ControllerAction.none;
 
@@ -78,27 +102,6 @@ internal sealed class ControllerService {
 
         if (dpadResult != ControllerAction.none)
             return dpadResult;
-
-        if ((pressedThisFrame & ControllerButtons.Accept) != 0)
-            return ControllerAction.Accept;
-
-        if ((pressedThisFrame & ControllerButtons.Back) != 0)
-            return ControllerAction.Back;
-
-        if ((pressedThisFrame & ControllerButtons.Menu) != 0)
-            return ControllerAction.Menu;
-
-        if ((pressedThisFrame & ControllerButtons.View) != 0)
-            return ControllerAction.View;
-
-        if((pressedThisFrame & ControllerButtons.LeftShoulder) != 0)
-            return ControllerAction.PreviousTab;
-
-        if((pressedThisFrame & ControllerButtons.RightShoulder) != 0)
-            return ControllerAction.NextTab;
-
-        if ((systemPressedThisFrame & ControllerSystemButtons.Guide) != 0)
-            return ControllerAction.Guide;
 
         const float pressThreshold = 0.65f;
         const float releaseThreshold = 0.30f;
