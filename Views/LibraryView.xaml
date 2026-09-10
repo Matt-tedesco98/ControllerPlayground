@@ -62,7 +62,8 @@
 
                         <controls:GameTile
                             Title="{x:Bind Name}"
-                            CoverImageUrl="{x:Bind LibraryCapsuleUrl}"/>
+                            CoverImageUrl="{x:Bind LibraryCapsuleUrl}"
+                            Activated="GameTile_Activated"/>
 
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>

@@ -67,7 +67,6 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
         public async Task LoadFullLibraryAsync() {
             if (_games.Count > 0) {
                 Debug.WriteLine($"Steam library already loaded: {_games.Count}");
-                LibraryLoaded?.Invoke(_games.Count);
                 return;
             }
 

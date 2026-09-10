@@ -22,12 +22,14 @@ public sealed partial class MainWindow : Window {
     public MainWindow() {
         InitializeComponent();
 
+        //views
         _homeView.NavigateRequested += NavigateTo;
         _settingsView.NavigateRequested += NavigateTo;
         _GamePageView.NavigateRequested += NavigateTo;
 
         GuideMenu.NavigateRequested += GuideMenu_NavigationRequested;
         _homeView.GamePageRequested += HomeView_GamePageRequested;
+        _libraryView.GamePageRequested += HomeView_GamePageRequested;
 
         NavigateTo(AppScreen.Home);
 
@@ -94,7 +96,7 @@ public sealed partial class MainWindow : Window {
         }
         // guide button overlay
         if (action == ControllerAction.Guide) {
-            System.Diagnostics.Debug.WriteLine("Guide requested");
+            Debug.WriteLine("Guide requested");
             ToggleGuide();
             return;
         }

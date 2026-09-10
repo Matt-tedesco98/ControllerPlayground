@@ -24,8 +24,18 @@ namespace ControllerPlayground.Views {
     public sealed partial class LibraryView : UserControl {
 
         public ObservableCollection<SteamLibraryGame> Games { get; } = new();
+        internal event Action<GameItem, GamePageTab>? GamePageRequested;
+
         public LibraryView() {
             InitializeComponent();
+
+            Loaded += LibraryView_Loaded;
+        }
+
+        private void LibraryView_Loaded(object sender, RoutedEventArgs e) {
+            if (Games.Count > 0) {
+                RestoreFocus();
+            }
         }
 
         internal void SetSteamLibraryGames(IReadOnlyList<SteamLibraryGame> games) {
@@ -38,7 +48,8 @@ namespace ControllerPlayground.Views {
             RestoreFocus();
         }
 
-        internal void HandleControllerAction(ControllerAction action) { 
+        internal void HandleControllerAction(ControllerAction action) {
+            System.Diagnostics.Debug.WriteLine($"Library controller action: {action}");
             var focusOption  = new FindNextElementOptions {
                 SearchRoot = LibraryRoot
             };
@@ -59,8 +70,23 @@ namespace ControllerPlayground.Views {
                     FocusManager.TryMoveFocus(FocusNavigationDirection.Right, focusOption);
                     break;
 
-            }
+                case ControllerAction.Accept: {
+                        object? focused = FocusManager.GetFocusedElement(LibraryRoot.XamlRoot);
 
+                        if (focused is DependencyObject element) {
+                            DependencyObject? current = element;
+
+                            while (current != null) {
+                                if (current is GameTile tile) {
+                                    tile.Activate();
+                                    break;
+                                }
+                                current = VisualTreeHelper.GetParent(current);
+                            }
+                        }
+                    }
+                    break;
+            }
         }
 
         internal void RestoreFocus() {
@@ -72,5 +98,24 @@ namespace ControllerPlayground.Views {
             });
         }
 
+        private void GameTile_Activated(object? sender, EventArgs e) {
+            if (sender is not GameTile tile)
+                return;
+
+            int index = LibraryRepeater.GetElementIndex(tile);
+
+            if(index < 0 || index >= Games.Count)
+                return;
+
+            SteamLibraryGame steamGame = Games[index];
+
+            GameItem game = new() {
+                Title = steamGame.Name,
+                SteamAppId = steamGame.AppId,
+                CoverImagePath = steamGame.LibraryCapsuleUrl
+            };
+
+            GamePageRequested?.Invoke(game, GamePageTab.Activity);
+        }
     }
 }
