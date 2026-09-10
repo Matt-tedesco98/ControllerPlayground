@@ -46,7 +46,8 @@
             
             <ItemsRepeater
                 x:Name="LibraryRepeater"
-                ItemsSource="{x:Bind Games, Mode=OneWay}">
+                ItemsSource="{x:Bind Games, Mode=OneWay}"
+                XYFocusKeyboardNavigation="Enabled">
 
                 <ItemsRepeater.Layout>
                     <UniformGridLayout

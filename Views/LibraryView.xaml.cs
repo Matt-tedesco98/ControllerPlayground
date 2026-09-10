@@ -14,6 +14,8 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using ControllerPlayground.Models;
 using System.Collections.ObjectModel;
+using ControllerPlayground.Input;
+using ControllerPlayground.Controls;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -32,6 +34,43 @@ namespace ControllerPlayground.Views {
                 Games.Add(game);
             }
             GameCountText.Text = $"{Games.Count} games";
+
+            RestoreFocus();
         }
+
+        internal void HandleControllerAction(ControllerAction action) { 
+            var focusOption  = new FindNextElementOptions {
+                SearchRoot = LibraryRoot
+            };
+
+            switch (action) {
+                case ControllerAction.NavigateUp:
+                    FocusManager.TryMoveFocus(FocusNavigationDirection.Up, focusOption); break;
+
+                case ControllerAction.NavigateDown:
+                    FocusManager.TryMoveFocus(FocusNavigationDirection.Down, focusOption);
+                    break;
+
+                case ControllerAction.NavigateLeft:
+                    FocusManager.TryMoveFocus(FocusNavigationDirection.Left, focusOption);
+                    break;
+
+                case ControllerAction.NavigateRight:
+                    FocusManager.TryMoveFocus(FocusNavigationDirection.Right, focusOption);
+                    break;
+
+            }
+
+        }
+
+        internal void RestoreFocus() {
+            DispatcherQueue.TryEnqueue(() => { 
+                if (Games.Count == 0)
+                    return;
+                if (LibraryRepeater.GetOrCreateElement(0) is GameTile firstTile)
+                    firstTile.FocusTile();
+            });
+        }
+
     }
 }

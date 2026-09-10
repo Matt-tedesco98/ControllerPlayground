@@ -143,6 +143,9 @@ public sealed partial class MainWindow : Window {
             case AppScreen.GamePage:
                 _GamePageView.HandleControllerAction(action);
                 break;
+            case AppScreen.Library:
+                _libraryView.HandleControllerAction(action);
+                break;
         }
     }
 
