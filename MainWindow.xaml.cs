@@ -52,6 +52,7 @@ public sealed partial class MainWindow : Window {
         _steamAppInfoService = new SteamAppInfoService(_steamSessionService);
 
         _steamLibraryService = new SteamLibraryService(_steamSessionService, _steamAppInfoService);
+        _steamLibraryService.LibraryLoaded += SteamLibraryService_LibraryLoaded;
 
         FriendsOverlay.ChatService = _steamChatService;
 
@@ -84,6 +85,7 @@ public sealed partial class MainWindow : Window {
     private readonly HomeView _homeView = new();
     private readonly SettingsView _settingsView = new();
     private readonly GamePageView _GamePageView = new();
+    private readonly LibraryView _libraryView = new();
 
     private void ControllerTimer_Tick(object? sender, object e) {
         ControllerAction action = _controllerService.PollAction();
@@ -169,6 +171,10 @@ public sealed partial class MainWindow : Window {
                 break;
             case AppScreen.GamePage:
                 ScreenHost.Content = _GamePageView;
+                break;
+            case AppScreen.Library:
+                ScreenHost.Content = _libraryView;
+                _ = _steamLibraryService.LoadFullLibraryAsync();
                 break;
 
         }
@@ -320,5 +326,11 @@ public sealed partial class MainWindow : Window {
         } catch (Exception ex) {
             Debug.WriteLine($"Failed to load recent Steam games: {ex}");
         }
+    }
+
+    private void SteamLibraryService_LibraryLoaded(int gameCount) {
+        DispatcherQueue.TryEnqueue(() => {
+            _libraryView.SetSteamLibraryGames(_steamLibraryService.Games);
+        });
     }
 }

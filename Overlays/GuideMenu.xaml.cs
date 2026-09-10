@@ -24,7 +24,7 @@ namespace ControllerPlayground.Overlays {
         internal event Action<AppScreen>? NavigateRequested;
 
         public void FocusFirstItem() {
-            (_lastFocusedButton ?? LibraryButton).Focus(FocusState.Programmatic);
+            (_lastFocusedButton ?? LibraryButton).Focus(FocusState.Keyboard);
         }
 
         private void GuideButton_GotFocus(object sender, RoutedEventArgs e) {
@@ -64,6 +64,8 @@ namespace ControllerPlayground.Overlays {
                         var focused = FocusManager.GetFocusedElement(GuideRoot.XamlRoot) as Button;
                         if (focused == SettingsButton) {
                             NavigateRequested?.Invoke(AppScreen.Settings);
+                        }else if (focused == LibraryButton) {
+                            NavigateRequested?.Invoke(AppScreen.Library);
                         }
                     }
                     break;

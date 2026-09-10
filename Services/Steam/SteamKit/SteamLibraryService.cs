@@ -64,7 +64,13 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
             LicenseListReceived?.Invoke(callback.LicenseList.Count);
         }
 
-        private async Task LoadFullLibraryAsync() {
+        public async Task LoadFullLibraryAsync() {
+            if (_games.Count > 0) {
+                Debug.WriteLine($"Steam library already loaded: {_games.Count}");
+                LibraryLoaded?.Invoke(_games.Count);
+                return;
+            }
+
             if (_licenses.Count == 0) {
                 Debug.WriteLine("Steam full library requested before liceses were received.");
                 return;

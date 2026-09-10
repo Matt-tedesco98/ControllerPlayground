@@ -29,6 +29,7 @@
 	  <None Remove="Views\FriendsView.xaml" />
 	  <None Remove="Views\GameActivityView.xaml" />
 	  <None Remove="Views\HomeView.xaml" />
+	  <None Remove="Views\LibraryView.xaml" />
 	  <None Remove="Views\SettingsView.xaml" />
 	</ItemGroup>
 
@@ -111,6 +112,12 @@
 	<ItemGroup>
 	  <Folder Include="Assets\ControllerGlyphs\Playstation\" />
 	  <Folder Include="Assets\ControllerGlyphs\Xbox\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Views\LibraryView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 
 	<ItemGroup>

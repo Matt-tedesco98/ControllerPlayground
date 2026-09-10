@@ -9,6 +9,7 @@ namespace ControllerPlayground.Navigation {
         Home,
         Settings,
         GamePage,
+        Library,
 
     }
 }
