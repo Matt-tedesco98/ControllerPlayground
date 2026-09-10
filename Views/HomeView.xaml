@@ -11,25 +11,35 @@
         Background="#202020"
         IsTabStop="True">
 
+        <StackPanel
+            VerticalAlignment="Center"
+            Spacing="14">
+            
+            <TextBlock
+                Text="Recently Played"
+                Margin="24,0,24,0"
+                FontSize="30"
+                FontWeight="SemiBold"
+                Foreground="White"/>
 
-        <ScrollViewer
+            <ScrollViewer
             x:Name="LibraryScrollViewer"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Center"
             HorizontalScrollMode="Enabled"
             HorizontalScrollBarVisibility="Hidden"
             VerticalScrollMode="Disabled"
             VerticalScrollBarVisibility="Disabled">
-            
-            <StackPanel
+
+                <StackPanel
                 x:Name="GameTitlePanel"
                 Orientation="Horizontal"
                 Spacing="24"
-                Padding="24"
+                Padding="24,8,24,8"
                 XYFocusKeyboardNavigation="Enabled"/>
-            
-        </ScrollViewer>
-        
+
+            </ScrollViewer>
+        </StackPanel>
+
         <StackPanel
             Orientation="Horizontal"
             HorizontalAlignment="Right"

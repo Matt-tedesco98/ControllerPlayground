@@ -7,6 +7,7 @@
         x:Name="TileButton"
         Width="220"
         Height="320"
+        Margin="6"
         Padding="0"
         CornerRadius="18"
         HorizontalContentAlignment="Stretch"
@@ -20,7 +21,8 @@
             <Border
                 Background="#343434"
                 CornerRadius="18" />
-
+            
+            <!-- Steam Cover Image -->
             <Border
                 CornerRadius="13">
                 
@@ -30,7 +32,8 @@
                     ImageFailed="CoverImage_ImageFailed" />
                 
             </Border>
-
+            
+            <!-- Gradient Overlay -->
             <Border
                 CornerRadius="18">
 
@@ -38,38 +41,33 @@
                     <LinearGradientBrush
                         StartPoint="0.5,0"
                         EndPoint="0.5,1">
-                        
+
                         <GradientStop
                             Color="#00000000"
                             Offset="0.35" />
-                        
+
                         <GradientStop
                             Color="#E6000000"
                             Offset="1" />
-                        
+
                     </LinearGradientBrush>
                 </Border.Background>
-                
+
             </Border>
 
-            <StackPanel
+            <TextBlock
+                x:Name="TitleText"
+                Text="{x:Bind Title, Mode=OneWay}"
                 VerticalAlignment="Bottom"
-                Padding="18"
-                Spacing="6">
-
-                <TextBlock
-                    x:Name="TitleText"
-                    Text="{x:Bind Title, Mode=OneWay}"
-                    FontSize="24"
-                    FontWeight="SemiBold"
-                    Foreground="White"
-                    TextWrapping="Wrap" />
-
-                <TextBlock
-                    Text="Press Enter to launch"
-                    FontSize="14"
-                    Foreground="#B8B8B8" />
-            </StackPanel>
+                Margin="16"
+                FontSize="22"
+                FontWeight="SemiBold"
+                Foreground="White"
+                TextWrapping="Wrap"
+                MaxLines="2"/>
+            
         </Grid>
+        
     </Button>
+    
 </UserControl>

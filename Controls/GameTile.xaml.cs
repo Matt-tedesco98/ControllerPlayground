@@ -70,7 +70,7 @@ namespace ControllerPlayground.Controls {
         }
 
         public bool FocusTile() {
-            return TileButton.Focus(FocusState.Programmatic);
+            return TileButton.Focus(FocusState.Keyboard);
         }
 
         public event EventHandler? Activated;
