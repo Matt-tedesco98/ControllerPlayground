@@ -18,6 +18,7 @@ using ControllerPlayground.Input;
 using ControllerPlayground.Controls;
 using ControllerPlayground.Services.Steam;
 using ControllerPlayground.Overlays;
+using System.Diagnostics;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -30,6 +31,8 @@ namespace ControllerPlayground.Views {
         private GameTile? _contextMenuTile;
         private SteamLibraryGame? _contextMenuGame;
         private readonly SteamLaunchService _steamLaunchService = new();
+        private readonly List<SteamLibraryGame> _allGames = new();
+        private readonly HashSet<uint> _installedAppIds = new();
         public ObservableCollection<SteamLibraryGame> Games { get; } = new();
         internal event Action<GameItem, GamePageTab>? GamePageRequested;
 
@@ -46,12 +49,24 @@ namespace ControllerPlayground.Views {
             }
         }
 
-        internal void SetSteamLibraryGames(IReadOnlyList<SteamLibraryGame> games) {
+        internal void SetSteamLibraryGames(IReadOnlyList<SteamLibraryGame> games, IReadOnlyCollection<uint> installedAppIds) {
+            _allGames.Clear();
+            _allGames.AddRange(games);
+
+            _installedAppIds.Clear();
+
+            foreach (uint appId in installedAppIds) {
+                _installedAppIds.Add(appId);
+            }
+
             Games.Clear();
+
             foreach (SteamLibraryGame game in games) {
                 Games.Add(game);
             }
             GameCountText.Text = $"{Games.Count} games";
+
+            Debug.WriteLine($"Library recived {_installedAppIds.Count} installed appIDs");
 
             RestoreFocus();
         }
@@ -90,6 +105,16 @@ namespace ControllerPlayground.Views {
                 case ControllerAction.Accept: {
                         object? focused = FocusManager.GetFocusedElement(LibraryRoot.XamlRoot);
 
+                        if (focused == AllGamesFilterButton) {
+                            ShowAllGames();
+                            break;
+                        }
+
+                        if (focused == InstalledFilterButton) {
+                            ShowInstalledGames();
+                            break;
+                        }
+
                         if (focused is DependencyObject element) {
                             DependencyObject? current = element;
 
@@ -111,11 +136,20 @@ namespace ControllerPlayground.Views {
         }
 
         internal void RestoreFocus() {
-            DispatcherQueue.TryEnqueue(() => { 
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => { 
                 if (Games.Count == 0)
                     return;
-                if (LibraryRepeater.GetOrCreateElement(0) is GameTile firstTile)
-                    firstTile.FocusTile();
+
+                LibraryRepeater.UpdateLayout();
+
+                if (LibraryRepeater.GetOrCreateElement(0) is not GameTile firstTile)
+                   return;
+
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => {
+                    bool focused = firstTile.FocusTile();
+
+                    Debug.WriteLine($"Library restore focus: {focused}");
+                });
             });
         }
 
@@ -203,5 +237,32 @@ namespace ControllerPlayground.Views {
                 
         }
 
+        private void AllGamesFilterButton_Click(object sender, RoutedEventArgs e) {
+            ShowAllGames();
+        }
+
+        private void InstalledFilterButton_Click(object sender, RoutedEventArgs e) {
+            ShowInstalledGames();
+        }
+        
+        private void ShowAllGames() {
+            Games.Clear();
+            foreach (SteamLibraryGame game in _allGames) {
+                Games.Add(game);
+            }
+            GameCountText.Text = $"{Games.Count} games";
+            RestoreFocus();
+        }
+
+        private void ShowInstalledGames() {
+            Games.Clear();
+            foreach (SteamLibraryGame game in _allGames) {
+                if (_installedAppIds.Contains(game.AppId)) {
+                    Games.Add(game);
+                }
+            }
+            GameCountText.Text = $"{Games.Count} games";
+            RestoreFocus();
+        }
     }
 }

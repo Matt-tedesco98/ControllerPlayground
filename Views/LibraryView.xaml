@@ -35,7 +35,29 @@
                 Text="Loading games..."
                 FontSize="18"
                 Foreground="#B8B8B8"/>
-            
+
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="12"
+                Margin="0,12,0,0">
+                
+                <Button
+                    x:Name="AllGamesFilterButton"
+                    Content="All Games"
+                    FontSize="18"
+                    Padding="18,10"
+                    Click="AllGamesFilterButton_Click"/>
+                
+                <Button
+                    x:Name="InstalledFilterButton"
+                    Content="Installed"
+                    FontSize="18"
+                    Padding="18,10"
+                    Click="InstalledFilterButton_Click"/>
+                
+            </StackPanel>
+
+
         </StackPanel>
         
         <ScrollViewer

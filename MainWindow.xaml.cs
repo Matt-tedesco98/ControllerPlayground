@@ -364,9 +364,10 @@ public sealed partial class MainWindow : Window {
         }
     }
 
-    private void SteamLibraryService_LibraryLoaded(int gameCount) {
+    private async void SteamLibraryService_LibraryLoaded(int gameCount) {
+        IReadOnlyCollection<uint> installedAppIds = await _steamLocalService.GetInstalledAppIdsAsync();
         DispatcherQueue.TryEnqueue(() => {
-            _libraryView.SetSteamLibraryGames(_steamLibraryService.Games);
+            _libraryView.SetSteamLibraryGames(_steamLibraryService.Games, installedAppIds);
         });
     }
 }

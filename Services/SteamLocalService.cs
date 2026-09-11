@@ -260,13 +260,15 @@ namespace ControllerPlayground.Services {
                 IReadOnlyDictionary<uint, DateTimeOffset>>(results);
         }
         public Task<IReadOnlyCollection<uint>> GetInstalledAppIdsAsync(CancellationToken cancellationToken = default) {
+            Debug.WriteLine(">>> ENTERED GetInstalledAppIdsAsync <<<");
             cancellationToken.ThrowIfCancellationRequested();
 
             HashSet<uint> installedAppIds = new();
 
             string? steamPath = GetSteamInstallPath();
+            Debug.WriteLine($"Installed detection Steam path: {steamPath ?? "<null>"}");
 
-            if (steamPath != null) {
+            if (steamPath == null) {
                 return Task.FromResult<IReadOnlyCollection<uint>>(installedAppIds);
             }
 
@@ -275,6 +277,10 @@ namespace ControllerPlayground.Services {
                 "steamapps",
                 "libraryfolders.vdf");
 
+            Debug.WriteLine($"Steam libraryfolders path: {libraryFoldersPath}");
+
+            Debug.WriteLine($"Steam libraryfolders exists: {File.Exists(libraryFoldersPath)}");
+
             if (!File.Exists(libraryFoldersPath)) {
                 Debug.WriteLine("Steam libraryfolders.vdf was not found");
                 return Task.FromResult<IReadOnlyCollection<uint>>(installedAppIds);
@@ -282,11 +288,15 @@ namespace ControllerPlayground.Services {
 
             VdfNode root = VdfParser.ParseFile(libraryFoldersPath);
 
+            Debug.WriteLine($"libraryfolders root children: {string.Join(", ", root.Children.Keys)}");
+
             if (!root.TryGetChild(
                 "libraryfolders",
                 out VdfNode? libraryFolders) || libraryFolders == null) { 
                 return Task.FromResult<IReadOnlyCollection<uint>>(installedAppIds);
             }
+
+            Debug.WriteLine($"Steam library entries: {string.Join(", ", libraryFolders.Children.Keys)}");
 
             foreach (var libraryEntry in libraryFolders.Children) {
                 if (!libraryEntry.Value.TryGetChild(
@@ -297,6 +307,7 @@ namespace ControllerPlayground.Services {
                 }
 
                 foreach (var appEntry in apps.Children) {
+                    Debug.WriteLine($"Library {libraryEntry.Key} children: " +$"{string.Join(", ", libraryEntry.Value.Children.Keys)}");
                     if (uint.TryParse(
                             appEntry.Key,
                             out uint appId)) {
