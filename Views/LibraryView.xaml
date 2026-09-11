@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:ControllerPlayground.Controls"
     xmlns:models="using:ControllerPlayground.Models"
+    xmlns:overlays="using:ControllerPlayground.Overlays"
     mc:Ignorable="d">
 
     <Grid
@@ -71,7 +72,17 @@
             </ItemsRepeater>
             
         </ScrollViewer>
-        
+
+        <Grid 
+            x:Name="ContextMenuLayer"
+            Visibility="Collapsed">
+
+            <overlays:GameContextMenu
+                x:Name="GameMenu"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"/>
+        </Grid>
+
     </Grid>
     
 </UserControl>

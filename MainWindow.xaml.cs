@@ -136,6 +136,15 @@ public sealed partial class MainWindow : Window {
 
         // handle back
         if (action == ControllerAction.Back) {
+            if (_currentScreen == AppScreen.Home && _homeView.IsContextMenuOpen) {
+                _homeView.HandleControllerAction(action);
+                return;
+            }
+
+            if (_currentScreen == AppScreen.Library && _libraryView.IsContextMenuOpen) {
+                _libraryView.HandleControllerAction(action);
+                return;
+            }
             GoBack();
             return;
         }

@@ -145,6 +145,7 @@ namespace ControllerPlayground.Views {
         }
 
         private bool _isContextMenuOpen;
+        internal bool IsContextMenuOpen => _isContextMenuOpen;
 
         private void OpenContextMenu() {
             if (_lastFocusedTitle == null)

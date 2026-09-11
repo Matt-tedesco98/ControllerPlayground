@@ -23,6 +23,10 @@ using ControllerPlayground.Controls;
 namespace ControllerPlayground.Views {
     public sealed partial class LibraryView : UserControl {
 
+        private bool _isContextMenuOpen;
+        internal bool IsContextMenuOpen => _isContextMenuOpen;
+        private GameTile? _contextMenuTile;
+        private SteamLibraryGame? _contextMenuGame;
         public ObservableCollection<SteamLibraryGame> Games { get; } = new();
         internal event Action<GameItem, GamePageTab>? GamePageRequested;
 
@@ -53,6 +57,15 @@ namespace ControllerPlayground.Views {
             var focusOption  = new FindNextElementOptions {
                 SearchRoot = LibraryRoot
             };
+
+            if (_isContextMenuOpen) { 
+                if (action== ControllerAction.Back || action == ControllerAction.Menu) {
+                    CloseContextMenu();
+                    return;
+                }
+                GameMenu.HandleControllerAction(action);
+                return;
+            }
 
             switch (action) {
                 case ControllerAction.NavigateUp:
@@ -86,6 +99,10 @@ namespace ControllerPlayground.Views {
                         }
                     }
                     break;
+
+                case ControllerAction.Menu:
+                    OpenContextMenu();
+                    break;
             }
         }
 
@@ -117,5 +134,43 @@ namespace ControllerPlayground.Views {
 
             GamePageRequested?.Invoke(game, GamePageTab.Activity);
         }
+        private void OpenContextMenu() {
+            object? focused = FocusManager.GetFocusedElement(LibraryRoot.XamlRoot);
+
+            if (focused is not DependencyObject element)
+                return;
+            DependencyObject? current = element;
+
+            while (current != null) {
+                if (current is GameTile tile) {
+                    int index = LibraryRepeater.GetElementIndex(tile);
+                    if (index < 0 || index >= Games.Count)
+                        return;
+
+                    _contextMenuTile = tile;
+                    _contextMenuGame = Games[index];
+
+                    GameMenu.GameTitle = _contextMenuGame.Name;
+
+                    _isContextMenuOpen = true;
+                    ContextMenuLayer.Visibility = Visibility.Visible;
+
+                    DispatcherQueue.TryEnqueue(() => {
+                        GameMenu.FocusFirstItem();
+                    });
+                    return;
+                }
+                current = VisualTreeHelper.GetParent(current);
+            }
+        }
+        private void CloseContextMenu() { 
+            _isContextMenuOpen = false;
+            ContextMenuLayer .Visibility = Visibility.Collapsed;
+
+            DispatcherQueue.TryEnqueue(() => {
+                _contextMenuTile?.FocusTile();
+            });
+        }
+
     }
 }
