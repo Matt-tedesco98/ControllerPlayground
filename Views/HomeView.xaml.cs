@@ -10,6 +10,7 @@ using ControllerPlayground.Navigation;
 using ControllerPlayground.Overlays;
 using ControllerPlayground.Models;
 using System.Collections.Generic;
+using ControllerPlayground.Services.Steam;
 
 namespace ControllerPlayground.Views {
     public sealed partial class HomeView : UserControl {
@@ -24,6 +25,7 @@ namespace ControllerPlayground.Views {
         internal event Action<AppScreen>? NavigateRequested;
 
         private readonly Dictionary<GameTile, GameItem> _gamesByTile = new();
+        private readonly SteamLaunchService _steamLaunchService = new();
 
         internal event Action<GameItem, GamePageTab>? GamePageRequested;
 
@@ -164,8 +166,12 @@ namespace ControllerPlayground.Views {
 
         private void GameMenu_ActionRequested(GameContextAction action) {
             switch (action) {
-                case GameContextAction.Play:
-                    Debug.WriteLine($"Play requested: {_lastFocusedTitle?.Title}");
+                case GameContextAction.Play: {
+                        if (_lastFocusedTitle != null && _gamesByTile.TryGetValue(_lastFocusedTitle, out GameItem? playGame) && playGame.SteamAppId.HasValue) {
+                            _ = _steamLaunchService.LaunchGameAsync(playGame.SteamAppId.Value);
+                            break;
+                        }
+                    }
                     break;
                 case GameContextAction.GameDetails:
                     if (_lastFocusedTitle != null &&
