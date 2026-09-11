@@ -33,7 +33,9 @@ namespace ControllerPlayground.Views {
             Loaded += GamePageView_Loaded;
         }
 
+        //Services
         public readonly ISteamService _steamService = new SteamService();
+        private readonly SteamLaunchService _steamLaunchService = new();
 
         internal void FocusInitialElement() {
             DispatcherQueue.TryEnqueue(() => {
@@ -185,6 +187,15 @@ namespace ControllerPlayground.Views {
                     }
                     break;
 
+                case ControllerAction.Accept: {
+                        var focused = FocusManager.GetFocusedElement(PageRoot.XamlRoot);
+
+                        if (focused == PlayButton) {
+                            _ = LaunchCurrentGameAsync();
+                        }
+                    }
+                    break;
+
 
             }
         }
@@ -314,5 +325,17 @@ namespace ControllerPlayground.Views {
             Debug.WriteLine($"Steam returned {items.Count} news items.");
         }
 
+        private async Task LaunchCurrentGameAsync() {
+            uint? addId = Game?.SteamAppId;
+            if (addId == null) {
+                Debug.WriteLine("Cannot launch game: Steam AppId is missing");
+                return;
+            }
+            await _steamLaunchService.LaunchGameAsync(addId.Value);
+        }
+
+        private async void PlayButton_Click(object sender, RoutedEventArgs e) {
+            await LaunchCurrentGameAsync();
+        }
     }
 }

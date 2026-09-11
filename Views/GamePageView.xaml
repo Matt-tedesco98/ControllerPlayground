@@ -65,6 +65,7 @@
                         Width="220"
                         Height="56"
                         FontSize="22"
+                        Click="PlayButton_Click"
                         GotFocus="PlayButton_GotFocus"
                         LostFocus="PlayButton_LostFocus"/>
 
