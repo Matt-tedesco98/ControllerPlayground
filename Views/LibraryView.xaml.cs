@@ -16,6 +16,8 @@ using ControllerPlayground.Models;
 using System.Collections.ObjectModel;
 using ControllerPlayground.Input;
 using ControllerPlayground.Controls;
+using ControllerPlayground.Services.Steam;
+using ControllerPlayground.Overlays;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -27,6 +29,7 @@ namespace ControllerPlayground.Views {
         internal bool IsContextMenuOpen => _isContextMenuOpen;
         private GameTile? _contextMenuTile;
         private SteamLibraryGame? _contextMenuGame;
+        private readonly SteamLaunchService _steamLaunchService = new();
         public ObservableCollection<SteamLibraryGame> Games { get; } = new();
         internal event Action<GameItem, GamePageTab>? GamePageRequested;
 
@@ -34,6 +37,7 @@ namespace ControllerPlayground.Views {
             InitializeComponent();
 
             Loaded += LibraryView_Loaded;
+            GameMenu.ActionRequested += GameMenu_ActionRequested;
         }
 
         private void LibraryView_Loaded(object sender, RoutedEventArgs e) {
@@ -170,6 +174,33 @@ namespace ControllerPlayground.Views {
             DispatcherQueue.TryEnqueue(() => {
                 _contextMenuTile?.FocusTile();
             });
+        }
+
+        private void GameMenu_ActionRequested(GameContextAction action) {
+            switch (action) {
+                case GameContextAction.Play:
+                    if (_contextMenuGame != null) {
+                        uint appId = _contextMenuGame.AppId;
+                        CloseContextMenu();
+                        _ = _steamLaunchService.LaunchGameAsync(appId);
+                    }
+                    break;
+                case GameContextAction.GameDetails:
+                    if (_contextMenuGame != null) {
+                        SteamLibraryGame steamGame = _contextMenuGame;
+                        CloseContextMenu();
+
+                        GameItem game = new() {
+                            Title = steamGame.Name,
+                            SteamAppId = steamGame.AppId,
+                            CoverImagePath = steamGame.LibraryCapsuleUrl
+                        };
+
+                        GamePageRequested?.Invoke(game, GamePageTab.GameInfo);
+                    }
+                    break;
+            }
+                
         }
 
     }
