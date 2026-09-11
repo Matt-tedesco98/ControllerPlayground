@@ -17,6 +17,7 @@ namespace ControllerPlayground.Views {
             InitializeComponent();
 
             GameMenu.ActionRequested += GameMenu_ActionRequested;
+            Loaded += HomeView_Loaded;
 
         }
 
@@ -25,6 +26,10 @@ namespace ControllerPlayground.Views {
         private readonly Dictionary<GameTile, GameItem> _gamesByTile = new();
 
         internal event Action<GameItem, GamePageTab>? GamePageRequested;
+
+        private void HomeView_Loaded(object sender,RoutedEventArgs e) {
+            RestoreFocus();
+        }
         private void GameTile_Activated(object sender, EventArgs e) {
             if (sender is GameTile gameTile && _gamesByTile.TryGetValue(gameTile, out var game)) {
                 GamePageRequested?.Invoke(game, GamePageTab.Activity);

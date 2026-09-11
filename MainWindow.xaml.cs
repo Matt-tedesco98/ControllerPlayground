@@ -134,6 +134,12 @@ public sealed partial class MainWindow : Window {
             return;
         }
 
+        // handle back
+        if (action == ControllerAction.Back) {
+            GoBack();
+            return;
+        }
+
 
         switch (_currentScreen) {
             case AppScreen.Home:
@@ -164,13 +170,22 @@ public sealed partial class MainWindow : Window {
         System.Diagnostics.Debug.WriteLine($"Controller family changed: {family}");
     }
 
+    private readonly Stack<AppScreen> _navigationHistory = new();
+    private AppScreen _currentScreen = AppScreen.Home;
     private void NavigateTo(AppScreen screen) {
+        NavigateTo(screen, true);
+    }
+
+    private void NavigateTo(AppScreen screen, bool addToHistory) {
+        if (addToHistory && screen != _currentScreen) {
+            _navigationHistory.Push(_currentScreen);
+        }
         _currentScreen = screen;
+
         switch (screen) {
             case AppScreen.Home:
                 ScreenHost.Content = _homeView;
                 break;
-
             case AppScreen.Settings:
                 ScreenHost.Content = _settingsView;
                 break;
@@ -179,13 +194,20 @@ public sealed partial class MainWindow : Window {
                 break;
             case AppScreen.Library:
                 ScreenHost.Content = _libraryView;
-                _ = _steamLibraryService.LoadFullLibraryAsync();
-                break;
 
+                if (_steamLibraryService.Games.Count == 0) {
+                    _ = _steamLibraryService.LoadFullLibraryAsync();
+                }
+                break;
         }
     }
 
-    private AppScreen _currentScreen = AppScreen.Home;
+    private void GoBack() { 
+        if (_navigationHistory.Count == 0)
+            return;
+        AppScreen previousScreen = _navigationHistory.Pop();
+        NavigateTo(previousScreen, false);
+    }
 
     private bool _isGuideOpen;
 
