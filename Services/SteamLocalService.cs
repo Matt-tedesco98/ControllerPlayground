@@ -259,5 +259,56 @@ namespace ControllerPlayground.Services {
             return Task.FromResult<
                 IReadOnlyDictionary<uint, DateTimeOffset>>(results);
         }
+        public Task<IReadOnlyCollection<uint>> GetInstalledAppIdsAsync(CancellationToken cancellationToken = default) {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            HashSet<uint> installedAppIds = new();
+
+            string? steamPath = GetSteamInstallPath();
+
+            if (steamPath != null) {
+                return Task.FromResult<IReadOnlyCollection<uint>>(installedAppIds);
+            }
+
+            string libraryFoldersPath = Path.Combine(
+                steamPath,
+                "steamapps",
+                "libraryfolders.vdf");
+
+            if (!File.Exists(libraryFoldersPath)) {
+                Debug.WriteLine("Steam libraryfolders.vdf was not found");
+                return Task.FromResult<IReadOnlyCollection<uint>>(installedAppIds);
+            }
+
+            VdfNode root = VdfParser.ParseFile(libraryFoldersPath);
+
+            if (!root.TryGetChild(
+                "libraryfolders",
+                out VdfNode? libraryFolders) || libraryFolders == null) { 
+                return Task.FromResult<IReadOnlyCollection<uint>>(installedAppIds);
+            }
+
+            foreach (var libraryEntry in libraryFolders.Children) {
+                if (!libraryEntry.Value.TryGetChild(
+                "apps",
+                out VdfNode? apps) ||
+            apps == null) {
+                    continue;
+                }
+
+                foreach (var appEntry in apps.Children) {
+                    if (uint.TryParse(
+                            appEntry.Key,
+                            out uint appId)) {
+                        installedAppIds.Add(appId);
+                    }
+                }
+            }
+        
+            Debug.WriteLine($"Steam installed app IDs: {installedAppIds.Count}");
+
+            return Task.FromResult<IReadOnlyCollection<uint>>(
+                installedAppIds);
+        }
     }
 }

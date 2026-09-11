@@ -8,5 +8,6 @@ namespace ControllerPlayground.Services {
     public interface ISteamLocalService {
         Task<IReadOnlyList<SteamFriend>> GetFriendsAsync(CancellationToken cancellationToken = default);
         Task<IReadOnlyDictionary<uint, DateTimeOffset>> GetLastPlayedByAppIdAsync (CancellationToken cancellationToken = default);
+        Task<IReadOnlyCollection<uint>> GetInstalledAppIdsAsync(CancellationToken cancellationToken = default);
     }
 }
