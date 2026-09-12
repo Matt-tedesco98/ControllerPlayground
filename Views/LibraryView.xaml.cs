@@ -96,7 +96,9 @@ namespace ControllerPlayground.Views {
 
 
                 case ControllerAction.NavigateDown:
-                    FocusManager.TryMoveFocus(FocusNavigationDirection.Down, focusOption);
+                    if (!TryNavigateGameGridDown()) {
+                        FocusManager.TryMoveFocus(FocusNavigationDirection.Down, focusOption);
+                    }
                     break;
 
                 case ControllerAction.NavigateLeft:
@@ -304,6 +306,28 @@ namespace ControllerPlayground.Views {
                     int columns = Math.Max(1, (int)Math.Floor(LibraryRepeater.ActualWidth / 245.0));
                     int targetIndex = currentIndex - columns;
                     if (targetIndex < 0 ) 
+                        return false;
+                    FocusGameAtIndex(targetIndex);
+                    return true;
+                }
+                current = VisualTreeHelper.GetParent(current);
+            }
+            return false;
+        }
+
+        private bool TryNavigateGameGridDown() {
+            object? focused = FocusManager.GetFocusedElement(LibraryRoot.XamlRoot);
+            if (focused is not DependencyObject element)
+                return false;
+            DependencyObject? current = element;
+            while (current != null) {
+                if (current is GameTile tile) {
+                    int currentIndex = LibraryRepeater.GetElementIndex(tile);
+                    if (currentIndex < 0)
+                        return false;
+                    int columns = Math.Max(1, (int)Math.Floor(LibraryRepeater.ActualWidth / 245.0));
+                    int targetIndex = currentIndex + columns;
+                    if (targetIndex >= Games.Count)
                         return false;
                     FocusGameAtIndex(targetIndex);
                     return true;
