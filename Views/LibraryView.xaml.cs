@@ -28,6 +28,7 @@ namespace ControllerPlayground.Views {
 
         private bool _isContextMenuOpen;
         internal bool IsContextMenuOpen => _isContextMenuOpen;
+        private uint? _lastOpenedAppId;
         private GameTile? _contextMenuTile;
         private SteamLibraryGame? _contextMenuGame;
         private readonly SteamLaunchService _steamLaunchService = new();
@@ -88,7 +89,11 @@ namespace ControllerPlayground.Views {
 
             switch (action) {
                 case ControllerAction.NavigateUp:
-                    FocusManager.TryMoveFocus(FocusNavigationDirection.Up, focusOption); break;
+                    if (!TryNavigateGameGridUp()) {
+                        FocusManager.TryMoveFocus(FocusNavigationDirection.Up, focusOption);
+                    }
+                        break;
+
 
                 case ControllerAction.NavigateDown:
                     FocusManager.TryMoveFocus(FocusNavigationDirection.Down, focusOption);
@@ -136,19 +141,37 @@ namespace ControllerPlayground.Views {
         }
 
         internal void RestoreFocus() {
+            int targetIndex = 0;
+
+            if (_lastOpenedAppId.HasValue) {
+                for (int i = 0; i < Games.Count; i++) {
+                    if (Games[i].AppId == _lastOpenedAppId.Value) {
+                        targetIndex = i;
+                        break;
+                    }
+                }
+            }
+            RestoreFocusToIndex(targetIndex);
+        }
+
+        internal void RestoreFocusToIndex(int index) {
             DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => { 
                 if (Games.Count == 0)
                     return;
 
+                if (index < 0 || index >= Games.Count) {
+                    index = 0;
+                }
+                    
                 LibraryRepeater.UpdateLayout();
 
-                if (LibraryRepeater.GetOrCreateElement(0) is not GameTile firstTile)
+                if (LibraryRepeater.GetOrCreateElement(index) is not GameTile firstTile)
                    return;
 
                 DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => {
                     bool focused = firstTile.FocusTile();
 
-                    Debug.WriteLine($"Library restore focus: {focused}");
+                    Debug.WriteLine($"Library restored AppID {_lastOpenedAppId} " + $"at index {index}: {focused}");
                 });
             });
         }
@@ -163,6 +186,8 @@ namespace ControllerPlayground.Views {
                 return;
 
             SteamLibraryGame steamGame = Games[index];
+
+            _lastOpenedAppId = steamGame.AppId;
 
             GameItem game = new() {
                 Title = steamGame.Name,
@@ -222,6 +247,7 @@ namespace ControllerPlayground.Views {
                 case GameContextAction.GameDetails:
                     if (_contextMenuGame != null) {
                         SteamLibraryGame steamGame = _contextMenuGame;
+                        _lastOpenedAppId = steamGame.AppId;
                         CloseContextMenu();
 
                         GameItem game = new() {
@@ -263,6 +289,42 @@ namespace ControllerPlayground.Views {
             }
             GameCountText.Text = $"{Games.Count} games";
             RestoreFocus();
+        }
+
+        private bool TryNavigateGameGridUp() {
+            object? focused = FocusManager.GetFocusedElement(LibraryRoot.XamlRoot);
+            if (focused is not DependencyObject element)
+                return false;
+            DependencyObject? current = element;
+            while (current != null) {
+                if (current is GameTile tile) {
+                    int currentIndex = LibraryRepeater.GetElementIndex(tile);
+                    if (currentIndex < 0 )
+                        return false;
+                    int columns = Math.Max(1, (int)Math.Floor(LibraryRepeater.ActualWidth / 245.0));
+                    int targetIndex = currentIndex - columns;
+                    if (targetIndex < 0 ) 
+                        return false;
+                    FocusGameAtIndex(targetIndex);
+                    return true;
+                }
+                current = VisualTreeHelper.GetParent(current);
+            }
+            return false;
+        }
+
+        private void FocusGameAtIndex(int index) {
+            if (index < 0 || index >= Games.Count)
+                return;
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => {
+                LibraryRepeater.UpdateLayout();
+                if (LibraryRepeater.GetOrCreateElement(index) is not GameTile tile)
+                    return;
+                tile.StartBringIntoView();
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => { 
+                    tile.FocusTile();
+                });
+            });
         }
     }
 }
