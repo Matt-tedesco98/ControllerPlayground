@@ -274,6 +274,7 @@ namespace ControllerPlayground.Views {
         }
         
         private void ShowAllGames() {
+            UpdateFilterVisuals(false);
             Games.Clear();
             foreach (SteamLibraryGame game in _allGames) {
                 Games.Add(game);
@@ -283,6 +284,7 @@ namespace ControllerPlayground.Views {
         }
 
         private void ShowInstalledGames() {
+            UpdateFilterVisuals(true);
             Games.Clear();
             foreach (SteamLibraryGame game in _allGames) {
                 if (_installedAppIds.Contains(game.AppId)) {
@@ -349,6 +351,11 @@ namespace ControllerPlayground.Views {
                     tile.FocusTile();
                 });
             });
+        }
+
+        private void UpdateFilterVisuals(bool installed) { 
+            AllGamesFilterIndicator.Visibility = installed ? Visibility.Collapsed : Visibility.Visible;
+            InstalledFilterIndicator.Visibility = installed ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }
