@@ -131,7 +131,7 @@
                                         <TextBlock
                                             Text="Your Stuff"
                                             HorizontalAlignment="Center"/>
-                                        
+
                                         <Border
                                             x:Name="YourStuffTabIndicator"
                                             Height="3"
@@ -148,7 +148,7 @@
                                         <TextBlock
                                             Text="Community"
                                             HorizontalAlignment="Center"/>
-                                        
+
                                         <Border
                                             x:Name="CommunityTabIndicator"
                                             Height="3"
@@ -300,6 +300,77 @@
                                         LostFocus="PageActionButton_LostFocus"/>
 
                                 </StackPanel>
+
+                            </StackPanel>
+
+                        </Grid>
+
+                        <!-- Native Support page -->
+                        <Grid
+                            x:Name="SupportContent"
+                            Visibility="Collapsed">
+
+                            <StackPanel
+                                Spacing="16"
+                                MaxWidth="700"
+                                HorizontalAlignment="Left">
+
+                                <TextBlock
+                                    Text="Support"
+                                    FontSize="30"
+                                    FontWeight="SemiBold"/>
+
+                                <TextBlock
+                                    Text="Game support and troubleshooting"
+                                    FontSize="18"
+                                    Foreground="#B8B8B8"
+                                    Margin="0,0,0,12"/>
+
+                                <Button
+                                    x:Name="VerifyGameFilesButton"
+                                    Content="Verify Game Files"
+                                    Width="360"
+                                    Height="56"
+                                    HorizontalAlignment="Left"
+                                    GotFocus="PageActionButton_GotFocus"
+                                    LostFocus="PageActionButton_LostFocus"/>
+
+                                <Button
+                                    x:Name="BrowseLocalFilesButton"
+                                    Content="Browse Installed Files"
+                                    Width="360"
+                                    Height="56"
+                                    HorizontalAlignment="Left"
+                                    GotFocus="PageActionButton_GotFocus"
+                                    LostFocus="PageActionButton_LostFocus"/>
+
+                                <Button
+                                    x:Name="ControllerHelpButton"
+                                    Content="Controller Troubleshooting"
+                                    Width="360"
+                                    Height="56"
+                                    HorizontalAlignment="Left"
+                                    GotFocus="PageActionButton_GotFocus"
+                                    LostFocus="PageActionButton_LostFocus"/>
+
+                                <Button
+                                    x:Name="KnownIssuesButton"
+                                    Content="Known Issues"
+                                    Width="360"
+                                    Height="56"
+                                    HorizontalAlignment="Left"
+                                    GotFocus="PageActionButton_GotFocus"
+                                    LostFocus="PageActionButton_LostFocus"/>
+
+                                <Button
+                                    x:Name="SteamSupportButton"
+                                    Content="Steam Support"
+                                    Width="360"
+                                    Height="56"
+                                    HorizontalAlignment="Left"
+                                    Click="SteamSupportButton_Click"
+                                    GotFocus="PageActionButton_GotFocus"
+                                    LostFocus="PageActionButton_LostFocus"/>    
 
                             </StackPanel>
 

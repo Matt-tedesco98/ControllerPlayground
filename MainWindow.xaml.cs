@@ -140,9 +140,12 @@ public sealed partial class MainWindow : Window {
                 _homeView.HandleControllerAction(action);
                 return;
             }
-
             if (_currentScreen == AppScreen.Library && _libraryView.IsContextMenuOpen) {
                 _libraryView.HandleControllerAction(action);
+                return;
+            }
+            if (_currentScreen == AppScreen.GamePage && _GamePageView.IsSupportPageOpen) {
+                _GamePageView.CloseNativeSupportPage();
                 return;
             }
             GoBack();

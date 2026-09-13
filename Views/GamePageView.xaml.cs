@@ -37,6 +37,8 @@ namespace ControllerPlayground.Views {
         //Services
         public readonly ISteamService _steamService = new SteamService();
         private readonly SteamLaunchService _steamLaunchService = new();
+        private bool _isSupportPageOpen;
+        internal bool IsSupportPageOpen => _isSupportPageOpen;
 
         internal void FocusInitialElement() {
             DispatcherQueue.TryEnqueue(() => {
@@ -72,7 +74,11 @@ namespace ControllerPlayground.Views {
 
             CommunityContent.Visibility = SelectedTab == GamePageTab.Community ? Visibility.Visible : Visibility.Collapsed;
 
-            GameInfoContent.Visibility = SelectedTab == GamePageTab.GameInfo ? Visibility.Visible : Visibility.Collapsed;
+            if (SelectedTab != GamePageTab.GameInfo) {
+                _isSupportPageOpen = false;
+            }
+            GameInfoContent.Visibility = SelectedTab == GamePageTab.GameInfo && !_isSupportPageOpen ? Visibility.Visible : Visibility.Collapsed;
+            SupportContent.Visibility = SelectedTab == GamePageTab.GameInfo && !_isSupportPageOpen ? Visibility.Collapsed : Visibility.Visible;
 
             ActivityTabIndicator.Visibility = SelectedTab == GamePageTab.Activity ? Visibility.Visible : Visibility.Collapsed;
             YourStuffTabIndicator.Visibility = SelectedTab == GamePageTab.YourStuff ? Visibility.Visible : Visibility.Collapsed;
@@ -205,6 +211,10 @@ namespace ControllerPlayground.Views {
                             break;
                         }
                         if (focused == SupportButton) {
+                            OpenNativeSupportPage();
+                            break;
+                        }
+                        if (focused == SteamSupportButton) {
                             _ = OpenSupportPageAsync();
                             break;
                         }
@@ -410,7 +420,35 @@ namespace ControllerPlayground.Views {
         }
 
         private async void SupportButton_Click(object sender, RoutedEventArgs e) {
+            OpenNativeSupportPage();
+        }
+
+        private async void SteamSupportButton_Click(object sender, RoutedEventArgs e) {
             await OpenSupportPageAsync();
+        }
+
+        private void OpenNativeSupportPage() {
+            _isSupportPageOpen = true;
+
+            GameInfoContent.Visibility = Visibility.Collapsed;
+            SupportContent.Visibility = Visibility.Visible;
+
+            DispatcherQueue.TryEnqueue(() => { 
+                VerifyGameFilesButton.Focus(FocusState.Programmatic);
+            });
+
+        }
+
+        internal void CloseNativeSupportPage() {
+            if (!_isSupportPageOpen)
+                return;
+            _isSupportPageOpen = false;
+            SupportContent.Visibility = Visibility.Collapsed;
+            GameInfoContent.Visibility = Visibility.Visible;
+
+            DispatcherQueue.TryEnqueue(() => { 
+                SupportButton.Focus(FocusState.Programmatic);
+            });
         }
     }
 }
