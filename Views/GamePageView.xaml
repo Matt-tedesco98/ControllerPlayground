@@ -289,11 +289,13 @@
                                     <Button 
                                         x:Name="StorePageButton"
                                         Content="Store Page"
+                                        Click="StorePageButton_Click"
                                         GotFocus="PageActionButton_GotFocus"
                                         LostFocus="PageActionButton_LostFocus"/>
                                     <Button 
                                         x:Name="SupportButton" 
                                         Content="Support" 
+                                        Click="SupportButton_Click"
                                         GotFocus="PageActionButton_GotFocus"
                                         LostFocus="PageActionButton_LostFocus"/>
 

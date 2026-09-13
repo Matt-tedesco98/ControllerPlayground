@@ -20,6 +20,7 @@ using ControllerPlayground.Services;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using ControllerPlayground.Services.Steam;
+using Windows.System;
 
 
 // To learn more about WinUI, the WinUI project structure,
@@ -197,8 +198,16 @@ namespace ControllerPlayground.Views {
 
                         if (focused == PlayButton) {
                             _ = LaunchCurrentGameAsync();
+                            break;
                         }
-
+                        if (focused == StorePageButton) {
+                            _ = OpenStorePageAsync();
+                            break;
+                        }
+                        if (focused == SupportButton) {
+                            _ = OpenSupportPageAsync();
+                            break;
+                        }
                         if (focused is Button button && IsTabButton(button)) {
                             SelectTab(button);
                         }
@@ -343,6 +352,37 @@ namespace ControllerPlayground.Views {
             await _steamLaunchService.LaunchGameAsync(addId.Value);
         }
 
+        private async Task OpenStorePageAsync() {
+            uint? appId = Game?.SteamAppId;
+            if (appId == null) {
+                Debug.WriteLine("Cannot open store page: Steam AppId is missing");
+                return; 
+            }
+            Uri storeUri = new Uri($"steam://store/{appId.Value}");
+            bool opened = await Launcher.LaunchUriAsync(storeUri);
+
+            Debug.WriteLine(
+                opened
+            ? $"Steam store page opened: {appId.Value}"
+            : $"Steam store page failed: {appId.Value}");
+        }
+
+        private async Task OpenSupportPageAsync() {
+            uint? appId = Game?.SteamAppId;
+            if (appId == null) {
+                Debug.WriteLine("Cannot open support page: Steam AppId is missing");
+                return;
+            }
+            Uri supportUrl = new($"https://help.steampowered.com/en/wizard/HelpWithGame/?appid={appId.Value}");
+            Uri steamUrl = new($"steam://openurl/{supportUrl}");
+            bool opened = await Launcher.LaunchUriAsync(steamUrl);
+
+            Debug.WriteLine(
+                opened
+                ? $"Steam support page opened: {appId.Value}"
+                : $"Steam support page failed: {appId.Value}");
+        }
+
         private async void PlayButton_Click(object sender, RoutedEventArgs e) {
             await LaunchCurrentGameAsync();
         }
@@ -363,6 +403,14 @@ namespace ControllerPlayground.Views {
             if (sender is Button button) {
                 SelectTab(button);
             }
+        }
+
+        private async void StorePageButton_Click(object sender, RoutedEventArgs e) {
+            await OpenStorePageAsync();
+        }
+
+        private async void SupportButton_Click(object sender, RoutedEventArgs e) {
+            await OpenSupportPageAsync();
         }
     }
 }
