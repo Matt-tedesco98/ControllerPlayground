@@ -72,6 +72,11 @@ namespace ControllerPlayground.Views {
             CommunityContent.Visibility = SelectedTab == GamePageTab.Community ? Visibility.Visible : Visibility.Collapsed;
 
             GameInfoContent.Visibility = SelectedTab == GamePageTab.GameInfo ? Visibility.Visible : Visibility.Collapsed;
+
+            ActivityTabIndicator.Visibility = SelectedTab == GamePageTab.Activity ? Visibility.Visible : Visibility.Collapsed;
+            YourStuffTabIndicator.Visibility = SelectedTab == GamePageTab.YourStuff ? Visibility.Visible : Visibility.Collapsed;
+            CommunityTabIndicator.Visibility = SelectedTab == GamePageTab.Community ? Visibility.Visible : Visibility.Collapsed;
+            GameInfoTabIndicator.Visibility = SelectedTab == GamePageTab.GameInfo ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public GamePageTab SelectedTab {
@@ -188,10 +193,14 @@ namespace ControllerPlayground.Views {
                     break;
 
                 case ControllerAction.Accept: {
-                        var focused = FocusManager.GetFocusedElement(PageRoot.XamlRoot);
+                        object? focused = FocusManager.GetFocusedElement(PageRoot.XamlRoot);
 
                         if (focused == PlayButton) {
                             _ = LaunchCurrentGameAsync();
+                        }
+
+                        if (focused is Button button && IsTabButton(button)) {
+                            SelectTab(button);
                         }
                     }
                     break;
@@ -336,6 +345,24 @@ namespace ControllerPlayground.Views {
 
         private async void PlayButton_Click(object sender, RoutedEventArgs e) {
             await LaunchCurrentGameAsync();
+        }
+
+        private void SelectTab(Button button) {
+            if (button == ActivityTabButton) {
+                SelectedTab = GamePageTab.Activity;
+            } else if (button == YourStuffTabButton) {
+                SelectedTab = GamePageTab.YourStuff;
+            } else if (button == CommunityTabButton) {
+                SelectedTab = GamePageTab.Community;
+            } else if (button == GameInfoTabButton) {
+                SelectedTab = GamePageTab.GameInfo;
+            }
+        }
+
+        private void TabButton_Click(object sender, RoutedEventArgs e) {
+            if (sender is Button button) {
+                SelectTab(button);
+            }
         }
     }
 }

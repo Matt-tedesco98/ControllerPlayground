@@ -109,19 +109,70 @@
 
                                 <Button
                                     x:Name="ActivityTabButton"
-                                    Content="Activity"/>
+                                    Click="TabButton_Click">
+                                    <StackPanel>
+                                        <TextBlock
+                                            Text="Activity"
+                                            HorizontalAlignment="Center"/>
+
+                                        <Border
+                                            x:Name="ActivityTabIndicator"
+                                            Height="3"
+                                            Margin="0,6,0,0"
+                                            CornerRadius="2"
+                                            Background="{ThemeResource AccentAAFillColorDefaultBrush}"/>
+                                    </StackPanel>
+                                </Button>
 
                                 <Button
                                     x:Name="YourStuffTabButton"
-                                    Content="Your Stuff"/>
+                                    Click="TabButton_Click">
+                                    <StackPanel>
+                                        <TextBlock
+                                            Text="Your Stuff"
+                                            HorizontalAlignment="Center"/>
+                                        
+                                        <Border
+                                            x:Name="YourStuffTabIndicator"
+                                            Height="3"
+                                            Margin="0,6,0,0"
+                                            CornerRadius="2"
+                                            Background="{ThemeResource AccentAAFillColorDefaultBrush}"/>
+                                    </StackPanel>
+                                </Button>
 
                                 <Button
                                     x:Name="CommunityTabButton"
-                                    Content="Community"/>
+                                    Click="TabButton_Click">
+                                    <StackPanel>
+                                        <TextBlock
+                                            Text="Community"
+                                            HorizontalAlignment="Center"/>
+                                        
+                                        <Border
+                                            x:Name="CommunityTabIndicator"
+                                            Height="3"
+                                            Margin="0,6,0,0"
+                                            CornerRadius="2"
+                                            Background="{ThemeResource AccentAAFillColorDefaultBrush}"/>
+                                    </StackPanel>
+                                </Button>
 
                                 <Button
                                     x:Name="GameInfoTabButton"
-                                    Content="Game Info"/>
+                                    Click="TabButton_Click">
+                                    <StackPanel>
+                                        <TextBlock
+                                            Text="Game Info"
+                                            HorizontalAlignment="Center"/>
+                                        <Border
+                                            x:Name="GameInfoTabIndicator"
+                                            Height="3"
+                                            Margin="0,6,0,0"
+                                            CornerRadius="2"
+                                            Background="{ThemeResource AccentAAFillColorDefaultBrush}"/>
+                                    </StackPanel>
+                                </Button>
 
                             </StackPanel>
 
