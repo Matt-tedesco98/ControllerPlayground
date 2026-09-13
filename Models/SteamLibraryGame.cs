@@ -9,5 +9,7 @@ namespace ControllerPlayground.Models {
         public uint AppId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string LibraryCapsuleUrl { get; set; } = string.Empty;
+        public string HeroImageUrl { get; set; } = string.Empty;
+        public string LibraryLogoUrl { get; set; } = string.Empty;
     }
 }

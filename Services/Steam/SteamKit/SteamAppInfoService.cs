@@ -43,11 +43,40 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
                             ["english"].AsString();
                     }
 
+                    string libraryHeroPath = app.KeyValues["common"]
+                        ["library_assets_full"]
+                        ["library_hero"]
+                        ["image2x"]
+                        ["english"].AsString();
+
+                    if (string.IsNullOrWhiteSpace(libraryHeroPath)) {
+                        libraryHeroPath = app.KeyValues["common"]
+                            ["library_assets_full"]
+                            ["library_hero"]
+                            ["image"]
+                            ["english"].AsString();
+                    }
+
+                    string libraryLogoPath = app.KeyValues["common"]
+                        ["library_assets_full"]
+                        ["library_logo"]
+                        ["image2x"]
+                        ["english"].AsString();
+                    if (string.IsNullOrWhiteSpace(libraryLogoPath)) {
+                        libraryLogoPath = app.KeyValues["common"]
+                            ["library_assets_full"]
+                            ["library_logo"]
+                            ["image"]
+                            ["english"].AsString();
+                    }
+
                     apps.Add(new SteamAppInfo {
                         AppId = app.ID,
                         Name = name,
                         Type = type,
-                        LibraryCapsulePath = libraryCapsulePath
+                        LibraryCapsulePath = libraryCapsulePath,
+                        LibraryHeroPath = libraryHeroPath,
+                        LibraryLogoPath = libraryLogoPath
                     });
                 }
             }

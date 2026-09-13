@@ -112,8 +112,9 @@ namespace ControllerPlayground.Views {
             GameItem? game = Game;
 
             if (game == null) {
-                HeroImage = null;
-                CoverImage = null;
+                HeroImage.Source = null;
+                CoverImage.Source = null;
+                GameLogoImage.Source = null;
                 return;
             }
 
@@ -129,6 +130,26 @@ namespace ControllerPlayground.Views {
             } else {
                 CoverImage.Source = null;
             }
+
+            GameLogoImage.Source = null;
+            GameLogoImage.Visibility = Visibility.Collapsed;
+            GameTitleText.Visibility = Visibility.Visible;
+
+            if(!string.IsNullOrWhiteSpace(game.LogoImagePath)) {
+                GameLogoImage.Source = new BitmapImage(new Uri(game.LogoImagePath));
+            }
+        }
+        private void GameLogoImage_ImageOpened(object sender, RoutedEventArgs e) {
+            GameLogoImage.Visibility = Visibility.Visible;
+            GameTitleText.Visibility = Visibility.Collapsed;
+        }
+        private void GameLogoImage_ImageFailed(object sender, RoutedEventArgs e) {
+            GameLogoImage.Source = null;
+
+            GameLogoImage.Visibility = Visibility.Collapsed;
+            GameTitleText.Visibility = Visibility.Visible;
+
+            Debug.WriteLine($"Steam library logo failed to load: {Game?.SteamAppId}");
         }
 
         internal event Action<AppScreen>? NavigateRequested;

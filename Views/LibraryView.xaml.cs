@@ -194,7 +194,9 @@ namespace ControllerPlayground.Views {
             GameItem game = new() {
                 Title = steamGame.Name,
                 SteamAppId = steamGame.AppId,
-                CoverImagePath = steamGame.LibraryCapsuleUrl
+                CoverImagePath = steamGame.LibraryCapsuleUrl,
+                HeroImagePath = steamGame.HeroImageUrl,
+                LogoImagePath = steamGame.LibraryLogoUrl
             };
 
             GamePageRequested?.Invoke(game, GamePageTab.Activity);
@@ -255,7 +257,8 @@ namespace ControllerPlayground.Views {
                         GameItem game = new() {
                             Title = steamGame.Name,
                             SteamAppId = steamGame.AppId,
-                            CoverImagePath = steamGame.LibraryCapsuleUrl
+                            CoverImagePath = steamGame.LibraryCapsuleUrl,
+                            HeroImagePath = steamGame.HeroImageUrl
                         };
 
                         GamePageRequested?.Invoke(game, GamePageTab.GameInfo);

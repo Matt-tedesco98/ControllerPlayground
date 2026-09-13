@@ -45,12 +45,29 @@
                         </Rectangle.Fill>
                     </Rectangle>
 
-                    <TextBlock
-                        Text="{x:Bind Game.Title, Mode=OneWay}"
-                        FontSize="36"
+                    <Grid
                         Margin="48"
                         HorizontalAlignment="Left"
-                        VerticalAlignment="Bottom"/>
+                        VerticalAlignment="Bottom">
+                        
+                        <Image
+                            x:Name="GameLogoImage"
+                            MaxWidth="500"
+                            MaxHeight="180"
+                            Stretch="Uniform"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom"
+                            ImageOpened="GameLogoImage_ImageOpened"
+                            ImageFailed="GameLogoImage_ImageFailed"/>
+
+                        <TextBlock
+                            x:Name="GameTitleText"
+                            Text="{x:Bind Game.Title, Mode=OneWay}"
+                            FontSize="36"
+                            FontWeight="SemiBold"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom"/>
+                    </Grid>
                 </Grid>
 
                 <!-- Main action / metadata row -->

@@ -95,7 +95,15 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
                 LibraryCapsuleUrl =
                 !string.IsNullOrWhiteSpace(app.LibraryCapsulePath)
                     ? $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/{app.LibraryCapsulePath}"
-                    : $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/library_600x900_2x.jpg"
+                    : $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/library_600x900_2x.jpg",
+
+                HeroImageUrl = !string.IsNullOrWhiteSpace(app.LibraryHeroPath)
+                    ? $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/{app.LibraryHeroPath}"
+                    : $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/library_hero.jpg",
+
+                LibraryLogoUrl = !string.IsNullOrWhiteSpace(app.LibraryLogoPath)
+                    ? $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/{app.LibraryLogoPath}"
+                    : $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/library_logo.jpg"
             }).ToList();
         }
     }

@@ -10,5 +10,7 @@ namespace ControllerPlayground.Models {
         public string Name { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
         public string LibraryCapsulePath { get; set; } = string.Empty;
+        public string LibraryHeroPath { get; set; } = string.Empty;
+        public string LibraryLogoPath { get; set; } = string.Empty;
     }
 }

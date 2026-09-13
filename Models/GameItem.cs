@@ -10,6 +10,7 @@ namespace ControllerPlayground.Models {
 
         public string HeroImagePath { get; set; } = string.Empty;
         public string CoverImagePath { get; set; } = string.Empty;
+        public string LogoImagePath { get; set; } = string.Empty;
 
         public string LastPlayed { get; set; } = string.Empty;
         public string PlayTime { get; set; } = string.Empty;
