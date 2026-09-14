@@ -22,9 +22,12 @@ namespace ControllerPlayground.Models {
         public List<string> Genres { get; set; } = new();
         public string ReleaseDate { get; set; } = string.Empty;
 
+        // Controller support properties
         public bool SupportsXboxController { get; set; }
         public bool SupportsDualShock { get; set; }
         public bool SupportsDualSense { get; set; }
+        public string ControllerSupport { get; set; } = string.Empty;
+
         public GameActivityData ActivityData { get; set; } = new();
         public uint? SteamAppId { get; set; }
 

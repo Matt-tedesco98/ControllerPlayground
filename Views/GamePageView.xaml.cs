@@ -400,6 +400,10 @@ namespace ControllerPlayground.Views {
             DescriptionText.Text = storeDetails.Description;
             GenresList.ItemsSource = Game.Genres;
 
+            Game.ControllerSupport = storeDetails.ControllerSupport;
+            ControllerSupportText.Text = string.IsNullOrWhiteSpace(Game.ControllerSupport)
+                ? "Controller support information not available"
+                : Game.ControllerSupport;
 
             Game.ActivityData.ActivityFeed.Clear();
 

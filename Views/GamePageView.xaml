@@ -385,6 +385,20 @@
 
                                 <StackPanel
                                     Orientation="Horizontal"
+                                    Spacing="20"
+                                    Margin="0,8,0,0">
+                                    
+                                    <TextBlock
+                                        Text="Controller"
+                                        FontSize="15"
+                                        Foreground="#A8A8A8"/>
+                                    <TextBlock
+                                        x:Name="ControllerSupportText"
+                                        FontSize="15"/>
+                                </StackPanel>
+
+                                <StackPanel
+                                    Orientation="Horizontal"
                                     Spacing="12"
                                     Margin="0,16,0,0">
 

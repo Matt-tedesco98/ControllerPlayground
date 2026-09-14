@@ -116,6 +116,16 @@ namespace ControllerPlayground.Services.Steam {
                 }
             }
 
+            if (dataElement.TryGetProperty("controller_support", out JsonElement controllerElement)) {
+                string controllerSupport = controllerElement.GetString() ?? string.Empty;
+                details.ControllerSupport = controllerSupport.ToLowerInvariant()
+                    switch {
+                        "full" => "Full Controller Support",
+                        "partial" => "Partial Controller Support",
+                        "none" => "No Controller Support",
+                        _ => controllerSupport
+                    };
+            }
             return details;
         }
     }
