@@ -28,25 +28,41 @@
             <StackPanel>
 
                 <!-- Hero area -->
-                <Grid Grid.Row="0">
+                <Grid 
+                    Height="460">
 
                     <Image
                         x:Name="HeroImage"
+                        Height="460"
                         Stretch="UniformToFill"
-                        MaxHeight="320"/>
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"/>
 
-
+                    <!-- Darken the left side behind the logo -->
                     <Rectangle>
                         <Rectangle.Fill>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#00000000" Offset="0.35"/>
-                                <GradientStop Color="#CC202020" Offset="1"/>
+                            <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                <GradientStop Color="#A0000000" Offset="0"/>
+                                <GradientStop Color="#50000000" Offset="0.35"/>
+                                <GradientStop Color="#00000000" Offset="0.70"/>
                             </LinearGradientBrush>
                         </Rectangle.Fill>
                     </Rectangle>
 
+                    <!-- Fade hero artwork into the rest of the page -->
+                    <Rectangle>
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#00000000" Offset="0.45"/>
+                                <GradientStop Color="#70202020" Offset="0.75"/>
+                                <GradientStop Color="#FF202020" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+
+                    <!-- Steam library logo / title fallback -->
                     <Grid
-                        Margin="48"
+                        Margin="56,0,56,48"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Bottom">
                         
@@ -74,14 +90,14 @@
                 <StackPanel
                     Orientation="Horizontal"
                     Spacing="24"
-                    Margin="48,24">
+                    Margin="56,16,56,28">
 
                     <Button
                         x:Name="PlayButton"
                         Content="Play"
-                        Width="220"
-                        Height="56"
-                        FontSize="22"
+                        Width="240"
+                        Height="64"
+                        FontSize="24"
                         Click="PlayButton_Click"
                         GotFocus="PlayButton_GotFocus"
                         LostFocus="PlayButton_LostFocus"/>
