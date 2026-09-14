@@ -2,7 +2,9 @@
 using SteamKit2;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
+using System;
 
 namespace ControllerPlayground.Services.Steam.SteamKit {
     public sealed class SteamAppInfoService {
@@ -70,17 +72,41 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
                             ["english"].AsString();
                     }
 
+                    KeyValue common = app.KeyValues["common"];
+                    string developer = GetAssociationNames(common, "developer");
+                    if (string.IsNullOrWhiteSpace(developer)) {
+                        developer = app.KeyValues["extended"]["developer"].AsString();
+                    }
+
+                    string publisher = GetAssociationNames(common, "publisher");
+                    if (string.IsNullOrWhiteSpace(publisher)) {
+                        publisher = app.KeyValues["extended"]["publisher"].AsString();
+                    }
+
+                    string releaseDate = string.Empty;
+                    string releaseTimestamp = common["steam_release_date"].AsString();
+                    if (long.TryParse(releaseTimestamp, out long unixSeconds) && unixSeconds > 0) {
+                        releaseDate = DateTimeOffset.FromUnixTimeSeconds(unixSeconds).ToString("MMM d, yyyy");
+                    }
+
                     apps.Add(new SteamAppInfo {
                         AppId = app.ID,
                         Name = name,
                         Type = type,
                         LibraryCapsulePath = libraryCapsulePath,
                         LibraryHeroPath = libraryHeroPath,
-                        LibraryLogoPath = libraryLogoPath
+                        LibraryLogoPath = libraryLogoPath,
+                        Developer = developer,
+                        Publisher = publisher,
+                        ReleaseDate = releaseDate
                     });
                 }
             }
             return apps;
+        }
+
+        private static string GetAssociationNames(KeyValue common, string associationType) {
+            return string.Join(", ", common["associations"].Children.Where(association => string.Equals(association["type"].AsString(), associationType, StringComparison.OrdinalIgnoreCase)).Select(association => association["name"].AsString()).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct());
         }
     }
 }

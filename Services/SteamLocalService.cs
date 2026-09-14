@@ -71,7 +71,7 @@ namespace ControllerPlayground.Services {
             return Task.FromResult<IReadOnlyList<SteamFriend>>(results);
         }
 
-        public string? GetSteamInstallPath() { 
+        public string? GetSteamInstallPath() {
             using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
             return key?.GetValue("SteamPath") as string;
         }
@@ -92,13 +92,13 @@ namespace ControllerPlayground.Services {
             string? steamPath = GetSteamInstallPath();
             uint? activeUserId = GetActiveUserId();
 
-            if (steamPath == null || activeUserId == null) { 
+            if (steamPath == null || activeUserId == null) {
                 return null;
             }
 
             return Path.Combine(
-                steamPath, 
-                "userdata", 
+                steamPath,
+                "userdata",
                 activeUserId.ToString(),
                 "config",
                 "localconfig.vdf");
@@ -106,7 +106,7 @@ namespace ControllerPlayground.Services {
 
         public const ulong SteamId64Base = 76561197960265728UL;
 
-        public ulong? GetActiveSteamId64() { 
+        public ulong? GetActiveSteamId64() {
             uint? accountId = GetActiveUserId();
 
             if (accountId == null) {
@@ -116,11 +116,11 @@ namespace ControllerPlayground.Services {
             return SteamId64Base + accountId.Value;
         }
 
-        public string? GetAvatarPath(string steamId64) { 
+        public string? GetAvatarPath(string steamId64) {
             string? steamPath = GetSteamInstallPath();
 
             if (steamPath == null)
-                return null; 
+                return null;
 
             string avatarPath = Path.Combine(
                 steamPath,
@@ -292,7 +292,7 @@ namespace ControllerPlayground.Services {
 
             if (!root.TryGetChild(
                 "libraryfolders",
-                out VdfNode? libraryFolders) || libraryFolders == null) { 
+                out VdfNode? libraryFolders) || libraryFolders == null) {
                 return Task.FromResult<IReadOnlyCollection<uint>>(installedAppIds);
             }
 
@@ -307,7 +307,7 @@ namespace ControllerPlayground.Services {
                 }
 
                 foreach (var appEntry in apps.Children) {
-                    Debug.WriteLine($"Library {libraryEntry.Key} children: " +$"{string.Join(", ", libraryEntry.Value.Children.Keys)}");
+                    Debug.WriteLine($"Library {libraryEntry.Key} children: " + $"{string.Join(", ", libraryEntry.Value.Children.Keys)}");
                     if (uint.TryParse(
                             appEntry.Key,
                             out uint appId)) {
@@ -315,11 +315,57 @@ namespace ControllerPlayground.Services {
                     }
                 }
             }
-        
+
             Debug.WriteLine($"Steam installed app IDs: {installedAppIds.Count}");
 
             return Task.FromResult<IReadOnlyCollection<uint>>(
                 installedAppIds);
+        }
+
+        public Task<IReadOnlyDictionary<uint, int>> GetPlaytimeByAppIdAsync(CancellationToken cancellationToken = default) {
+            cancellationToken.ThrowIfCancellationRequested();
+            Dictionary<uint, int> results = new();
+            string? configPath = GetActiveUserConfigPath();
+            if (configPath == null || !File.Exists(configPath)) {
+                return Task.FromResult<IReadOnlyDictionary<uint, int>>(results);
+            }
+            VdfNode root = VdfParser.ParseFile(configPath);
+            if (!root.TryGetChild(
+           "UserLocalConfigStore",
+           out VdfNode? userConfig) ||
+            userConfig == null ||
+            !userConfig.TryGetChild(
+                "Software",
+                out VdfNode? software) ||
+                 software == null ||
+                !software.TryGetChild(
+                    "Valve",
+                    out VdfNode? valve) ||
+                    valve == null ||
+                    !valve.TryGetChild(
+                        "Steam",
+                        out VdfNode? steam) ||
+                        steam == null ||
+                        !steam.TryGetChild(
+                            "apps",
+                            out VdfNode? apps) ||
+                            apps == null) {
+                return Task.FromResult<IReadOnlyDictionary<uint, int>>(results);
+            }
+            foreach (var entry in apps.Children) {
+                if (!uint.TryParse(entry.Key, out uint appId)) {
+                    continue;
+                }
+                if (!entry.Value.TryGetChild("Playtime", out VdfNode? playtimeNode)) {
+                    continue;
+                }
+                if (!int.TryParse(playtimeNode?.Value, out int minutes) || minutes < 0) {
+                    continue;
+                }
+                results[appId] = minutes;
+            }
+            Debug.WriteLine($"Steam playtime entries: {results.Count}");
+            return Task.FromResult<IReadOnlyDictionary<uint, int>>(results);
         }
     }
 }

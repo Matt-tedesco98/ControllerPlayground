@@ -37,6 +37,7 @@ namespace ControllerPlayground.Views {
         //Services
         public readonly ISteamService _steamService = new SteamService();
         private readonly SteamLaunchService _steamLaunchService = new();
+        private readonly SteamLocalService _steamLocalService = new();
         private bool _isSupportPageOpen;
         internal bool IsSupportPageOpen => _isSupportPageOpen;
 
@@ -362,8 +363,43 @@ namespace ControllerPlayground.Views {
 
             if (appId == null)
                 return;
+            // Load last played date
+            IReadOnlyDictionary<uint, DateTimeOffset> lastPlayedByApp = await _steamLocalService.GetLastPlayedByAppIdAsync();
+            if(lastPlayedByApp.TryGetValue(appId.Value, out DateTimeOffset lastPlayed)) {
+                Game.LastPlayed = $"Last Played: {lastPlayed.LocalDateTime:MMM d, yyyy}";
+                LastPlayedText.Text = Game.LastPlayed;
+            }else {
+                Game.LastPlayed = "Last Played: Never";
+                LastPlayedText.Text = Game.LastPlayed;
+            }
+
+            // Total playtime
+            IReadOnlyDictionary<uint, int> playtimeByApp = await _steamLocalService.GetPlaytimeByAppIdAsync();
+            if (playtimeByApp.TryGetValue(appId.Value, out int playtimeMinutes)) {
+                int hours = playtimeMinutes / 60;
+                int minutes = playtimeMinutes % 60;
+                Game.PlayTime = hours > 0 
+                    ? $"{hours}h {minutes}m played"
+                    : $"{minutes}m played";
+                PlayTimeText.Text = Game.PlayTime;
+            } else {
+                Game.PlayTime = "No playtime";
+                PlayTimeText.Text = Game.PlayTime;
+            }
 
             var items = await _steamService.GetGameActivityAsync(appId.Value);
+
+            SteamStoreDetails storeDetails = await _steamService.GetGameStoreDetailsAsync(appId.Value);
+
+            Game.Description = storeDetails.Description;
+
+            Game.Genres.Clear();
+            foreach (string genre in storeDetails.Genres) {
+                Game.Genres.Add(genre);
+            }
+            DescriptionText.Text = storeDetails.Description;
+            GenresList.ItemsSource = Game.Genres;
+
 
             Game.ActivityData.ActivityFeed.Clear();
 

@@ -202,7 +202,10 @@ namespace ControllerPlayground.Views {
                     SteamAppId = steamGame.AppId,
                     CoverImagePath = steamGame.LibraryCapsuleUrl,
                     HeroImagePath = steamGame.HeroImageUrl,
-                    LogoImagePath = steamGame.LibraryLogoUrl
+                    LogoImagePath = steamGame.LibraryLogoUrl,
+                    Developer = steamGame.Developer,
+                    Publisher = steamGame.Publisher,
+                    ReleaseDate = steamGame.ReleaseDate
                 };
 
                 GameTile tile = new() {

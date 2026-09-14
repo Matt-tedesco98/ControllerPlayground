@@ -92,6 +92,11 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
             return apps.Where(app => string.Equals(app.Type, "game", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(app.Name)).Select(app => new SteamLibraryGame {
                 AppId = app.AppId,
                 Name = app.Name,
+
+                Developer = app.Developer,
+                Publisher = app.Publisher,
+                ReleaseDate = app.ReleaseDate,
+
                 LibraryCapsuleUrl =
                 !string.IsNullOrWhiteSpace(app.LibraryCapsulePath)
                     ? $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/{app.LibraryCapsulePath}"

@@ -39,5 +39,84 @@ namespace ControllerPlayground.Services.Steam {
             }
             return items;
         }
+        public async Task<SteamStoreDetails> GetGameStoreDetailsAsync(
+    uint appId,
+    CancellationToken cancellationToken = default) {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            SteamStoreDetails details = new();
+
+            string url =
+                $"https://store.steampowered.com/api/appdetails" +
+                $"?appids={appId}&l=english";
+
+            using HttpResponseMessage response =
+                await HttpClient.GetAsync(
+                    url,
+                    cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+
+            await using var stream =
+                await response.Content.ReadAsStreamAsync(
+                    cancellationToken);
+
+            using JsonDocument document =
+                await JsonDocument.ParseAsync(
+                    stream,
+                    cancellationToken: cancellationToken);
+
+            string appIdKey =
+                appId.ToString();
+
+            if (!document.RootElement.TryGetProperty(
+                    appIdKey,
+                    out JsonElement appEntry)) {
+                return details;
+            }
+
+            if (!appEntry.TryGetProperty(
+                    "success",
+                    out JsonElement successElement) ||
+                !successElement.GetBoolean()) {
+                return details;
+            }
+
+            if (!appEntry.TryGetProperty(
+                    "data",
+                    out JsonElement dataElement)) {
+                return details;
+            }
+
+            if (dataElement.TryGetProperty(
+                    "short_description",
+                    out JsonElement descriptionElement)) {
+                details.Description =
+                    descriptionElement.GetString()
+                    ?? string.Empty;
+            }
+
+            if (dataElement.TryGetProperty(
+                    "genres",
+                    out JsonElement genresElement)) {
+                foreach (JsonElement genre in
+                         genresElement.EnumerateArray()) {
+                    if (!genre.TryGetProperty(
+                            "description",
+                            out JsonElement nameElement)) {
+                        continue;
+                    }
+
+                    string? name =
+                        nameElement.GetString();
+
+                    if (!string.IsNullOrWhiteSpace(name)) {
+                        details.Genres.Add(name);
+                    }
+                }
+            }
+
+            return details;
+        }
     }
 }

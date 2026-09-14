@@ -103,10 +103,12 @@
                         LostFocus="PlayButton_LostFocus"/>
 
                     <TextBlock
+                        x:Name="LastPlayedText"
                         Text="{x:Bind Game.LastPlayed, Mode=OneWay}"
                         VerticalAlignment="Center"/>
 
                     <TextBlock
+                        x:Name="PlayTimeText"
                         Text="{x:Bind Game.PlayTime, Mode=OneWay}"
                         VerticalAlignment="Center"/>
                 </StackPanel>
@@ -290,29 +292,96 @@
                                 Spacing="16">
 
                                 <TextBlock
+                                    x:Name="DescriptionText"
                                     Text="{x:Bind Game.Description, Mode=OneWay}"
                                     FontSize="18"
                                     TextWrapping="Wrap"
                                     MaxWidth="900"
                                     HorizontalAlignment="Left"/>
 
-                                <StackPanel
-                                    Spacing="8"
-                                    Margin="0,12,0,0">
+                                <ItemsControl
+                                    x:Name="GenresList"
+                                    Margin="0,4,0,0">
+
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel
+                                                Orientation="Horizontal"
+                                                Spacing="8"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border
+                                                Padding="10,5"
+                                                CornerRadius="12"
+                                                Background="#303030">
+                                                
+                                                <TextBlock
+                                                    Text="{Binding}"
+                                                    FontSize="14"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Grid
+                                    Margin="0,16,0,0"
+                                    ColumnSpacing="20"
+                                    RowSpacing="8">
+                                    
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
                                     <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Text="Developer"
+                                        FontSize="15"
+                                        Foreground="#A8A8A8"/>
+
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="1"
                                         Text="{x:Bind Game.Developer, Mode=OneWay}"
                                         FontSize="16"/>
+                                    
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Text="Publisher"
+                                        FontSize="15"
+                                        Foreground="#A8A8A8"/>
 
                                     <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="1"
                                         Text="{x:Bind Game.Publisher, Mode=OneWay}"
                                         FontSize="16"/>
 
                                     <TextBlock
+                                        Grid.Row="2"
+                                        Grid.Column="0"
+                                        Text="Release Date"
+                                        FontSize="15"
+                                        Foreground="#A8A8A8"/>
+
+                                    <TextBlock
+                                        Grid.Row="2"
+                                        Grid.Column="1"
                                         Text="{x:Bind Game.ReleaseDate, Mode=OneWay}"
                                         FontSize="16"/>
 
-                                </StackPanel>
+                                </Grid>
 
                                 <StackPanel
                                     Orientation="Horizontal"
