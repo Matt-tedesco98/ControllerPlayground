@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using ControllerPlayground.Services.Steam;
 using Windows.System;
+using ControllerPlayground.Services.Steam.SteamKit;
 
 
 // To learn more about WinUI, the WinUI project structure,
@@ -38,6 +39,7 @@ namespace ControllerPlayground.Views {
         public readonly ISteamService _steamService = new SteamService();
         private readonly SteamLaunchService _steamLaunchService = new();
         private readonly SteamLocalService _steamLocalService = new();
+        internal SteamLibraryService? SteamLibraryService { get; set; }
         private bool _isSupportPageOpen;
         internal bool IsSupportPageOpen => _isSupportPageOpen;
 
@@ -197,12 +199,18 @@ namespace ControllerPlayground.Views {
                     NavigateRequested?.Invoke(AppScreen.Home);
                     break;
                 case ControllerAction.NavigateDown: {
+                        if (MoveDlcFocus(1)) {
+                            break;
+                        }
                         FocusManager.TryMoveFocus(FocusNavigationDirection.Down, new FindNextElementOptions {
                             SearchRoot = PageRoot
                         });
                     }
                     break;
                 case ControllerAction.NavigateUp: {
+                        if (MoveDlcFocus(-1)) {
+                            break;
+                        }
                         FocusManager.TryMoveFocus(FocusNavigationDirection.Up, new FindNextElementOptions {
                             SearchRoot = PageRoot
                         });
@@ -224,6 +232,16 @@ namespace ControllerPlayground.Views {
                 case ControllerAction.Accept: {
                         object? focused = FocusManager.GetFocusedElement(PageRoot.XamlRoot);
 
+                        Debug.WriteLine(
+    $"ACCEPT focused type: " +
+    $"{focused?.GetType().FullName ?? "null"}");
+
+                        if (focused is FrameworkElement element) {
+                            Debug.WriteLine(
+                                $"ACCEPT DataContext type: " +
+                                $"{element.DataContext?.GetType().FullName ?? "null"}");
+                        }
+
                         if (focused == PlayButton) {
                             _ = LaunchCurrentGameAsync();
                             break;
@@ -239,6 +257,33 @@ namespace ControllerPlayground.Views {
                         if (focused == SteamSupportButton) {
                             _ = OpenSupportPageAsync();
                             break;
+                        }
+                        if (focused is ListViewItem dlcItem) {
+                            int ownedIndex =
+                                OwnedDlcList.IndexFromContainer(
+                                    dlcItem);
+
+                            if (ownedIndex >= 0 &&
+                                OwnedDlcList.Items[ownedIndex]
+                                    is SteamDlcItem ownedDlc) {
+                                _ = OpenDlcStorePageAsync(
+                                    ownedDlc.AppId);
+
+                                break;
+                            }
+
+                            int otherIndex =
+                                OtherDlcList.IndexFromContainer(
+                                    dlcItem);
+
+                            if (otherIndex >= 0 &&
+                                OtherDlcList.Items[otherIndex]
+                                    is SteamDlcItem otherDlc) {
+                                _ = OpenDlcStorePageAsync(
+                                    otherDlc.AppId);
+
+                                break;
+                            }
                         }
                         if (focused is Button button && IsTabButton(button)) {
                             SelectTab(button);
@@ -391,6 +436,62 @@ namespace ControllerPlayground.Views {
 
             SteamStoreDetails storeDetails = await _steamService.GetGameStoreDetailsAsync(appId.Value);
 
+            //dlc
+            if (SteamLibraryService != null && storeDetails.DlcAppIds.Count > 0) {
+                IReadOnlyList<SteamDlcItem> dlcItems = await SteamLibraryService.GetDlcAsync(storeDetails.DlcAppIds);
+
+                IReadOnlyCollection<uint> ownedAppIds = await SteamLibraryService.GetOwnedAppIdsAsync();
+
+                List<SteamDlcItem> ownedDlc =
+                    dlcItems
+                        .Where(dlc =>
+                            ownedAppIds.Contains(dlc.AppId))
+                        .ToList();
+
+                List<SteamDlcItem> missingDlc =
+                    dlcItems
+                        .Where(dlc =>
+                            !ownedAppIds.Contains(dlc.AppId))
+                        .ToList();
+
+                Debug.WriteLine(
+                    $"Owned DLC: {ownedDlc.Count}");
+
+                foreach (SteamDlcItem dlc in ownedDlc) {
+                    Debug.WriteLine(
+                        $"OWNED: {dlc.Name}");
+                }
+
+                Debug.WriteLine(
+                    $"Missing DLC: {missingDlc.Count}");
+
+                foreach (SteamDlcItem dlc in missingDlc) {
+                    Debug.WriteLine(
+                        $"MISSING: {dlc.Name}");
+                }
+
+                OwnedDlcList.ItemsSource =
+                    ownedDlc;
+
+                OtherDlcList.ItemsSource =
+                    missingDlc;
+
+                OtherDlcHeader.Visibility =
+                    missingDlc.Count > 0
+                        ? Visibility.Visible
+                        : Visibility.Collapsed;
+
+                OtherDlcList.Visibility =
+                    missingDlc.Count > 0
+                        ? Visibility.Visible
+                        : Visibility.Collapsed;
+
+                Debug.WriteLine($"Steam DLC metadata Returned: {dlcItems.Count}");
+                foreach (SteamDlcItem dlc in dlcItems) {
+                    Debug.WriteLine($"DLC {dlc.Name} ({dlc.AppId})");
+                }
+            }
+
             Game.Description = storeDetails.Description;
 
             Game.Genres.Clear();
@@ -510,6 +611,140 @@ namespace ControllerPlayground.Views {
             DispatcherQueue.TryEnqueue(() => { 
                 SupportButton.Focus(FocusState.Programmatic);
             });
+        }
+        private async void DlcButton_Click(object sender, RoutedEventArgs e) {
+            if (sender is not Button button || button.DataContext is not SteamDlcItem dlc)
+                return;
+            await OpenDlcStorePageAsync(dlc.AppId);
+        }
+        private async Task OpenDlcStorePageAsync(uint dlcAppId) {
+            Uri storeUri = new($"steam://store/{dlcAppId}");
+            bool opened = await Launcher.LaunchUriAsync(storeUri);
+            Debug.WriteLine(
+                opened
+                ? $"Steam DLC store page opened: {dlcAppId}"
+                : $"Steam DLC store page failed: {dlcAppId}");
+        }
+        private bool MoveDlcFocus(int direction) {
+            if (SelectedTab != GamePageTab.YourStuff)
+                return false;
+
+            object? focused =
+                FocusManager.GetFocusedElement(
+                    PageRoot.XamlRoot);
+
+            // From the Your Stuff tab, Down enters the DLC list.
+            if (focused == YourStuffTabButton) {
+                if (direction > 0 &&
+                    OwnedDlcList.Items.Count > 0) {
+                    FocusDlcItem(
+                        OwnedDlcList,
+                        0);
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            if (focused is not ListViewItem focusedItem)
+                return false;
+
+            int ownedIndex =
+                OwnedDlcList.IndexFromContainer(
+                    focusedItem);
+
+            if (ownedIndex >= 0) {
+                int nextIndex =
+                    ownedIndex + direction;
+
+                if (nextIndex >= 0 &&
+                    nextIndex < OwnedDlcList.Items.Count) {
+                    FocusDlcItem(
+                        OwnedDlcList,
+                        nextIndex);
+
+                    return true;
+                }
+
+                // Up from the first DLC returns to the tab.
+                if (direction < 0 &&
+                    ownedIndex == 0) {
+                    OwnedDlcList.SelectedIndex = -1;
+
+                    YourStuffTabButton.Focus(
+                        FocusState.Programmatic);
+
+                    return true;
+                }
+
+                // Down from the final owned DLC
+                // enters Other DLC if there is any.
+                if (direction > 0 &&
+                    OtherDlcList.Items.Count > 0) {
+                    FocusDlcItem(
+                        OtherDlcList,
+                        0);
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            int otherIndex =
+                OtherDlcList.IndexFromContainer(
+                    focusedItem);
+
+            if (otherIndex >= 0) {
+                int nextIndex =
+                    otherIndex + direction;
+
+                if (nextIndex >= 0 &&
+                    nextIndex < OtherDlcList.Items.Count) {
+                    FocusDlcItem(
+                        OtherDlcList,
+                        nextIndex);
+
+                    return true;
+                }
+
+                // Up from first Other DLC returns
+                // to the last owned DLC.
+                if (direction < 0 &&
+                    otherIndex == 0 &&
+                    OwnedDlcList.Items.Count > 0) {
+                    FocusDlcItem(
+                        OwnedDlcList,
+                        OwnedDlcList.Items.Count - 1);
+
+                    return true;
+                }
+
+                // No more DLC below us.
+                // Let normal Game Page navigation take over.
+                return false;
+            }
+
+            return false;
+        }
+        private void FocusDlcItem(ListView list, int index) {
+            OwnedDlcList.SelectedIndex = list == OwnedDlcList ? index : -1;
+
+            object item = list.Items[index];
+
+            list.ScrollIntoView(item);
+
+            DispatcherQueue.TryEnqueue(() => { 
+                if (list.ContainerFromIndex(index) is ListViewItem container) 
+                    container.Focus(FocusState.Keyboard);   
+            });
+        }
+        private async void DlcList_ItemClick(object sender, ItemClickEventArgs e) {
+            if (e.ClickedItem is SteamDlcItem dlc) {
+                await OpenDlcStorePageAsync(
+                    dlc.AppId);
+            }
         }
     }
 }

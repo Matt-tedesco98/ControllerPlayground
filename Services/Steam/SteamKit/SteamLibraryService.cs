@@ -82,7 +82,7 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
             _games = (await GetGamesAsync(OwnedAppIds)).OrderBy(game => game.Name).ToList();
 
             Debug.WriteLine($"Steam library games loaded: {_games.Count}");
-            
+
             LibraryLoaded?.Invoke(_games.Count);
         }
 
@@ -110,6 +110,47 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
                     ? $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/{app.LibraryLogoPath}"
                     : $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/library_logo.jpg"
             }).ToList();
+        }
+
+        public async Task<IReadOnlyList<SteamDlcItem>>GetDlcAsync(
+            IEnumerable<uint> appIds) {
+                IReadOnlyList<SteamAppInfo> apps =
+                await _appInfoService
+                    .GetAppInfoAsync(appIds);
+
+            return apps
+                .Where(app =>
+                    !string.IsNullOrWhiteSpace(
+                        app.Name))
+                .Select(app =>
+                    new SteamDlcItem {
+                        AppId =
+                            app.AppId,
+
+                        Name =
+                            app.Name,
+
+                        ImageUrl =
+                            !string.IsNullOrWhiteSpace(
+                                app.LibraryCapsulePath)
+                                ? $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/{app.LibraryCapsulePath}"
+                                : $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{app.AppId}/header.jpg"
+                    })
+                .OrderBy(dlc =>
+                    dlc.Name)
+                .ToList();
+        }
+        public async Task<IReadOnlyCollection<uint>> GetOwnedAppIdsAsync() {
+            if (_ownedAppIds.Count > 0)
+                return _ownedAppIds;
+
+            if (_licenses.Count == 0) {
+                Debug.WriteLine("Steam owned app IDs requested before liceses were received.");
+                return Array.Empty<uint>();
+            }
+            
+            await LoadOwnedAppIdsAsync();
+            return _ownedAppIds;
         }
     }
 }

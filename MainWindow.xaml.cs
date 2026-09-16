@@ -54,6 +54,9 @@ public sealed partial class MainWindow : Window {
         _steamAppInfoService = new SteamAppInfoService(_steamSessionService);
 
         _steamLibraryService = new SteamLibraryService(_steamSessionService, _steamAppInfoService);
+
+        _GamePageView.SteamLibraryService = _steamLibraryService;
+
         _steamLibraryService.LibraryLoaded += SteamLibraryService_LibraryLoaded;
 
         FriendsOverlay.ChatService = _steamChatService;

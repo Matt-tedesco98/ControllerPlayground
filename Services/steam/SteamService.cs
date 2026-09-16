@@ -126,6 +126,15 @@ namespace ControllerPlayground.Services.Steam {
                         _ => controllerSupport
                     };
             }
+            
+            if (dataElement.TryGetProperty("dlc", out JsonElement dlcElement)) {
+                foreach (JsonElement dlcIdElement in dlcElement.EnumerateArray()) {
+                    if (dlcIdElement.TryGetUInt32(out uint dlcId)) {
+                        details.DlcAppIds.Add(dlcId);
+                    }
+                }
+            }
+
             return details;
         }
     }
