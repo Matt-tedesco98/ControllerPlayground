@@ -151,6 +151,10 @@ ControllerInput/ControllerInput.vcxproj
 
 The native `ControllerInput.dll` is copied into the WinUI application's output during the build.
 
+## Usage and Rights
+
+ControllerPlayground is a personal portfolio project. Its source code is publicly available for viewing and evaluation, but no license is granted for copying, modifying, redistributing, or using the code in another project. All rights are reserved by the author.
+
 ## Author
 
 **Matthew Tedesco**
