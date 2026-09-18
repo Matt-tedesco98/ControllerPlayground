@@ -437,60 +437,7 @@ namespace ControllerPlayground.Views {
             SteamStoreDetails storeDetails = await _steamService.GetGameStoreDetailsAsync(appId.Value);
 
             //dlc
-            if (SteamLibraryService != null && storeDetails.DlcAppIds.Count > 0) {
-                IReadOnlyList<SteamDlcItem> dlcItems = await SteamLibraryService.GetDlcAsync(storeDetails.DlcAppIds);
-
-                IReadOnlyCollection<uint> ownedAppIds = await SteamLibraryService.GetOwnedAppIdsAsync();
-
-                List<SteamDlcItem> ownedDlc =
-                    dlcItems
-                        .Where(dlc =>
-                            ownedAppIds.Contains(dlc.AppId))
-                        .ToList();
-
-                List<SteamDlcItem> missingDlc =
-                    dlcItems
-                        .Where(dlc =>
-                            !ownedAppIds.Contains(dlc.AppId))
-                        .ToList();
-
-                Debug.WriteLine(
-                    $"Owned DLC: {ownedDlc.Count}");
-
-                foreach (SteamDlcItem dlc in ownedDlc) {
-                    Debug.WriteLine(
-                        $"OWNED: {dlc.Name}");
-                }
-
-                Debug.WriteLine(
-                    $"Missing DLC: {missingDlc.Count}");
-
-                foreach (SteamDlcItem dlc in missingDlc) {
-                    Debug.WriteLine(
-                        $"MISSING: {dlc.Name}");
-                }
-
-                OwnedDlcList.ItemsSource =
-                    ownedDlc;
-
-                OtherDlcList.ItemsSource =
-                    missingDlc;
-
-                OtherDlcHeader.Visibility =
-                    missingDlc.Count > 0
-                        ? Visibility.Visible
-                        : Visibility.Collapsed;
-
-                OtherDlcList.Visibility =
-                    missingDlc.Count > 0
-                        ? Visibility.Visible
-                        : Visibility.Collapsed;
-
-                Debug.WriteLine($"Steam DLC metadata Returned: {dlcItems.Count}");
-                foreach (SteamDlcItem dlc in dlcItems) {
-                    Debug.WriteLine($"DLC {dlc.Name} ({dlc.AppId})");
-                }
-            }
+            await LoadDlcAsync(storeDetails.DlcAppIds);
 
             Game.Description = storeDetails.Description;
 
@@ -513,6 +460,55 @@ namespace ControllerPlayground.Views {
             }
 
             Debug.WriteLine($"Steam returned {items.Count} news items.");
+        }
+        private async Task LoadDlcAsync(
+    IReadOnlyList<uint> dlcAppIds) {
+            if (SteamLibraryService == null ||
+                dlcAppIds.Count == 0) {
+                return;
+            }
+
+            IReadOnlyList<SteamDlcItem> dlcItems =
+                await SteamLibraryService.GetDlcAsync(
+                    dlcAppIds);
+
+            IReadOnlyCollection<uint> ownedAppIds =
+                await SteamLibraryService
+                    .GetOwnedAppIdsAsync();
+
+            List<SteamDlcItem> ownedDlc =
+                dlcItems
+                    .Where(dlc =>
+                        ownedAppIds.Contains(dlc.AppId))
+                    .ToList();
+
+            List<SteamDlcItem> otherDlc =
+                dlcItems
+                    .Where(dlc =>
+                        !ownedAppIds.Contains(dlc.AppId))
+                    .ToList();
+
+            OwnedDlcList.ItemsSource =
+                ownedDlc;
+
+            OtherDlcList.ItemsSource =
+                otherDlc;
+
+            OtherDlcHeader.Visibility =
+                otherDlc.Count > 0
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+
+            OtherDlcList.Visibility =
+                otherDlc.Count > 0
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+
+            Debug.WriteLine(
+                $"Owned DLC: {ownedDlc.Count}");
+
+            Debug.WriteLine(
+                $"Other DLC: {otherDlc.Count}");
         }
 
         private async Task LaunchCurrentGameAsync() {
