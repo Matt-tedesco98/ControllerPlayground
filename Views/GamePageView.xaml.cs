@@ -42,6 +42,9 @@ namespace ControllerPlayground.Views {
         internal SteamLibraryService? SteamLibraryService { get; set; }
         private bool _isSupportPageOpen;
         internal bool IsSupportPageOpen => _isSupportPageOpen;
+        private IReadOnlyList<uint> _currentDlcAppIds = Array.Empty<uint>();
+        private uint? _loadedDlcForAppId;
+        private bool _isDlcLoading;
 
         internal void FocusInitialElement() {
             DispatcherQueue.TryEnqueue(() => {
@@ -74,6 +77,8 @@ namespace ControllerPlayground.Views {
             ActivityContent.Visibility = SelectedTab == GamePageTab.Activity ? Visibility.Visible : Visibility.Collapsed;
 
             YourStuffContent.Visibility = SelectedTab == GamePageTab.YourStuff ? Visibility.Visible : Visibility.Collapsed;
+            if (SelectedTab == GamePageTab.YourStuff)
+                _ = EnsureDlcLoadedAsync();
 
             CommunityContent.Visibility = SelectedTab == GamePageTab.Community ? Visibility.Visible : Visibility.Collapsed;
 
@@ -107,8 +112,19 @@ namespace ControllerPlayground.Views {
 
         private static void OnGameChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             if (d is GamePageView view) {
+                view.ResetDlcState();
                 view.UpdateGameVisuals();
             }
+        }
+
+        private void ResetDlcState() {
+            _currentDlcAppIds = Array.Empty<uint>();
+            _loadedDlcForAppId = null;
+            _isDlcLoading = false;
+            OwnedDlcList.ItemsSource = null;
+            OtherDlcList.ItemsSource = null;
+            OtherDlcHeader.Visibility = Visibility.Collapsed;
+            OtherDlcList.Visibility = Visibility.Collapsed;
         }
 
         private void UpdateGameVisuals() {
@@ -437,7 +453,10 @@ namespace ControllerPlayground.Views {
             SteamStoreDetails storeDetails = await _steamService.GetGameStoreDetailsAsync(appId.Value);
 
             //dlc
-            await LoadDlcAsync(storeDetails.DlcAppIds);
+            _currentDlcAppIds = storeDetails.DlcAppIds;
+            if (SelectedTab == GamePageTab.YourStuff) {
+                await EnsureDlcLoadedAsync();
+            }
 
             Game.Description = storeDetails.Description;
 
@@ -509,6 +528,21 @@ namespace ControllerPlayground.Views {
 
             Debug.WriteLine(
                 $"Other DLC: {otherDlc.Count}");
+        }
+        private async Task EnsureDlcLoadedAsync() {
+            uint? appId = Game?.SteamAppId;
+            if (appId == null || _currentDlcAppIds.Count == 0 || _isDlcLoading || _loadedDlcForAppId == appId.Value)
+                return;
+            _isDlcLoading = true;
+            try {
+                Debug.WriteLine($"Lazy loading DLC for {Game?.Title}...");
+                await LoadDlcAsync(_currentDlcAppIds);
+                _loadedDlcForAppId = appId.Value;
+                Debug.WriteLine($"DLC loaded for {Game?.Title}.");
+            }
+            finally {
+                _isDlcLoading = false;
+            }
         }
 
         private async Task LaunchCurrentGameAsync() {
