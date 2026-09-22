@@ -279,15 +279,7 @@
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="models:SteamDlcItem">
 
-                                            <Button
-                                                Click="DlcButton_Click"
-                                                HorizontalAlignment="Stretch"
-                                                HorizontalContentAlignment="Stretch"
-                                                Background="Transparent"
-                                                BorderThickness="0"
-                                                Padding="0">
-
-                                                <Grid ColumnSpacing="16">
+                                            <Grid ColumnSpacing="16">
 
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="120"/>
@@ -327,9 +319,6 @@
 
                                                 </Grid>
 
-                                            </Button>
-
-
                                         </DataTemplate>
 
                                     </ListView.ItemTemplate>
@@ -358,11 +347,42 @@
                                                 Padding="14"
                                                 CornerRadius="8"
                                                 Background="#303030">
+                                                
+                                                <Grid ColumnSpacing="16">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="120"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border
+                                                        Grid.Column="0"
+                                                        Width="120"
+                                                        Height="68"
+                                                        CornerRadius="6"
+                                                        Background="#252525">
+                                                        <Image
+                                                            Source="{x:Bind ImageUrl}"
+                                                            Stretch="UniformToFill"/>
+                                                    </Border>
+                                                    
+                                                    <StackPanel
+                                                        Grid.Column="1"
+                                                        VerticalAlignment="Center"
+                                                        Spacing="4">
 
-                                                <TextBlock
-                                                    Text="{x:Bind Name}"
-                                                    FontSize="18"
-                                                    TextWrapping="Wrap"/>
+                                                        <TextBlock
+                                                            Text="{x:Bind Name}"
+                                                            FontSize="18"
+                                                            FontWeight="SemiBold"
+                                                            TextWrapping="Wrap"/>
+
+                                                        <TextBlock
+                                                            Text="Not Owned"
+                                                            FontSize="13"
+                                                            Foreground="#A8A8A8"/>
+
+                                                    </StackPanel>
+
+                                                </Grid>
 
                                             </Border>
 

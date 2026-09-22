@@ -255,17 +255,6 @@ namespace ControllerPlayground.Views {
 
                 case ControllerAction.Accept: {
                         object? focused = FocusManager.GetFocusedElement(PageRoot.XamlRoot);
-
-                        Debug.WriteLine(
-    $"ACCEPT focused type: " +
-    $"{focused?.GetType().FullName ?? "null"}");
-
-                        if (focused is FrameworkElement element) {
-                            Debug.WriteLine(
-                                $"ACCEPT DataContext type: " +
-                                $"{element.DataContext?.GetType().FullName ?? "null"}");
-                        }
-
                         if (focused == PlayButton) {
                             _ = LaunchCurrentGameAsync();
                             break;
@@ -550,12 +539,6 @@ namespace ControllerPlayground.Views {
                 otherDlc.Count > 0
                     ? Visibility.Visible
                     : Visibility.Collapsed;
-
-            Debug.WriteLine(
-                $"Owned DLC: {ownedDlc.Count}");
-
-            Debug.WriteLine(
-                $"Other DLC: {otherDlc.Count}");
         }
         private async Task EnsureDlcLoadedAsync() {
             uint? appId = Game?.SteamAppId;
@@ -574,10 +557,8 @@ namespace ControllerPlayground.Views {
             OtherDlcList.Visibility = Visibility.Collapsed;
             OtherDlcHeader.Visibility = Visibility.Collapsed;
             try {
-                Debug.WriteLine($"Lazy loading DLC for {Game?.Title}...");
                 await LoadDlcAsync(_currentDlcAppIds);
                 _loadedDlcForAppId = appId.Value;
-                Debug.WriteLine($"DLC loaded for {Game?.Title}.");
             } finally {
                 DlcLoadingPanel.Visibility = Visibility.Collapsed;
                 OwnedDlcHeader.Visibility = Visibility.Visible;
@@ -682,11 +663,6 @@ namespace ControllerPlayground.Views {
             DispatcherQueue.TryEnqueue(() => {
                 SupportButton.Focus(FocusState.Programmatic);
             });
-        }
-        private async void DlcButton_Click(object sender, RoutedEventArgs e) {
-            if (sender is not Button button || button.DataContext is not SteamDlcItem dlc)
-                return;
-            await OpenDlcStorePageAsync(dlc.AppId);
         }
         private async Task OpenDlcStorePageAsync(uint dlcAppId) {
             Uri storeUri = new($"steam://store/{dlcAppId}");
@@ -801,6 +777,8 @@ namespace ControllerPlayground.Views {
         }
         private void FocusDlcItem(ListView list, int index) {
             OwnedDlcList.SelectedIndex = list == OwnedDlcList ? index : -1;
+
+            OtherDlcList.SelectedIndex = list == OtherDlcList ? index : -1;
 
             object item = list.Items[index];
 
