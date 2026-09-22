@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using ControllerPlayground.Services.Steam;
 using Windows.System;
 using ControllerPlayground.Services.Steam.SteamKit;
+using System.Xml.Serialization;
 
 
 // To learn more about WinUI, the WinUI project structure,
@@ -308,6 +309,18 @@ namespace ControllerPlayground.Views {
                         }
                         if (focused == GuidesButton) {
                             _ = OpenGuidesAsync();
+                            break;
+                        }
+                        if (focused == VerifyGameFilesButton) {
+                            _ = VerifyGameFilesAsync();
+                            break;
+                        }
+                        if (focused == BrowseLocalFilesButton) {
+                            _ = BrowseLocalFilesAsync();
+                            break;
+                        }
+                        if(focused == ControllerHelpButton) {
+                            OpenControllerTroubleshooting();
                             break;
                         }
                         if (focused is Button button && IsTabButton(button)) {
@@ -845,6 +858,56 @@ namespace ControllerPlayground.Views {
         }
         private async void GuidesButton_Click(object sender, RoutedEventArgs e) {
             await OpenGuidesAsync();
+        }
+        private async Task VerifyGameFilesAsync() {
+            uint? appId = Game?.SteamAppId;
+            if (appId == null) {
+                Debug.WriteLine("Cannot verify game files: Steam AppId is missing");
+                return;
+            }
+            Uri verifyUri = new($"steam://validate/{appId.Value}");
+            bool opened = await Launcher.LaunchUriAsync(verifyUri);
+            Debug.WriteLine(
+                opened
+                ? $"Steam verify game files opened: {appId.Value}"
+                : $"Steam verify game files failed: {appId.Value}");
+        }
+        private async void VerifyGameFilesButton_Click(object sender, RoutedEventArgs e) {
+            await VerifyGameFilesAsync();
+        }
+        private async Task BrowseLocalFilesAsync() {
+            uint? appId = Game?.SteamAppId;
+            if (appId == null) {
+                Debug.WriteLine("Cannot browse local files: Steam AppId is missing");
+                return;
+            }
+            string? gamePath = await _steamLocalService.GetInstalledGamePathAsync(appId.Value);
+            if (string.IsNullOrWhiteSpace(gamePath)) {
+                Debug.WriteLine($"Cannot browse local files: Game path is missing for AppId {appId.Value}");
+                return;
+            }
+            Process.Start(new ProcessStartInfo {
+                FileName = gamePath,
+                UseShellExecute = true
+            });
+            Debug.WriteLine($"Opened local files for AppId {appId.Value} at path: {gamePath}");
+        }
+        private async void BrowseLocalFilesButton_Click(object sender, RoutedEventArgs e) {
+            await BrowseLocalFilesAsync();
+        }
+        private void OpenControllerTroubleshooting() {
+            try {
+                Process.Start(new ProcessStartInfo {
+                    FileName = "joy.cpl",
+                    UseShellExecute = true
+                });
+                Debug.WriteLine("Opened controller troubleshooting (joy.cpl)");
+            } catch (Exception ex) {
+                Debug.WriteLine($"Failed to open controller troubleshooting: {ex}");
+            }
+        }
+        private void ControllerHelpButton_Click(object sender, RoutedEventArgs e) {
+            OpenControllerTroubleshooting();
         }
     }
 }

@@ -367,5 +367,87 @@ namespace ControllerPlayground.Services {
             Debug.WriteLine($"Steam playtime entries: {results.Count}");
             return Task.FromResult<IReadOnlyDictionary<uint, int>>(results);
         }
+        public Task<string?> GetInstalledGamePathAsync(uint appId, CancellationToken cancellationToken = default) {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            string? steamPath =
+                GetSteamInstallPath();
+
+            if (steamPath == null)
+                return Task.FromResult<string?>(null);
+
+            string libraryFoldersPath =
+                Path.Combine(
+                    steamPath,
+                    "steamapps",
+                    "libraryfolders.vdf");
+
+            if (!File.Exists(libraryFoldersPath))
+                return Task.FromResult<string?>(null);
+
+            VdfNode root =
+                VdfParser.ParseFile(
+                    libraryFoldersPath);
+
+            if (!root.TryGetChild(
+                    "libraryfolders",
+                    out VdfNode? libraryFolders) ||
+                libraryFolders == null) {
+                return Task.FromResult<string?>(null);
+            }
+
+            foreach (var libraryEntry in
+                     libraryFolders.Children) {
+                if (!libraryEntry.Value.TryGetChild(
+                        "path",
+                        out VdfNode? pathNode) ||
+                    string.IsNullOrWhiteSpace(
+                        pathNode?.Value)) {
+                    continue;
+                }
+
+                string libraryPath =
+                    pathNode.Value;
+
+                string manifestPath =
+                    Path.Combine(
+                        libraryPath,
+                        "steamapps",
+                        $"appmanifest_{appId}.acf");
+
+                if (!File.Exists(manifestPath))
+                    continue;
+
+                VdfNode manifest =
+                    VdfParser.ParseFile(
+                        manifestPath);
+
+                if (!manifest.TryGetChild(
+                        "AppState",
+                        out VdfNode? appState) ||
+                    appState == null ||
+                    !appState.TryGetChild(
+                        "installdir",
+                        out VdfNode? installDir) ||
+                    string.IsNullOrWhiteSpace(
+                        installDir?.Value)) {
+                    continue;
+                }
+
+                string gamePath =
+                    Path.Combine(
+                        libraryPath,
+                        "steamapps",
+                        "common",
+                        installDir.Value);
+
+                return Task.FromResult<string?>(
+                    Directory.Exists(gamePath)
+                        ? gamePath
+                        : null);
+            }
+
+            return Task.FromResult<string?>(null);
+        }
     }
 }

@@ -615,6 +615,7 @@
                                     Width="360"
                                     Height="56"
                                     HorizontalAlignment="Left"
+                                    Click="VerifyGameFilesButton_Click"
                                     GotFocus="PageActionButton_GotFocus"
                                     LostFocus="PageActionButton_LostFocus"/>
 
@@ -624,6 +625,7 @@
                                     Width="360"
                                     Height="56"
                                     HorizontalAlignment="Left"
+                                    Click="BrowseLocalFilesButton_Click"
                                     GotFocus="PageActionButton_GotFocus"
                                     LostFocus="PageActionButton_LostFocus"/>
 
@@ -633,6 +635,7 @@
                                     Width="360"
                                     Height="56"
                                     HorizontalAlignment="Left"
+                                    Click="ControllerHelpButton_Click"
                                     GotFocus="PageActionButton_GotFocus"
                                     LostFocus="PageActionButton_LostFocus"/>
 
