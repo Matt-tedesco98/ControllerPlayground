@@ -43,6 +43,8 @@ namespace ControllerPlayground.Views {
         internal SteamLibraryService? SteamLibraryService { get; set; }
         private bool _isSupportPageOpen;
         internal bool IsSupportPageOpen => _isSupportPageOpen;
+        private bool _isKnownIssuesPageOpen;
+        internal bool IsKnownIssuesPageOpen => _isKnownIssuesPageOpen;
 
         //DLC state
         private IReadOnlyList<uint> _currentDlcAppIds = Array.Empty<uint>();
@@ -319,8 +321,16 @@ namespace ControllerPlayground.Views {
                             _ = BrowseLocalFilesAsync();
                             break;
                         }
-                        if(focused == ControllerHelpButton) {
+                        if (focused == ControllerHelpButton) {
                             OpenControllerTroubleshooting();
+                            break;
+                        }
+                        if (focused == KnownIssuesButton) {
+                            OpenKnownIssuesPage();
+                            break;
+                        }
+                        if (focused == KnownIssuesDiscussionsButton) {
+                            _ = OpenDiscussionsAsync();
                             break;
                         }
                         if (focused is Button button && IsTabButton(button)) {
@@ -669,7 +679,9 @@ namespace ControllerPlayground.Views {
         internal void CloseNativeSupportPage() {
             if (!_isSupportPageOpen)
                 return;
+            _isKnownIssuesPageOpen = false;
             _isSupportPageOpen = false;
+            KnownIssuesContent.Visibility = Visibility.Collapsed;
             SupportContent.Visibility = Visibility.Collapsed;
             GameInfoContent.Visibility = Visibility.Visible;
 
@@ -908,6 +920,30 @@ namespace ControllerPlayground.Views {
         }
         private void ControllerHelpButton_Click(object sender, RoutedEventArgs e) {
             OpenControllerTroubleshooting();
+        }
+        private void OpenKnownIssuesPage() {
+            _isKnownIssuesPageOpen = true;
+            SupportContent.Visibility = Visibility.Collapsed;
+            KnownIssuesContent.Visibility = Visibility.Visible;
+            DispatcherQueue.TryEnqueue(() => {
+                KnownIssuesDiscussionsButton.Focus(FocusState.Programmatic);
+            });
+        }
+        internal void CloseKnownIssuesPage() {
+            if (!_isKnownIssuesPageOpen)
+                return;
+            _isKnownIssuesPageOpen = false;
+            KnownIssuesContent.Visibility = Visibility.Collapsed;
+            SupportContent.Visibility = Visibility.Visible;
+            DispatcherQueue.TryEnqueue(() => {
+                KnownIssuesButton.Focus(FocusState.Programmatic);
+            });
+        }
+        private void KnownIssuesButton_Click(object sender, RoutedEventArgs e) {
+            OpenKnownIssuesPage();
+        }
+        private async void KnownIssuesDiscussionsButton_Click(object sender, RoutedEventArgs e) {
+            await OpenDiscussionsAsync();
         }
     }
 }

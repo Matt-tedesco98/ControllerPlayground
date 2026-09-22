@@ -645,6 +645,7 @@
                                     Width="360"
                                     Height="56"
                                     HorizontalAlignment="Left"
+                                    Click="KnownIssuesButton_Click"
                                     GotFocus="PageActionButton_GotFocus"
                                     LostFocus="PageActionButton_LostFocus"/>
 
@@ -660,6 +661,45 @@
 
                             </StackPanel>
 
+                        </Grid>
+
+                        <Grid
+                            x:Name="KnownIssuesContent"
+                            Visibility="Collapsed">
+                            
+                            <StackPanel
+                                Spacing="16"
+                                MaxWidth="700"
+                                HorizontalAlignment="Left">
+                                
+                                <TextBlock
+                                    Text="Known Issues"
+                                    FontSize="30"
+                                    FontWeight="SemiBold"/>
+
+                                <TextBlock
+                                    Text="No ControllerPlayground-specific issues are currently listed for this game."
+                                    FontSize="18"
+                                    Foreground="#B8B8B8"
+                                    TextWrapping="Wrap"/>
+                                
+                                <TextBlock
+                                    Text="Check Steam Discussions for current community reports and troubleshooting."
+                                    FontSize="16"
+                                    Foreground="#A8A8A8"
+                                    TextWrapping="Wrap"/>
+                                
+                                <Button
+                                    x:Name="KnownIssuesDiscussionsButton"
+                                    Content="Open Steam Discussions"
+                                    Width="360"
+                                    Height="56"
+                                    HorizontalAlignment="Left"
+                                    Click="KnownIssuesDiscussionsButton_Click"
+                                    GotFocus="PageActionButton_GotFocus"
+                                    LostFocus="PageActionButton_LostFocus"/>
+                                
+                            </StackPanel>
                         </Grid>
 
                     </StackPanel>
