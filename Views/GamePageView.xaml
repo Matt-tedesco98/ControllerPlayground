@@ -230,9 +230,35 @@
                             x:Name="YourStuffContent"
                             Visibility="Collapsed">
 
+                            <StackPanel
+                                x:Name="DlcLoadingPanel"
+                                Orientation="Horizontal"
+                                Spacing="12"
+                                Visibility="Collapsed">
+                                
+                                <ProgressRing
+                                    Width="24"
+                                    Height="24"
+                                    IsActive="True"/>
+                                
+                                <TextBlock
+                                    Text="Loading DLC..."
+                                    VerticalAlignment="Center"
+                                    FontSize="18"/>
+                                
+                            </StackPanel>
+                            
+                            <TextBlock
+                                x:Name="NoDlcText"
+                                Text="No DLC available for this game"
+                                FontSize="18"
+                                Foreground="#A8A8A8"
+                                Visibility="Collapsed"/>
+
                             <StackPanel Spacing="24">
 
                                 <TextBlock
+                                    x:Name="OwnedDlcHeader"
                                     Text="Owned DLC"
                                     FontSize="28"
                                     FontWeight="SemiBold" />
@@ -357,9 +383,26 @@
 
                             <StackPanel Spacing="12">
 
-                                <Button Content="Community Hub" />
-                                <Button Content="Discussions" />
-                                <Button Content="Guides" />
+                                <Button 
+                                    x:Name="CommunityHubButton"
+                                    Content="Community Hub"
+                                    Click="CommunityHubButton_Click"
+                                    GotFocus="PageActionButton_GotFocus"
+                                    LostFocus="PageActionButton_LostFocus"/>
+                                
+                                <Button 
+                                    x:Name="DiscussionsButton"
+                                    Content="Discussions"
+                                    Click="DiscussionsButton_Click"
+                                    GotFocus="PageActionButton_GotFocus"
+                                    LostFocus="PageActionButton_LostFocus"/>
+                                
+                                <Button 
+                                    x:Name="GuidesButton"
+                                    Content="Guides"
+                                    Click="GuidesButton_Click"
+                                    GotFocus="PageActionButton_GotFocus"
+                                    LostFocus="PageActionButton_LostFocus"/>
 
                             </StackPanel>
 

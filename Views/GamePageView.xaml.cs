@@ -42,9 +42,12 @@ namespace ControllerPlayground.Views {
         internal SteamLibraryService? SteamLibraryService { get; set; }
         private bool _isSupportPageOpen;
         internal bool IsSupportPageOpen => _isSupportPageOpen;
+
+        //DLC state
         private IReadOnlyList<uint> _currentDlcAppIds = Array.Empty<uint>();
         private uint? _loadedDlcForAppId;
         private bool _isDlcLoading;
+        private bool _dlcInfoLoaded;
 
         internal void FocusInitialElement() {
             DispatcherQueue.TryEnqueue(() => {
@@ -125,6 +128,11 @@ namespace ControllerPlayground.Views {
             OtherDlcList.ItemsSource = null;
             OtherDlcHeader.Visibility = Visibility.Collapsed;
             OtherDlcList.Visibility = Visibility.Collapsed;
+            DlcLoadingPanel.Visibility = Visibility.Collapsed;
+            _dlcInfoLoaded = false;
+            NoDlcText.Visibility = Visibility.Collapsed;
+            OwnedDlcList.Visibility = Visibility.Visible;
+            OwnedDlcHeader.Visibility = Visibility.Visible;
         }
 
         private void UpdateGameVisuals() {
@@ -154,7 +162,7 @@ namespace ControllerPlayground.Views {
             GameLogoImage.Visibility = Visibility.Collapsed;
             GameTitleText.Visibility = Visibility.Visible;
 
-            if(!string.IsNullOrWhiteSpace(game.LogoImagePath)) {
+            if (!string.IsNullOrWhiteSpace(game.LogoImagePath)) {
                 GameLogoImage.Source = new BitmapImage(new Uri(game.LogoImagePath));
             }
         }
@@ -301,6 +309,18 @@ namespace ControllerPlayground.Views {
                                 break;
                             }
                         }
+                        if (focused == CommunityHubButton) {
+                            _ = OpenComminityHubAsync();
+                            break;
+                        }
+                        if (focused == DiscussionsButton) {
+                            _ = OpenDiscussionsAsync();
+                            break;
+                        }
+                        if (focused == GuidesButton) {
+                            _ = OpenGuidesAsync();
+                            break;
+                        }
                         if (focused is Button button && IsTabButton(button)) {
                             SelectTab(button);
                         }
@@ -426,10 +446,10 @@ namespace ControllerPlayground.Views {
                 return;
             // Load last played date
             IReadOnlyDictionary<uint, DateTimeOffset> lastPlayedByApp = await _steamLocalService.GetLastPlayedByAppIdAsync();
-            if(lastPlayedByApp.TryGetValue(appId.Value, out DateTimeOffset lastPlayed)) {
+            if (lastPlayedByApp.TryGetValue(appId.Value, out DateTimeOffset lastPlayed)) {
                 Game.LastPlayed = $"Last Played: {lastPlayed.LocalDateTime:MMM d, yyyy}";
                 LastPlayedText.Text = Game.LastPlayed;
-            }else {
+            } else {
                 Game.LastPlayed = "Last Played: Never";
                 LastPlayedText.Text = Game.LastPlayed;
             }
@@ -439,7 +459,7 @@ namespace ControllerPlayground.Views {
             if (playtimeByApp.TryGetValue(appId.Value, out int playtimeMinutes)) {
                 int hours = playtimeMinutes / 60;
                 int minutes = playtimeMinutes % 60;
-                Game.PlayTime = hours > 0 
+                Game.PlayTime = hours > 0
                     ? $"{hours}h {minutes}m played"
                     : $"{minutes}m played";
                 PlayTimeText.Text = Game.PlayTime;
@@ -454,6 +474,14 @@ namespace ControllerPlayground.Views {
 
             //dlc
             _currentDlcAppIds = storeDetails.DlcAppIds;
+            _dlcInfoLoaded = true;
+            if (_currentDlcAppIds.Count == 0) {
+                OwnedDlcHeader.Visibility = Visibility.Collapsed;
+                OwnedDlcList.Visibility = Visibility.Collapsed;
+                OtherDlcHeader.Visibility = Visibility.Collapsed;
+                OtherDlcList.Visibility = Visibility.Collapsed;
+                NoDlcText.Visibility = Visibility.Visible;
+            }
             if (SelectedTab == GamePageTab.YourStuff) {
                 await EnsureDlcLoadedAsync();
             }
@@ -531,16 +559,29 @@ namespace ControllerPlayground.Views {
         }
         private async Task EnsureDlcLoadedAsync() {
             uint? appId = Game?.SteamAppId;
+            if (_dlcInfoLoaded && _currentDlcAppIds.Count == 0) {
+                NoDlcText.Visibility =
+                    Visibility.Visible;
+
+                return;
+            }
             if (appId == null || _currentDlcAppIds.Count == 0 || _isDlcLoading || _loadedDlcForAppId == appId.Value)
                 return;
             _isDlcLoading = true;
+            DlcLoadingPanel.Visibility = Visibility.Visible;
+            OwnedDlcHeader.Visibility = Visibility.Collapsed;
+            OwnedDlcList.Visibility = Visibility.Collapsed;
+            OtherDlcList.Visibility = Visibility.Collapsed;
+            OtherDlcHeader.Visibility = Visibility.Collapsed;
             try {
                 Debug.WriteLine($"Lazy loading DLC for {Game?.Title}...");
                 await LoadDlcAsync(_currentDlcAppIds);
                 _loadedDlcForAppId = appId.Value;
                 Debug.WriteLine($"DLC loaded for {Game?.Title}.");
-            }
-            finally {
+            } finally {
+                DlcLoadingPanel.Visibility = Visibility.Collapsed;
+                OwnedDlcHeader.Visibility = Visibility.Visible;
+                OwnedDlcList.Visibility = Visibility.Visible;
                 _isDlcLoading = false;
             }
         }
@@ -558,7 +599,7 @@ namespace ControllerPlayground.Views {
             uint? appId = Game?.SteamAppId;
             if (appId == null) {
                 Debug.WriteLine("Cannot open store page: Steam AppId is missing");
-                return; 
+                return;
             }
             Uri storeUri = new Uri($"steam://store/{appId.Value}");
             bool opened = await Launcher.LaunchUriAsync(storeUri);
@@ -625,7 +666,7 @@ namespace ControllerPlayground.Views {
             GameInfoContent.Visibility = Visibility.Collapsed;
             SupportContent.Visibility = Visibility.Visible;
 
-            DispatcherQueue.TryEnqueue(() => { 
+            DispatcherQueue.TryEnqueue(() => {
                 VerifyGameFilesButton.Focus(FocusState.Programmatic);
             });
 
@@ -638,7 +679,7 @@ namespace ControllerPlayground.Views {
             SupportContent.Visibility = Visibility.Collapsed;
             GameInfoContent.Visibility = Visibility.Visible;
 
-            DispatcherQueue.TryEnqueue(() => { 
+            DispatcherQueue.TryEnqueue(() => {
                 SupportButton.Focus(FocusState.Programmatic);
             });
         }
@@ -765,9 +806,9 @@ namespace ControllerPlayground.Views {
 
             list.ScrollIntoView(item);
 
-            DispatcherQueue.TryEnqueue(() => { 
-                if (list.ContainerFromIndex(index) is ListViewItem container) 
-                    container.Focus(FocusState.Keyboard);   
+            DispatcherQueue.TryEnqueue(() => {
+                if (list.ContainerFromIndex(index) is ListViewItem container)
+                    container.Focus(FocusState.Keyboard);
             });
         }
         private async void DlcList_ItemClick(object sender, ItemClickEventArgs e) {
@@ -775,6 +816,57 @@ namespace ControllerPlayground.Views {
                 await OpenDlcStorePageAsync(
                     dlc.AppId);
             }
+        }
+        private async Task OpenComminityHubAsync() {
+            uint? appId = Game?.SteamAppId;
+            if (appId == null) {
+                Debug.WriteLine("Cannot open community hub: Steam AppId is missing");
+                return;
+            }
+            Uri communityUrl = new($"https://steamcommunity.com/app/{appId.Value}");
+            Uri steamUrl = new($"steam://openurl/{communityUrl}");
+            bool opened = await Launcher.LaunchUriAsync(steamUrl);
+            Debug.WriteLine(
+                opened
+                ? $"Steam community hub opened: {appId.Value}"
+                : $"Steam community hub failed: {appId.Value}");
+        }
+        private async void CommunityHubButton_Click(object sender, RoutedEventArgs e) {
+            await OpenComminityHubAsync();
+        }
+        private async Task OpenDiscussionsAsync() {
+            uint? appId = Game?.SteamAppId;
+            if (appId == null) {
+                Debug.WriteLine("Cannot open discussions: Steam AppId is missing");
+                return;
+            }
+            Uri discussionsUrl = new($"https://steamcommunity.com/app/{appId.Value}/discussions");
+            Uri steamUrl = new($"steam://openurl/{discussionsUrl}");
+            bool opened = await Launcher.LaunchUriAsync(steamUrl);
+            Debug.WriteLine(
+                opened
+                ? $"Steam discussions opened: {appId.Value}"
+                : $"Steam discussions failed: {appId.Value}");
+        }
+        private async void DiscussionsButton_Click(object sender, RoutedEventArgs e) {
+            await OpenDiscussionsAsync();
+        }
+        private async Task OpenGuidesAsync() {
+            uint? appId = Game?.SteamAppId;
+            if (appId == null) {
+                Debug.WriteLine("Cannot open guides: Steam AppId is missing");
+                return;
+            }
+            Uri guidesUrl = new($"https://steamcommunity.com/app/{appId.Value}/guides");
+            Uri steamUrl = new($"steam://openurl/{guidesUrl}");
+            bool opened = await Launcher.LaunchUriAsync(steamUrl);
+            Debug.WriteLine(
+                opened
+                ? $"Steam guides opened: {appId.Value}"
+                : $"Steam guides failed: {appId.Value}");
+        }
+        private async void GuidesButton_Click(object sender, RoutedEventArgs e) {
+            await OpenGuidesAsync();
         }
     }
 }
