@@ -15,12 +15,24 @@ using System.Diagnostics;
 using System.Linq;
 using ControllerPlayground.Services.Steam.SteamKit;
 using System.Collections.Generic;
+using ControllerPlayground.Services.Steam;
 
 namespace ControllerPlayground;
 
 public sealed partial class MainWindow : Window {
     public MainWindow() {
         InitializeComponent();
+
+        // launch monitor
+        _steamGameSessionMonitor = new SteamGameSessionMonitor(_steamLocalService);
+        _steamGameSessionMonitor.GameStarted += SteamGameSessionMonitor_GameStarted;
+        _steamGameSessionMonitor.GameExited += SteamGameSessionMonitor_GameExited;
+
+        //launch service
+        _homeView.LaunchService = _steamLaunchService;
+        _libraryView.LaunchService = _steamLaunchService;
+        _GamePageView.LaunchService = _steamLaunchService;
+        _steamLaunchService.GameLaunchRequested += SteamLaunchService_GameLaunchRequested;
 
         //views
         _homeView.NavigateRequested += NavigateTo;
@@ -80,6 +92,8 @@ public sealed partial class MainWindow : Window {
     private readonly DispatcherTimer _controllerTimer = new();
     private readonly ControllerService _controllerService = new();
     private readonly SteamSessionService _steamSessionService = new();
+    private readonly SteamLaunchService _steamLaunchService = new();
+    private readonly SteamGameSessionMonitor _steamGameSessionMonitor;
     private readonly ISteamChatService _steamChatService;
     private readonly SteamLibraryService _steamLibraryService;
     private readonly SteamAppInfoService _steamAppInfoService;
@@ -396,5 +410,35 @@ public sealed partial class MainWindow : Window {
         _isGuideOpen = false;
         OverlayLayer.Visibility = Visibility.Collapsed;
         NavigateTo(screen);
+    }
+    private async void SteamLaunchService_GameLaunchRequested(uint appId) {
+        Debug.WriteLine($"ControllerPlayground observed Steam game launch: {appId}");
+        
+        _steamGameSessionMonitor.StartMonitoring(appId);
+    }
+
+    private void SteamGameSessionMonitor_GameStarted(uint appId) {
+        Debug.WriteLine($"Steam game started: {appId}");
+        DispatcherQueue.TryEnqueue(() => {
+            AppWindow.Hide();
+            Debug.WriteLine("ControllerPlayground hidden while game is running.");
+        });
+    }
+
+    private void SteamGameSessionMonitor_GameExited(uint appId) {
+        Debug.WriteLine($"Steam game exited: {appId}");
+        DispatcherQueue.TryEnqueue(() => {
+            AppWindow.Show();
+            Activate();
+            RestoreCurrentScreenFocus();
+            Debug.WriteLine("ControllerPlayground shown after game exited.");
+        });
+        _ = RefreshAfterGameExitAsync(appId);
+    }
+    private async Task RefreshAfterGameExitAsync(uint appId) {
+        await Task.Delay(2000);
+        Debug.WriteLine($"Refreshing Steam library after game exit: {appId}");
+        await LoadRecentSteamGamesAsync();
+        Debug.WriteLine($"Steam recent games refreshed after game exit: {appId}");
     }
 }

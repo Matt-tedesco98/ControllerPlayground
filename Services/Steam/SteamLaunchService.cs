@@ -8,6 +8,7 @@ using Windows.System;
 
 namespace ControllerPlayground.Services.Steam {
     public sealed class SteamLaunchService {
+        public event Action<uint>? GameLaunchRequested;
         public async Task<bool> LaunchGameAsync(uint appId) {
             Uri launchUri = new($"steam://run/{appId}");
             bool launched = await Launcher.LaunchUriAsync(launchUri);
@@ -15,6 +16,9 @@ namespace ControllerPlayground.Services.Steam {
                 launched
                     ? $"Steam launch requested: {appId}"
                     : $"Steam launch failed: {appId}");
+            if (launched) {
+                GameLaunchRequested?.Invoke(appId);
+            }
 
             return launched;
         }

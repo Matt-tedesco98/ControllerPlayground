@@ -32,7 +32,7 @@ namespace ControllerPlayground.Views {
         private uint? _lastFocusedAppId;
         private GameTile? _contextMenuTile;
         private SteamLibraryGame? _contextMenuGame;
-        private readonly SteamLaunchService _steamLaunchService = new();
+        internal SteamLaunchService LaunchService { get; set; } = new();
         private readonly List<SteamLibraryGame> _allGames = new();
         private readonly HashSet<uint> _installedAppIds = new();
         public ObservableCollection<SteamLibraryGame> Games { get; } = new();
@@ -251,7 +251,7 @@ namespace ControllerPlayground.Views {
                     if (_contextMenuGame != null) {
                         uint appId = _contextMenuGame.AppId;
                         CloseContextMenu();
-                        _ = _steamLaunchService.LaunchGameAsync(appId);
+                        _ = LaunchService.LaunchGameAsync(appId);
                     }
                     break;
                 case GameContextAction.GameDetails:

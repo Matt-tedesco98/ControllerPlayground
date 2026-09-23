@@ -38,7 +38,7 @@ namespace ControllerPlayground.Views {
 
         //Services
         public readonly ISteamService _steamService = new SteamService();
-        private readonly SteamLaunchService _steamLaunchService = new();
+        internal SteamLaunchService LaunchService { get; set; } = new();
         private readonly SteamLocalService _steamLocalService = new();
         internal SteamLibraryService? SteamLibraryService { get; set; }
         private bool _isSupportPageOpen;
@@ -596,7 +596,7 @@ namespace ControllerPlayground.Views {
                 Debug.WriteLine("Cannot launch game: Steam AppId is missing");
                 return;
             }
-            await _steamLaunchService.LaunchGameAsync(addId.Value);
+            await LaunchService.LaunchGameAsync(addId.Value);
         }
 
         private async Task OpenStorePageAsync() {

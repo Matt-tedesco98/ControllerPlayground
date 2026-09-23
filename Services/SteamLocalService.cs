@@ -449,5 +449,39 @@ namespace ControllerPlayground.Services {
 
             return Task.FromResult<string?>(null);
         }
+        public Task<bool> IsGameRunningAsync(uint appId, CancellationToken cancellationToken = default) {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            using RegistryKey? steamKey =
+                Registry.CurrentUser.OpenSubKey(
+                    @"Software\Valve\Steam");
+
+            object? runningAppValue =
+                steamKey?.GetValue("RunningAppID");
+
+            if (runningAppValue != null &&
+                uint.TryParse(
+                    runningAppValue.ToString(),
+                    out uint runningAppId) &&
+                runningAppId == appId) {
+                return Task.FromResult(true);
+            }
+
+            using RegistryKey? appKey =
+                Registry.CurrentUser.OpenSubKey(
+                    $@"Software\Valve\Steam\Apps\{appId}");
+
+            object? runningValue =
+                appKey?.GetValue("Running");
+
+            bool isRunning =
+                runningValue != null &&
+                int.TryParse(
+                    runningValue.ToString(),
+                    out int running) &&
+                running == 1;
+
+            return Task.FromResult(isRunning);
+        }
     }
 }

@@ -11,5 +11,6 @@ namespace ControllerPlayground.Services {
         Task<IReadOnlyCollection<uint>> GetInstalledAppIdsAsync(CancellationToken cancellationToken = default);
         Task<IReadOnlyDictionary<uint, int>> GetPlaytimeByAppIdAsync(CancellationToken cancellationToken = default);
         Task<string> GetInstalledGamePathAsync(uint appId, CancellationToken cancellationToken = default);
+        Task<bool> IsGameRunningAsync(uint appId, CancellationToken cancellationToken = default);
     }
 }
