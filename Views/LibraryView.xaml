@@ -115,7 +115,8 @@
                         <controls:GameTile
                             Title="{x:Bind Name}"
                             CoverImageUrl="{x:Bind LibraryCapsuleUrl}"
-                            Activated="GameTile_Activated"/>
+                            Activated="GameTile_Activated"
+                            GotFocus="GameTile_GotFocus"/>
 
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>

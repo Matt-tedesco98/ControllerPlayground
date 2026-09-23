@@ -29,6 +29,7 @@ namespace ControllerPlayground.Views {
         private bool _isContextMenuOpen;
         internal bool IsContextMenuOpen => _isContextMenuOpen;
         private uint? _lastOpenedAppId;
+        private uint? _lastFocusedAppId;
         private GameTile? _contextMenuTile;
         private SteamLibraryGame? _contextMenuGame;
         private readonly SteamLaunchService _steamLaunchService = new();
@@ -145,9 +146,11 @@ namespace ControllerPlayground.Views {
         internal void RestoreFocus() {
             int targetIndex = 0;
 
-            if (_lastOpenedAppId.HasValue) {
+            uint?targetAppId = _lastFocusedAppId ?? _lastOpenedAppId;
+
+            if (targetAppId.HasValue) {
                 for (int i = 0; i < Games.Count; i++) {
-                    if (Games[i].AppId == _lastOpenedAppId.Value) {
+                    if (Games[i].AppId == targetAppId.Value) {
                         targetIndex = i;
                         break;
                     }
@@ -362,6 +365,17 @@ namespace ControllerPlayground.Views {
         private void UpdateFilterVisuals(bool installed) { 
             AllGamesFilterIndicator.Visibility = installed ? Visibility.Collapsed : Visibility.Visible;
             InstalledFilterIndicator.Visibility = installed ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void GameTile_GotFocus(object sender, RoutedEventArgs e) {
+            if (sender is not GameTile tile)
+                return;
+
+            int index = LibraryRepeater.GetElementIndex(tile);
+            if (index < 0 || index >= Games.Count)
+                return;
+
+            _lastFocusedAppId = Games[index].AppId;
         }
     }
 }

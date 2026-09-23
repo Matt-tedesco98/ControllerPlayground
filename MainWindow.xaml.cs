@@ -229,27 +229,39 @@ public sealed partial class MainWindow : Window {
     }
 
     private bool _isGuideOpen;
-
+    
+    private void RestoreCurrentScreenFocus() {
+        switch (_currentScreen) {
+            case AppScreen.Home:
+                _homeView.RestoreFocus();
+                break;
+            case AppScreen.Settings:
+                PlayArea.Focus(FocusState.Programmatic);
+                break;
+            case AppScreen.GamePage:
+                _GamePageView.FocusInitialElement();
+                break;
+            case AppScreen.Library:
+                _libraryView.RestoreFocus();
+                break;
+        }
+    }
     private void ToggleGuide() {
         _isGuideOpen = !_isGuideOpen;
 
-        OverlayLayer.Visibility = _isGuideOpen ? Visibility.Visible : Visibility.Collapsed;
 
         if (_isGuideOpen) {
+
+            OverlayLayer.Visibility = _isGuideOpen ? Visibility.Visible : Visibility.Collapsed;
+
             DispatcherQueue.TryEnqueue(() => {
                 GuideMenu.FocusFirstItem();
             });
         } else {
             OverlayLayer.Visibility = Visibility.Collapsed;
-            _homeView.RestoreFocus();
+            RestoreCurrentScreenFocus();
         }
         ;
-    }
-
-    private void GuideMenu_NavigationRequested(AppScreen screen) {
-        _isGuideOpen = false;
-        OverlayLayer.Visibility = Visibility.Collapsed;
-        NavigateTo(screen);
     }
 
     private void HomeView_GamePageRequested(GameItem game, GamePageTab tab) {
@@ -286,14 +298,14 @@ public sealed partial class MainWindow : Window {
             FriendsOverlay.FocusFirstItem();
         } else {
             FriendsOverlayLayer.Visibility = Visibility.Collapsed;
-            _homeView.RestoreFocus();
+            RestoreCurrentScreenFocus();
         }
     }
 
     private void CloseFriendsOverlay() {
         _isFriendsOpen = false;
         FriendsOverlayLayer.Visibility = Visibility.Collapsed;
-        _homeView.RestoreFocus();
+        RestoreCurrentScreenFocus();
     }
 
     private async void SteamSessionService_Connected() {
@@ -379,5 +391,10 @@ public sealed partial class MainWindow : Window {
         DispatcherQueue.TryEnqueue(() => {
             _libraryView.SetSteamLibraryGames(_steamLibraryService.Games, installedAppIds);
         });
+    }
+    private void GuideMenu_NavigationRequested(AppScreen screen) {
+        _isGuideOpen = false;
+        OverlayLayer.Visibility = Visibility.Collapsed;
+        NavigateTo(screen);
     }
 }
