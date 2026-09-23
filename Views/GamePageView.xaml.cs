@@ -41,6 +41,7 @@ namespace ControllerPlayground.Views {
         internal SteamLaunchService LaunchService { get; set; } = new();
         private readonly SteamLocalService _steamLocalService = new();
         internal SteamLibraryService? SteamLibraryService { get; set; }
+        internal GameSessionService? SessionService { get; set; }
         private bool _isSupportPageOpen;
         internal bool IsSupportPageOpen => _isSupportPageOpen;
         private bool _isKnownIssuesPageOpen;
@@ -120,6 +121,8 @@ namespace ControllerPlayground.Views {
             if (d is GamePageView view) {
                 view.ResetDlcState();
                 view.UpdateGameVisuals();
+
+                view.UpdateGameSessionState(view.SessionService?.State ?? GameSessionState.Idle, view.SessionService?.CurrentAppId);
             }
         }
 
@@ -944,6 +947,41 @@ namespace ControllerPlayground.Views {
         }
         private async void KnownIssuesDiscussionsButton_Click(object sender, RoutedEventArgs e) {
             await OpenDiscussionsAsync();
+        }
+        internal void UpdateGameSessionState(GameSessionState state, uint? appId) {
+            uint? currentGameAppId =
+                Game?.SteamAppId;
+
+            bool isCurrentGame =
+                currentGameAppId.HasValue &&
+                appId.HasValue &&
+                currentGameAppId.Value == appId.Value;
+
+            switch (state) {
+                case GameSessionState.Launching:
+                    PlayButton.Content =
+                        isCurrentGame
+                            ? "Launching..."
+                            : "Play";
+
+                    PlayButton.IsEnabled = false;
+                    break;
+
+                case GameSessionState.Running:
+                    PlayButton.Content =
+                        isCurrentGame
+                            ? "Running"
+                            : "Play";
+
+                    PlayButton.IsEnabled = false;
+                    break;
+
+                case GameSessionState.Idle:
+                default:
+                    PlayButton.Content = "Play";
+                    PlayButton.IsEnabled = true;
+                    break;
+            }
         }
     }
 }

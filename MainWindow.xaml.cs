@@ -28,6 +28,10 @@ public sealed partial class MainWindow : Window {
         _steamGameSessionMonitor.GameStarted += SteamGameSessionMonitor_GameStarted;
         _steamGameSessionMonitor.GameExited += SteamGameSessionMonitor_GameExited;
 
+        //game session service
+        _gameSessionService.StateChanged += GameSessionService_StateChanged;
+        _GamePageView.SessionService = _gameSessionService;
+
         //launch service
         _homeView.LaunchService = _steamLaunchService;
         _libraryView.LaunchService = _steamLaunchService;
@@ -91,12 +95,15 @@ public sealed partial class MainWindow : Window {
 
     private readonly DispatcherTimer _controllerTimer = new();
     private readonly ControllerService _controllerService = new();
+    // Steam services
     private readonly SteamSessionService _steamSessionService = new();
     private readonly SteamLaunchService _steamLaunchService = new();
     private readonly SteamGameSessionMonitor _steamGameSessionMonitor;
     private readonly ISteamChatService _steamChatService;
     private readonly SteamLibraryService _steamLibraryService;
     private readonly SteamAppInfoService _steamAppInfoService;
+    private readonly GameSessionService _gameSessionService = new();
+    // friends overlay
     private bool _isFriendsOpen;
     private int _totalUnreadMessages;
 
@@ -413,11 +420,12 @@ public sealed partial class MainWindow : Window {
     }
     private async void SteamLaunchService_GameLaunchRequested(uint appId) {
         Debug.WriteLine($"ControllerPlayground observed Steam game launch: {appId}");
-        
+
         _steamGameSessionMonitor.StartMonitoring(appId);
     }
 
     private void SteamGameSessionMonitor_GameStarted(uint appId) {
+        _gameSessionService.MarkRunning(appId);
         Debug.WriteLine($"Steam game started: {appId}");
         DispatcherQueue.TryEnqueue(() => {
             AppWindow.Hide();
@@ -426,6 +434,7 @@ public sealed partial class MainWindow : Window {
     }
 
     private void SteamGameSessionMonitor_GameExited(uint appId) {
+        _gameSessionService.EndSession(appId);
         Debug.WriteLine($"Steam game exited: {appId}");
         DispatcherQueue.TryEnqueue(() => {
             AppWindow.Show();
@@ -440,5 +449,11 @@ public sealed partial class MainWindow : Window {
         Debug.WriteLine($"Refreshing Steam library after game exit: {appId}");
         await LoadRecentSteamGamesAsync();
         Debug.WriteLine($"Steam recent games refreshed after game exit: {appId}");
+    }
+    private void GameSessionService_StateChanged(GameSessionState state, uint? appId) {
+        Debug.WriteLine($"Game session state changed: {state} | AppId: {appId}");
+        DispatcherQueue.TryEnqueue(() => {
+            _GamePageView.UpdateGameSessionState(state, appId);
+        });
     }
 }
