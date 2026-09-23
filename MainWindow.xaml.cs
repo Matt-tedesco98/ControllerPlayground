@@ -16,6 +16,7 @@ using System.Linq;
 using ControllerPlayground.Services.Steam.SteamKit;
 using System.Collections.Generic;
 using ControllerPlayground.Services.Steam;
+using Microsoft.UI.Windowing;
 
 namespace ControllerPlayground;
 
@@ -23,15 +24,17 @@ public sealed partial class MainWindow : Window {
     public MainWindow() {
         InitializeComponent();
 
-        // launch monitor
-        _steamGameSessionMonitor = new SteamGameSessionMonitor(_steamLocalService);
-        _steamGameSessionMonitor.GameStarted += SteamGameSessionMonitor_GameStarted;
-        _steamGameSessionMonitor.GameExited += SteamGameSessionMonitor_GameExited;
 
         //game session service
         _gameSessionService.StateChanged += GameSessionService_StateChanged;
         _GamePageView.SessionService = _gameSessionService;
 
+        _steamLaunchService.SessionService = _gameSessionService;
+
+        // launch monitor
+        _steamGameSessionMonitor = new SteamGameSessionMonitor(_steamLocalService);
+        _steamGameSessionMonitor.GameStarted += SteamGameSessionMonitor_GameStarted;
+        _steamGameSessionMonitor.GameExited += SteamGameSessionMonitor_GameExited;
         //launch service
         _homeView.LaunchService = _steamLaunchService;
         _libraryView.LaunchService = _steamLaunchService;
@@ -428,8 +431,10 @@ public sealed partial class MainWindow : Window {
         _gameSessionService.MarkRunning(appId);
         Debug.WriteLine($"Steam game started: {appId}");
         DispatcherQueue.TryEnqueue(() => {
-            AppWindow.Hide();
-            Debug.WriteLine("ControllerPlayground hidden while game is running.");
+            if (AppWindow.Presenter is OverlappedPresenter presenter) {
+                presenter.Minimize();
+            }
+            Debug.WriteLine("ControllerPlayground Minimized while game is running.");
         });
     }
 
@@ -437,10 +442,11 @@ public sealed partial class MainWindow : Window {
         _gameSessionService.EndSession(appId);
         Debug.WriteLine($"Steam game exited: {appId}");
         DispatcherQueue.TryEnqueue(() => {
-            AppWindow.Show();
-            Activate();
+            if (AppWindow.Presenter is OverlappedPresenter presenter) {
+            presenter.Restore();
+        }
             RestoreCurrentScreenFocus();
-            Debug.WriteLine("ControllerPlayground shown after game exited.");
+            Debug.WriteLine("ControllerPlayground restored after game exited.");
         });
         _ = RefreshAfterGameExitAsync(appId);
     }
