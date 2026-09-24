@@ -80,7 +80,7 @@ namespace ControllerPlayground.Overlays {
         }
         internal void UpdateGameSessionState(GameSessionState state, uint? appId, string? gameTitle) {
 
-            bool hasActiveGame = state != GameSessionState.Idle && appId.HasValue;
+            bool hasActiveGame = state == GameSessionState.Running && appId.HasValue;
 
             CurrentGamePanel.Visibility = hasActiveGame ? Visibility.Visible : Visibility.Collapsed;
 
