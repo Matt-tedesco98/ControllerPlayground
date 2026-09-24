@@ -229,6 +229,13 @@ namespace ControllerPlayground.Views {
                     NavigateRequested?.Invoke(AppScreen.Home);
                     break;
                 case ControllerAction.NavigateDown: {
+                        object? focused = FocusManager.GetFocusedElement(PageRoot.XamlRoot);
+                        Debug.WriteLine($"NavigateDown focused: {focused?.GetType().Name}");
+                        if (focused == PlayButton) {
+                            Debug.WriteLine("NavigateDown: PlayButton -> ActivityTabButton");
+                            ActivityTabButton.Focus(FocusState.Keyboard);
+                            break;
+                        }
                         if (MoveDlcFocus(1)) {
                             break;
                         }
@@ -238,6 +245,11 @@ namespace ControllerPlayground.Views {
                     }
                     break;
                 case ControllerAction.NavigateUp: {
+                        object? focused = FocusManager.GetFocusedElement(PageRoot.XamlRoot);
+                        if(SelectedTab == GamePageTab.Activity && focused is ListViewItem activityItem && ActivityContent.ActivityList.IndexFromContainer(activityItem) == 0) {
+                            PlayButton.Focus(FocusState.Keyboard);
+                            break;
+                        }
                         if (MoveDlcFocus(-1)) {
                             break;
                         }
@@ -375,9 +387,12 @@ namespace ControllerPlayground.Views {
 
         private async void GamePageView_Loaded(object sender, RoutedEventArgs e) {
             if (SelectedTab == GamePageTab.Activity) {
-                PlayButton.Focus(FocusState.Programmatic);
+                PlayButton.Focus(FocusState.Keyboard);
+                DispatcherQueue.TryEnqueue(() => {
+                    PageScrollViewer.ChangeView(null, 0, null, true);
+                });
             } else {
-                GetSelectedTabButton().Focus(FocusState.Programmatic);
+                GetSelectedTabButton().Focus(FocusState.Keyboard);
             }
             _ = LoadSteamServiceAsync();
 

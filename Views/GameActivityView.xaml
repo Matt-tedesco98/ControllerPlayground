@@ -103,24 +103,29 @@
             Opacity="0.6"
             Margin="0,12,0,0"/>
 
-            <ItemsControl
-            ItemsSource="{x:Bind Data.ActivityFeed, Mode=OneWay}">
+            <ListView
+                x:Name="ActivityFeedList"
+                ItemsSource="{x:Bind Data.ActivityFeed, Mode=OneWay}"
+                SelectionMode="Single"
+                MaxHeight="600"
+                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                HorizontalAlignment="Stretch">
 
-                <ItemsControl.ItemsPanel>
+                <ListView.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Spacing="12"/>
                     </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
+                </ListView.ItemsPanel>
 
-                <ItemsControl.ItemTemplate>
+                <ListView.ItemTemplate>
                     <DataTemplate x:DataType="models:ActivityFeedItem">
 
                         <Control:ActivityFeedCard
                         Item="{x:Bind}"/>
 
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                </ListView.ItemTemplate>
+            </ListView>
         </StackPanel>
 
     </StackPanel>

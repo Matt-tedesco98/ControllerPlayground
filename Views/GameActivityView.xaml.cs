@@ -22,6 +22,7 @@ namespace ControllerPlayground.Views {
         public GameActivityView() {
             InitializeComponent();
         }
+        internal ListView? ActivityList => ActivityFeedList;
 
         public GameActivityData? Data {
             get => (GameActivityData?)GetValue(DataProperty);
