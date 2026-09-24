@@ -24,6 +24,44 @@
                     FontSize="32"
                     FontWeight="SemiBold"/>
 
+                <StackPanel
+                    x:Name="CurrentGamePanel"
+                    Spacing="8"
+                    Visibility="Collapsed">
+
+                    <TextBlock
+                        Text="Current Game"
+                        FontSize="14"
+                        Foreground="#A8A8A8"/>
+
+                    <TextBlock
+                        x:Name="CurrentGameTitleText"
+                        FontSize="22"
+                        FontWeight="SemiBold"
+                        TextWrapping="Wrap"/>
+                    
+                    <TextBlock
+                        x:Name="CurrentGameStatusText"
+                        Text="Running"
+                        FontSize="16"
+                        Foreground="#A8A8A8"/>
+
+                    <Button
+                        x:Name="ResumeGameButton"
+                        Content="Resume Game"
+                        FontSize="22"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Left"
+                        GotFocus="GuideButton_GotFocus"
+                        LostFocus="GuideButton_LostFocus"/>
+                    
+                    <Border
+                        Height="1"
+                        Background="#404040"
+                        Margin="0,8,0,0"/>
+
+                </StackPanel>
+
                 <Button 
                     x:Name="LibraryButton"
                     Content="Library"

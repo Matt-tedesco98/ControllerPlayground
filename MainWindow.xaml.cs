@@ -24,7 +24,8 @@ public sealed partial class MainWindow : Window {
     public MainWindow() {
         InitializeComponent();
 
-
+        // Guide menu
+        GuideMenu.ResumeGameRequested += GuideMenu_ResumeGameRequested;
         //game session service
         _gameSessionService.StateChanged += GameSessionService_StateChanged;
         _GamePageView.SessionService = _gameSessionService;
@@ -460,6 +461,25 @@ public sealed partial class MainWindow : Window {
         Debug.WriteLine($"Game session state changed: {state} | AppId: {appId}");
         DispatcherQueue.TryEnqueue(() => {
             _GamePageView.UpdateGameSessionState(state, appId);
+            string? gameTitle = null;
+            if (appId.HasValue) {
+                if (_GamePageView.Game?.SteamAppId == appId.Value) {
+                    gameTitle = _GamePageView.Game?.Title;
+                } else {
+                    gameTitle = _steamLibraryService.Games.FirstOrDefault(game => game.AppId == appId.Value)?.Name;
+                }
+            }
+            GuideMenu.UpdateGameSessionState(state,appId, gameTitle);
         });
+    }
+    private void GuideMenu_ResumeGameRequested() {
+        if (_gameSessionService.State != GameSessionState.Running)
+            return;
+        _isGuideOpen = false;
+        OverlayLayer.Visibility = Visibility.Collapsed;
+        if (AppWindow.Presenter is OverlappedPresenter presenter) {
+            presenter.Minimize();
+        }
+        Debug.WriteLine($"Resumed Game:{_gameSessionService.CurrentAppId}");
     }
 }

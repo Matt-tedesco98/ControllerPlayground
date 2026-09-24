@@ -16,12 +16,15 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
 using ControllerPlayground.Navigation;
+using ControllerPlayground.Services.Steam;
 
 
 namespace ControllerPlayground.Overlays {
     public sealed partial class GuideMenu : UserControl {
 
         internal event Action<AppScreen>? NavigateRequested;
+        private Button? _lastFocusedButton;
+        internal event Action? ResumeGameRequested;
 
         public void FocusFirstItem() {
             (_lastFocusedButton ?? LibraryButton).Focus(FocusState.Keyboard);
@@ -62,6 +65,10 @@ namespace ControllerPlayground.Overlays {
 
                 case ControllerAction.Accept: {
                         var focused = FocusManager.GetFocusedElement(GuideRoot.XamlRoot) as Button;
+                        if (focused == ResumeGameButton) {
+                            ResumeGameRequested?.Invoke();
+                            break;
+                        }
                         if (focused == SettingsButton) {
                             NavigateRequested?.Invoke(AppScreen.Settings);
                         }else if (focused == LibraryButton) {
@@ -71,8 +78,23 @@ namespace ControllerPlayground.Overlays {
                     break;
             }
         }
+        internal void UpdateGameSessionState(GameSessionState state, uint? appId, string? gameTitle) {
 
-        private Button? _lastFocusedButton;
+            bool hasActiveGame = state != GameSessionState.Idle && appId.HasValue;
+
+            CurrentGamePanel.Visibility = hasActiveGame ? Visibility.Visible : Visibility.Collapsed;
+
+            if(!hasActiveGame) {
+                CurrentGameTitleText.Text = string.Empty;
+                CurrentGameStatusText.Text = string.Empty;
+                return;
+            }
+
+            CurrentGameTitleText.Text = !string.IsNullOrWhiteSpace(gameTitle) ? gameTitle : $"Steam App {appId}";
+
+            ResumeGameButton.IsEnabled = state == GameSessionState.Running;
+        }
+
 
         public GuideMenu() {
             InitializeComponent();
