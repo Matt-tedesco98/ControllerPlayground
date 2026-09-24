@@ -27,7 +27,15 @@ namespace ControllerPlayground.Overlays {
         internal event Action? ResumeGameRequested;
 
         public void FocusFirstItem() {
-            (_lastFocusedButton ?? LibraryButton).Focus(FocusState.Keyboard);
+            if (CurrentGamePanel.Visibility == Visibility.Visible && ResumeGameButton.IsEnabled) {
+                ResumeGameButton.Focus(FocusState.Keyboard);
+                return;
+            }
+            if (_lastFocusedButton == ResumeGameButton || _lastFocusedButton is null) {
+                LibraryButton.Focus(FocusState.Keyboard);
+                return;
+            }
+            _lastFocusedButton.Focus(FocusState.Keyboard);
         }
 
         private void GuideButton_GotFocus(object sender, RoutedEventArgs e) {
