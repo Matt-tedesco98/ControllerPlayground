@@ -230,9 +230,7 @@ namespace ControllerPlayground.Views {
                     break;
                 case ControllerAction.NavigateDown: {
                         object? focused = FocusManager.GetFocusedElement(PageRoot.XamlRoot);
-                        Debug.WriteLine($"NavigateDown focused: {focused?.GetType().Name}");
                         if (focused == PlayButton) {
-                            Debug.WriteLine("NavigateDown: PlayButton -> ActivityTabButton");
                             ActivityTabButton.Focus(FocusState.Keyboard);
                             break;
                         }
@@ -247,7 +245,7 @@ namespace ControllerPlayground.Views {
                 case ControllerAction.NavigateUp: {
                         object? focused = FocusManager.GetFocusedElement(PageRoot.XamlRoot);
                         if(SelectedTab == GamePageTab.Activity && focused is ListViewItem activityItem && ActivityContent.ActivityList.IndexFromContainer(activityItem) == 0) {
-                            PlayButton.Focus(FocusState.Keyboard);
+                            ActivityTabButton.Focus(FocusState.Keyboard);
                             break;
                         }
                         if (MoveDlcFocus(-1)) {
