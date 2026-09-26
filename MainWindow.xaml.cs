@@ -33,14 +33,14 @@ public sealed partial class MainWindow : Window {
         _steamLaunchService.SessionService = _gameSessionService;
 
         // launch monitor
-        _steamGameSessionMonitor = new SteamGameSessionMonitor(_steamLocalService);
-        _steamGameSessionMonitor.GameStarted += SteamGameSessionMonitor_GameStarted;
-        _steamGameSessionMonitor.GameExited += SteamGameSessionMonitor_GameExited;
+        _steamGameSessionCoordinator = new SteamGameSessionCoordinator(_steamLaunchService, _gameSessionService, _steamLocalService);
+        _steamGameSessionCoordinator.GameStarted += SteamGameSessionMonitor_GameStarted;
+        _steamGameSessionCoordinator.GameExited += SteamGameSessionMonitor_GameExited;
+
         //launch service
         _homeView.LaunchService = _steamLaunchService;
         _libraryView.LaunchService = _steamLaunchService;
         _GamePageView.LaunchService = _steamLaunchService;
-        _steamLaunchService.GameLaunchRequested += SteamLaunchService_GameLaunchRequested;
 
         //views
         _homeView.NavigateRequested += NavigateTo;
@@ -99,10 +99,13 @@ public sealed partial class MainWindow : Window {
 
     private readonly DispatcherTimer _controllerTimer = new();
     private readonly ControllerService _controllerService = new();
+
+    private readonly GameWindowService _gameWindowService = new();
+
     // Steam services
     private readonly SteamSessionService _steamSessionService = new();
     private readonly SteamLaunchService _steamLaunchService = new();
-    private readonly SteamGameSessionMonitor _steamGameSessionMonitor;
+    private readonly SteamGameSessionCoordinator _steamGameSessionCoordinator;
     private readonly ISteamChatService _steamChatService;
     private readonly SteamLibraryService _steamLibraryService;
     private readonly SteamAppInfoService _steamAppInfoService;
@@ -422,14 +425,7 @@ public sealed partial class MainWindow : Window {
         OverlayLayer.Visibility = Visibility.Collapsed;
         NavigateTo(screen);
     }
-    private async void SteamLaunchService_GameLaunchRequested(uint appId) {
-        Debug.WriteLine($"ControllerPlayground observed Steam game launch: {appId}");
-
-        _steamGameSessionMonitor.StartMonitoring(appId);
-    }
-
     private void SteamGameSessionMonitor_GameStarted(uint appId) {
-        _gameSessionService.MarkRunning(appId);
         Debug.WriteLine($"Steam game started: {appId}");
         DispatcherQueue.TryEnqueue(() => {
             if (AppWindow.Presenter is OverlappedPresenter presenter) {
@@ -440,7 +436,6 @@ public sealed partial class MainWindow : Window {
     }
 
     private void SteamGameSessionMonitor_GameExited(uint appId) {
-        _gameSessionService.EndSession(appId);
         Debug.WriteLine($"Steam game exited: {appId}");
         DispatcherQueue.TryEnqueue(() => {
             if (AppWindow.Presenter is OverlappedPresenter presenter) {
@@ -472,14 +467,24 @@ public sealed partial class MainWindow : Window {
             GuideMenu.UpdateGameSessionState(state,appId, gameTitle);
         });
     }
-    private void GuideMenu_ResumeGameRequested() {
-        if (_gameSessionService.State != GameSessionState.Running)
+    private async void GuideMenu_ResumeGameRequested() {
+        if (_gameSessionService.State != GameSessionState.Running || !_gameSessionService.CurrentAppId.HasValue)
             return;
+
+        uint addId = _gameSessionService.CurrentAppId.Value;
+
+        string? gamePath = await _steamLocalService.GetInstalledGamePathAsync(addId);
+
         _isGuideOpen = false;
         OverlayLayer.Visibility = Visibility.Collapsed;
+
         if (AppWindow.Presenter is OverlappedPresenter presenter) {
             presenter.Minimize();
         }
-        Debug.WriteLine($"Resumed Game:{_gameSessionService.CurrentAppId}");
+
+        if (!string.IsNullOrWhiteSpace(gamePath)) {
+            _gameWindowService.TryFocusGameWindow(gamePath);
+        }
+        Debug.WriteLine($"Resumed Game:{addId}");
     }
 }
