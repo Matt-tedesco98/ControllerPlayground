@@ -70,7 +70,9 @@ namespace ControllerPlayground.Views {
 
             Debug.WriteLine($"Library recived {_installedAppIds.Count} installed appIDs");
 
-            RestoreFocus();
+            if (XamlRoot != null) {
+                RestoreFocus();
+            }
         }
 
         internal void HandleControllerAction(ControllerAction action) {

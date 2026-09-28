@@ -75,13 +75,15 @@ namespace ControllerPlayground.Services.Steam.SteamKit {
                 return;
             }
 
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
             if (_ownedAppIds.Count == 0) {
                 await LoadOwnedAppIdsAsync();
             }
 
             _games = (await GetGamesAsync(OwnedAppIds)).OrderBy(game => game.Name).ToList();
 
-            Debug.WriteLine($"Steam library games loaded: {_games.Count}");
+            Debug.WriteLine($"Steam library games loaded: {_games.Count}" + $"in {stopwatch.ElapsedMilliseconds} ms");
 
             LibraryLoaded?.Invoke(_games.Count);
         }

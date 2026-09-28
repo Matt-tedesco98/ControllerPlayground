@@ -17,12 +17,15 @@ using ControllerPlayground.Services.Steam.SteamKit;
 using System.Collections.Generic;
 using ControllerPlayground.Services.Steam;
 using Microsoft.UI.Windowing;
+using ControllerPlayground.Services.Data;
 
 namespace ControllerPlayground;
 
 public sealed partial class MainWindow : Window {
     public MainWindow() {
         InitializeComponent();
+
+        _ = InitializeDatabaseAsync();
 
         // Guide menu
         GuideMenu.ResumeGameRequested += GuideMenu_ResumeGameRequested;
@@ -119,6 +122,10 @@ public sealed partial class MainWindow : Window {
     private readonly SettingsView _settingsView = new();
     private readonly GamePageView _GamePageView = new();
     private readonly LibraryView _libraryView = new();
+
+    // Database services
+    private readonly ControllerPlaygroundDatabase _database = new();
+    private readonly SteamArtworkCacheService _artworkCache = new();
 
     private void ControllerTimer_Tick(object? sender, object e) {
         ControllerAction action = _controllerService.PollAction();
@@ -249,7 +256,7 @@ public sealed partial class MainWindow : Window {
         }
     }
 
-    private void GoBack() { 
+    private void GoBack() {
         if (_navigationHistory.Count == 0)
             return;
         AppScreen previousScreen = _navigationHistory.Pop();
@@ -257,7 +264,7 @@ public sealed partial class MainWindow : Window {
     }
 
     private bool _isGuideOpen;
-    
+
     private void RestoreCurrentScreenFocus() {
         switch (_currentScreen) {
             case AppScreen.Home:
@@ -415,7 +422,16 @@ public sealed partial class MainWindow : Window {
     }
 
     private async void SteamLibraryService_LibraryLoaded(int gameCount) {
+        await _database.UpsertSteamGamesAsync(_steamLibraryService.Games);
+
+        Debug.WriteLine($"Cached Steam games to SQLite: {_steamLibraryService.Games.Count}");
+
+        Debug.WriteLine($"Starting Steam artwork cache for {_steamLibraryService.Games.Count} games");
+
+        _ = _artworkCache.CacheLibraryCapsulesAsync(_steamLibraryService.Games);
+
         IReadOnlyCollection<uint> installedAppIds = await _steamLocalService.GetInstalledAppIdsAsync();
+
         DispatcherQueue.TryEnqueue(() => {
             _libraryView.SetSteamLibraryGames(_steamLibraryService.Games, installedAppIds);
         });
@@ -439,8 +455,8 @@ public sealed partial class MainWindow : Window {
         Debug.WriteLine($"Steam game exited: {appId}");
         DispatcherQueue.TryEnqueue(() => {
             if (AppWindow.Presenter is OverlappedPresenter presenter) {
-            presenter.Restore();
-        }
+                presenter.Restore();
+            }
             RestoreCurrentScreenFocus();
             Debug.WriteLine("ControllerPlayground restored after game exited.");
         });
@@ -464,7 +480,7 @@ public sealed partial class MainWindow : Window {
                     gameTitle = _steamLibraryService.Games.FirstOrDefault(game => game.AppId == appId.Value)?.Name;
                 }
             }
-            GuideMenu.UpdateGameSessionState(state,appId, gameTitle);
+            GuideMenu.UpdateGameSessionState(state, appId, gameTitle);
         });
     }
     private async void GuideMenu_ResumeGameRequested() {
@@ -486,5 +502,32 @@ public sealed partial class MainWindow : Window {
             _gameWindowService.TryFocusGameWindow(gamePath);
         }
         Debug.WriteLine($"Resumed Game:{addId}");
+    }
+    private async Task InitializeDatabaseAsync() {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        try {
+            await _database.InitializeAsync();
+
+            Debug.WriteLine($"ControllerPlayground database ready : {_database.DatabasePath}"); 
+
+            IReadOnlyList<SteamLibraryGame> cachedGames = await _database.GetSteamGamesAsync();
+
+            foreach (SteamLibraryGame game in cachedGames) {
+                game.LibraryCapsuleUrl = _artworkCache.GetLibraryCapsuleSource(game);
+            }
+            Debug.WriteLine($"Loaded cached Steam games at startup: {cachedGames.Count}" + $"in {stopwatch.ElapsedMilliseconds} ms");
+
+            if (cachedGames.Count == 0) {
+                return;
+            }
+
+            IReadOnlyCollection<uint> installedAppIds = await _steamLocalService.GetInstalledAppIdsAsync();
+            DispatcherQueue.TryEnqueue(() => { 
+                _libraryView.SetSteamLibraryGames(cachedGames, installedAppIds);
+            });
+
+        } catch (Exception ex) {
+            Debug.WriteLine($"ControllerPlayground database initialization failed: {ex}");
+        }
     }
 }
