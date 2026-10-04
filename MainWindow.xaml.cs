@@ -447,6 +447,7 @@ public sealed partial class MainWindow : Window {
             if (AppWindow.Presenter is OverlappedPresenter presenter) {
                 presenter.Minimize();
             }
+            _ = RefreshRecentGameAfterLaunchAsync(appId);
             Debug.WriteLine("ControllerPlayground Minimized while game is running.");
         });
     }
@@ -463,10 +464,28 @@ public sealed partial class MainWindow : Window {
         _ = RefreshAfterGameExitAsync(appId);
     }
     private async Task RefreshAfterGameExitAsync(uint appId) {
-        await Task.Delay(2000);
         Debug.WriteLine($"Refreshing Steam library after game exit: {appId}");
+
         await LoadRecentSteamGamesAsync();
+
         Debug.WriteLine($"Steam recent games refreshed after game exit: {appId}");
+    }
+
+    private async Task RefreshRecentGameAfterLaunchAsync(uint appId) {
+        for (int attempt = 0; attempt < 10; attempt++) {
+            IReadOnlyDictionary<uint, DateTimeOffset> lastPlayed = await _steamLocalService.GetLastPlayedByAppIdAsync();
+
+            if (lastPlayed.TryGetValue(appId, out DateTimeOffset timestamp) && timestamp >= DateTimeOffset.Now.AddMinutes(-2)) {
+                Debug.WriteLine($"Steam LastPlayed updated for: {appId}");
+                await LoadRecentSteamGamesAsync();
+                return;
+            }
+
+            await Task.Delay(1000);
+
+        }
+
+        Debug.WriteLine($"Steam LastPlayed update Timed out for: {appId}");
     }
     private void GameSessionService_StateChanged(GameSessionState state, uint? appId) {
         Debug.WriteLine($"Game session state changed: {state} | AppId: {appId}");
@@ -508,7 +527,7 @@ public sealed partial class MainWindow : Window {
         try {
             await _database.InitializeAsync();
 
-            Debug.WriteLine($"ControllerPlayground database ready : {_database.DatabasePath}"); 
+            Debug.WriteLine($"ControllerPlayground database ready : {_database.DatabasePath}");
 
             IReadOnlyList<SteamLibraryGame> cachedGames = await _database.GetSteamGamesAsync();
 
@@ -522,7 +541,7 @@ public sealed partial class MainWindow : Window {
             }
 
             IReadOnlyCollection<uint> installedAppIds = await _steamLocalService.GetInstalledAppIdsAsync();
-            DispatcherQueue.TryEnqueue(() => { 
+            DispatcherQueue.TryEnqueue(() => {
                 _libraryView.SetSteamLibraryGames(cachedGames, installedAppIds);
             });
 
