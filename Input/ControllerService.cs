@@ -13,13 +13,10 @@ internal sealed class ControllerService {
 
     private uint _previousSystemButtons;
 
-    //Controller Dpad handling variables
-    private ControllerAction _heldDpadAction = ControllerAction.none;
-    private long _nextDpadRepeatTime;
-
-    //Controller Stick handling variables
-    private ControllerAction _heldStickAction = ControllerAction.none;
-    private long _nextStickRepeatTime;
+    // navigational repeat state
+    private ControllerAction _heldNavigationAction = ControllerAction.none;
+    private long _nextNavigationRepeatTime;
+    private ControllerAction _stickDirection = ControllerAction.none;
 
     // Constants for repeat behavior
     private const int InitialRepeatDelayMs = 400;
@@ -97,11 +94,6 @@ internal sealed class ControllerService {
         if ((currentButtons & ControllerButtons.DpadRight) != 0)
             dpadAction = ControllerAction.NavigateRight;
 
-        // Handle Dpad repeat behavior
-        ControllerAction dpadResult = HandleRepeat(dpadAction, ref _heldDpadAction, ref _nextDpadRepeatTime);
-
-        if (dpadResult != ControllerAction.none)
-            return dpadResult;
 
         const float pressThreshold = 0.65f;
         const float releaseThreshold = 0.30f;
@@ -112,28 +104,62 @@ internal sealed class ControllerService {
         ControllerAction stickAction = ControllerAction.none;
 
         // Stick is pushed far enough to choose a direction
-        if (Math.Abs(x) >= pressThreshold || Math.Abs(y) >= pressThreshold) {
-            // Using the angle of the stick to determine the direction or switch randomly if the stick is in a diagonal position
+        const float directionSwitchMargin = 0.15f;
+
+        if (Math.Abs(x) <= releaseThreshold &&
+            Math.Abs(y) <= releaseThreshold) {
+
+            _stickDirection = ControllerAction.none;
+        } else if (Math.Abs(x) >= pressThreshold ||
+                   Math.Abs(y) >= pressThreshold) {
+
+            ControllerAction candidateDirection;
+
             if (Math.Abs(x) >= Math.Abs(y)) {
-                stickAction = x > 0 ? ControllerAction.NavigateRight : ControllerAction.NavigateLeft;
+                candidateDirection =
+                    x > 0
+                        ? ControllerAction.NavigateRight
+                        : ControllerAction.NavigateLeft;
             } else {
-                stickAction = y > 0 ? ControllerAction.NavigateUp : ControllerAction.NavigateDown;
+                candidateDirection =
+                    y > 0
+                        ? ControllerAction.NavigateUp
+                        : ControllerAction.NavigateDown;
             }
-        }
 
-        //Stick returned close enough to center to release the action
-        else if (Math.Abs(x) <= releaseThreshold && Math.Abs(y) <= releaseThreshold) {
-            stickAction = ControllerAction.none;
-        } else {
-            // Stick is still held in a direction, but not far enough to trigger a new action
-            stickAction = _heldStickAction;
-        }
+            if (_stickDirection == ControllerAction.none) {
+                _stickDirection = candidateDirection;
+            } else if (candidateDirection != _stickDirection) {
+                bool oppositeDirection =
+                    (_stickDirection == ControllerAction.NavigateLeft &&
+                     candidateDirection == ControllerAction.NavigateRight) ||
+                    (_stickDirection == ControllerAction.NavigateRight &&
+                     candidateDirection == ControllerAction.NavigateLeft) ||
+                    (_stickDirection == ControllerAction.NavigateUp &&
+                     candidateDirection == ControllerAction.NavigateDown) ||
+                    (_stickDirection == ControllerAction.NavigateDown &&
+                     candidateDirection == ControllerAction.NavigateUp);
+
+                float axisDifference =
+                    Math.Abs(Math.Abs(x) - Math.Abs(y));
+
+                if (oppositeDirection ||
+                    axisDifference >= directionSwitchMargin) {
+
+                    _stickDirection = candidateDirection;
+                }
+            }
+          }
+
+        stickAction = _stickDirection;
+
+        ControllerAction navigationAction = dpadAction != ControllerAction.none ? dpadAction : stickAction;
 
 
-        // Handle Stick repeat behavior
-        ControllerAction stickResult = HandleRepeat(stickAction, ref _heldStickAction, ref _nextStickRepeatTime);
-        if (stickResult != ControllerAction.none)
-            return stickResult;
+        // Handle repeat behavior
+        ControllerAction navigationResult = HandleRepeat(navigationAction, ref _heldNavigationAction, ref _nextNavigationRepeatTime);
+        if (navigationResult != ControllerAction.none)
+            return navigationResult;
 
         return ControllerAction.none;
     }
@@ -202,11 +228,8 @@ internal sealed class ControllerService {
     }
 
     private void ResetInputState() {
-        _previousButtons = 0;
-        _heldDpadAction = ControllerAction.none;
-        _nextDpadRepeatTime = 0;
-        _heldStickAction = ControllerAction.none;
-        _nextStickRepeatTime = 0;
-        _previousSystemButtons = 0;
+        _heldNavigationAction = ControllerAction.none;
+        _nextNavigationRepeatTime = 0;
+        _stickDirection = ControllerAction.none;
     }
 }
