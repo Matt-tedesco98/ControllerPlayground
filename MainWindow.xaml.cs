@@ -70,7 +70,13 @@ public sealed partial class MainWindow : Window {
         _controllerTimer.Tick += ControllerTimer_Tick;
         _controllerTimer.Start();
 
-        Activated += (_, _) => { PlayArea.Focus(FocusState.Programmatic); };
+        Activated += (_, _) => { PlayArea.Focus(FocusState.Programmatic); 
+
+            DispatcherQueue.TryEnqueue(() => {
+                RestoreCurrentScreenFocus();
+            });
+
+        };
 
         _steamChatService = new SteamChatService(_steamSessionService);
 
@@ -169,6 +175,16 @@ public sealed partial class MainWindow : Window {
                 return;
             }
             FriendsOverlay.HandleControllerAction(action);
+            return;
+        }
+
+        // Focus Recovery
+        object? focusedElement = FocusManager.GetFocusedElement(PlayArea.XamlRoot);
+
+        if (focusedElement == null || focusedElement == PlayArea) { 
+            Debug.WriteLine($"Controller focus lost on {_currentScreen}; restoring focus");
+
+            RestoreCurrentScreenFocus();
             return;
         }
 
