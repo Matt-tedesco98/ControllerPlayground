@@ -341,7 +341,7 @@ namespace ControllerPlayground.Views {
                     int columns = Math.Max(1, (int)Math.Floor(LibraryRepeater.ActualWidth / 245.0));
                     int targetIndex = currentIndex + columns;
                     if (targetIndex >= Games.Count)
-                        return false;
+                        return true;
                     FocusGameAtIndex(targetIndex);
                     return true;
                 }
