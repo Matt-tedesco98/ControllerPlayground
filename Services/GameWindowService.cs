@@ -67,5 +67,15 @@ namespace ControllerPlayground.Services {
             Debug.WriteLine(focused ? $"Focused game window for: {gameWindow}" : $"Failed to focus game window for: {gameWindow}");
             return focused;
         }
+
+        public bool TryFocusWindow(IntPtr windowHandle) {
+            if (windowHandle == IntPtr.Zero)
+                return false;
+
+            bool focused = SetForegroundWindow(windowHandle);
+
+            Debug.WriteLine(focused ? $"Focused window: {windowHandle}" : $"Failed to focus window: {windowHandle}");
+            return focused;
+        }
     }
 }

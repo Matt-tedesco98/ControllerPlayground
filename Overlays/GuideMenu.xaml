@@ -79,6 +79,7 @@
                     GotFocus="GuideButton_GotFocus"
                     LostFocus="GuideButton_LostFocus"/>
                 <Button 
+                    x:Name="DiscordButton"
                     Content="Discord" 
                     FontSize="22"
                     HorizontalAlignment="Stretch"
@@ -86,6 +87,7 @@
                     GotFocus="GuideButton_GotFocus"
                     LostFocus="GuideButton_LostFocus"/>
                 <Button 
+                    x:Name="PowerButton"
                     Content="Power" 
                     FontSize="22"
                     HorizontalAlignment="Stretch"

@@ -43,11 +43,19 @@ namespace ControllerPlayground.Overlays {
                 SearchRoot = MenuRoot
             };
             switch (action) {
-                case ControllerAction.NavigateUp:
-                    FocusManager.TryMoveFocus(FocusNavigationDirection.Up, focusoptions);
+                case ControllerAction.NavigateUp: {
+                        object focused = FocusManager.GetFocusedElement(MenuRoot.XamlRoot);
+                        if (focused == PlayButton)
+                            break;
+                        FocusManager.TryMoveFocus(FocusNavigationDirection.Up, focusoptions);
+                    }
                     break;
-                case ControllerAction.NavigateDown:
-                    FocusManager.TryMoveFocus(FocusNavigationDirection.Down, focusoptions);
+                case ControllerAction.NavigateDown: {
+                        object focused = FocusManager.GetFocusedElement(MenuRoot.XamlRoot);
+                        if (focused == PropertiesButton)
+                            break;
+                        FocusManager.TryMoveFocus(FocusNavigationDirection.Down, focusoptions);
+                    }
                     break;
 
                 case ControllerAction.Accept: 

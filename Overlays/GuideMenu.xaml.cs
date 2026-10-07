@@ -59,16 +59,33 @@ namespace ControllerPlayground.Overlays {
             };
 
             switch (action) {
-                case ControllerAction.NavigateUp:
-                    FocusManager.TryMoveFocus(
-                        FocusNavigationDirection.Up,
-                        focusOptions);
+                case ControllerAction.NavigateUp: {
+                        object? focused = FocusManager.GetFocusedElement(GuideRoot.XamlRoot);
+
+                        bool resumeVisible = CurrentGamePanel.Visibility == Visibility.Visible && ResumeGameButton.IsEnabled;
+
+                        if ((resumeVisible && focused == ResumeGameButton) || (!resumeVisible && focused == LibraryButton)) { 
+
+                            break;
+                        }
+                    
+
+                        FocusManager.TryMoveFocus(
+                            FocusNavigationDirection.Up,
+                            focusOptions);
+                    }
                     break;
 
-                case ControllerAction.NavigateDown:
-                    FocusManager.TryMoveFocus(
-                        FocusNavigationDirection.Down,
-                        focusOptions);
+                case ControllerAction.NavigateDown: {
+                        object? focused = FocusManager.GetFocusedElement(GuideRoot.XamlRoot);
+
+                        if (focused == PowerButton) {
+                            break;
+                        }
+                        FocusManager.TryMoveFocus(
+                            FocusNavigationDirection.Down,
+                            focusOptions);
+                    }
                     break;
 
                 case ControllerAction.Accept: {

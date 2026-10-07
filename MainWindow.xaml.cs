@@ -141,6 +141,17 @@ public sealed partial class MainWindow : Window {
         // guide button overlay
         if (action == ControllerAction.Guide) {
             Debug.WriteLine("Guide requested");
+
+            if (!_isGuideOpen && _gameSessionService.State == GameSessionState.Running) {
+                if (AppWindow.Presenter is OverlappedPresenter presenter) {
+                    presenter.Restore();
+                }
+                Activate();
+
+                IntPtr windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
+
+                _gameWindowService.TryFocusWindow(windowHandle);
+            }
             ToggleGuide();
             return;
         }

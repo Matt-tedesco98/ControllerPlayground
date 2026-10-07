@@ -30,7 +30,12 @@ bool ControllerInput_Initialize() {
 
 	HRESULT result = GameInputCreate(&g_gameInput);
 
-	return SUCCEEDED(result);
+	if (FAILED(result) || g_gameInput == nullptr)
+		return false; // Failed to create GameInput instance
+
+	g_gameInput->SetFocusPolicy(GameInputExclusiveForegroundInput);
+
+	return result;
 }
 
 static bool ReadControllerState(IGameInputReading* reading, ControllerState* state) {
