@@ -10,6 +10,15 @@ using namespace GameInput::v2;
 using namespace GameInput::v3;
 #endif
 
+static volatile LONG g_pendingSystemButtons = 0;
+static  GameInputCallbackToken g_guideCallbackToken{};
+
+static HWND g_windowHandle = nullptr;
+
+static WNDPROC g_previousWindowProc = nullptr;
+
+static bool g_dualSensePsPressed = false;
+
 static IGameInput* g_gameInput = nullptr;
 static IGameInputReading* g_currentReading = nullptr;
 static IGameInputReading* g_previousReading = nullptr;
@@ -23,6 +32,56 @@ constexpr uint8_t DualSenseMuteButton = 14;
 
 constexpr unsigned int ControllerSystemButtonGuide = 0x00000001;
 
+static bool IsDualSensePsPressed(
+	const BYTE* report,
+	UINT reportSize)
+{
+	if (report == nullptr ||
+		reportSize == 0)
+	{
+		return false;
+	}
+
+	// USB full report.
+	if (report[0] == 0x01 &&
+		reportSize >= 64)
+	{
+		return (report[10] & 0x01) != 0;
+	}
+
+	// Bluetooth full report.
+	if (report[0] == 0x31 &&
+		reportSize >= 78)
+	{
+		return (report[11] & 0x01) != 0;
+	}
+
+	// Bluetooth minimal report.
+	if (report[0] == 0x01 &&
+		reportSize >= 8)
+	{
+		return (report[7] & 0x01) != 0;
+	}
+
+	return false;
+}
+
+static void CALLBACK OnSystemButton(
+	GameInputCallbackToken callbackToken,
+	void* context,
+	IGameInputDevice* device,
+	uint64_t timestamp,
+	GameInputSystemButtons currentButtons,
+	GameInputSystemButtons previousButtons) {
+
+	bool guidePressed = (currentButtons & GameInputSystemButtonGuide) != 0;
+
+	bool guideWasPressed = (previousButtons & GameInputSystemButtonGuide) != 0;
+
+	if (guidePressed && !guideWasPressed) {
+		InterlockedOr(&g_pendingSystemButtons, ControllerSystemButtonGuide);
+	}
+}
 
 bool ControllerInput_Initialize() {
 	if (g_gameInput != nullptr)
@@ -33,9 +92,25 @@ bool ControllerInput_Initialize() {
 	if (FAILED(result) || g_gameInput == nullptr)
 		return false; // Failed to create GameInput instance
 
-	g_gameInput->SetFocusPolicy(GameInputExclusiveForegroundInput);
+	GameInputFocusPolicy focusPolicy = static_cast<GameInputFocusPolicy>(GameInputExclusiveForegroundInput | GameInputEnableBackgroundGuideButton);
 
-	return result;
+	g_gameInput->SetFocusPolicy(focusPolicy);
+
+	HRESULT callbackResult = g_gameInput->RegisterSystemButtonCallback(
+		nullptr,
+		GameInputSystemButtonGuide,
+		nullptr,
+		OnSystemButton,
+		&g_guideCallbackToken
+	);
+
+	if (FAILED(callbackResult))
+	{
+		OutputDebugStringA(
+			"ControllerInput: Guide callback registration FAILED\n");
+		}
+
+	return SUCCEEDED(callbackResult);
 }
 
 static bool ReadControllerState(IGameInputReading* reading, ControllerState* state) {
@@ -158,6 +233,20 @@ bool ControllerInput_GetState(
 	}
 
 	*State = {};
+
+	LONG pendingSystemButtons =
+		InterlockedExchange(
+			&g_pendingSystemButtons,
+			0);
+
+	if (pendingSystemButtons != 0)
+	{
+		State->systemButtons |=
+			static_cast<unsigned int>(
+				pendingSystemButtons);
+
+		return true;
+	}
 
 	// First poll establishes our position
 	// in GameInput's reading history.
@@ -376,4 +465,139 @@ bool ControllerInput_GetDeviceInfo(ControllerDeviceInfo* info) {
 	reading->Release(); // Release the reading object
 
 	return SUCCEEDED(result) && deviceInfo != nullptr;
+}
+
+static LRESULT CALLBACK ControllerInput_WindowProc(
+	HWND hWnd,
+	UINT message,
+	WPARAM wParam,
+	LPARAM lParam)
+{
+	if (message == WM_INPUT &&
+		GET_RAWINPUT_CODE_WPARAM(wParam) == RIM_INPUTSINK)
+	{
+		UINT size = 0;
+
+		GetRawInputData(
+			reinterpret_cast<HRAWINPUT>(lParam),
+			RID_INPUT,
+			nullptr,
+			&size,
+			sizeof(RAWINPUTHEADER));
+
+		if (size > 0)
+		{
+			BYTE* buffer = new BYTE[size];
+
+			if (GetRawInputData(
+				reinterpret_cast<HRAWINPUT>(lParam),
+				RID_INPUT,
+				buffer,
+				&size,
+				sizeof(RAWINPUTHEADER)) == size)
+			{
+				RAWINPUT* raw =
+					reinterpret_cast<RAWINPUT*>(buffer);
+
+				RID_DEVICE_INFO deviceInfo{};
+				deviceInfo.cbSize =
+					sizeof(RID_DEVICE_INFO);
+
+				UINT deviceInfoSize =
+					sizeof(RID_DEVICE_INFO);
+
+				if (GetRawInputDeviceInfo(
+					raw->header.hDevice,
+					RIDI_DEVICEINFO,
+					&deviceInfo,
+					&deviceInfoSize) !=
+					static_cast<UINT>(-1))
+				{
+					if (deviceInfo.dwType == RIM_TYPEHID &&
+						deviceInfo.hid.dwVendorId == SonyVendorId &&
+						deviceInfo.hid.dwProductId ==
+						DualSenseProductId)
+					{
+						UINT reportSize =
+							raw->data.hid.dwSizeHid;
+
+						const BYTE* reportData =
+							raw->data.hid.bRawData;
+
+						for (UINT i = 0;
+							i < raw->data.hid.dwCount;
+							i++)
+						{
+							const BYTE* report =
+								reportData + (i * reportSize);
+
+							bool psPressed =
+								IsDualSensePsPressed(
+									report,
+									reportSize);
+
+							if (psPressed &&
+								!g_dualSensePsPressed)
+							{
+								InterlockedOr(
+									&g_pendingSystemButtons,
+									ControllerSystemButtonGuide);
+							}
+
+							g_dualSensePsPressed =
+								psPressed;
+						}
+					}
+				}
+			}
+
+			delete[] buffer;
+		}
+	}
+
+	return CallWindowProc(
+		g_previousWindowProc,
+		hWnd,
+		message,
+		wParam,
+		lParam);
+}
+
+void ControllerInput_SetWindowHandle(
+	void* windowHandle)
+{
+	g_windowHandle =
+		static_cast<HWND>(windowHandle);
+
+	if (g_windowHandle == nullptr)
+		return;
+
+	RAWINPUTDEVICE devices[2]{};
+
+	devices[0].usUsagePage = 0x01;
+	devices[0].usUsage = 0x04;
+	devices[0].dwFlags = RIDEV_INPUTSINK;
+	devices[0].hwndTarget = g_windowHandle;
+
+	devices[1].usUsagePage = 0x01;
+	devices[1].usUsage = 0x05;
+	devices[1].dwFlags = RIDEV_INPUTSINK;
+	devices[1].hwndTarget = g_windowHandle;
+
+	if (!RegisterRawInputDevices(
+		devices,
+		2,
+		sizeof(RAWINPUTDEVICE)))
+	{
+		OutputDebugStringA(
+			"ControllerInput: Raw Input registration FAILED\n");
+	}
+
+	g_previousWindowProc =
+		reinterpret_cast<WNDPROC>(
+			SetWindowLongPtr(
+				g_windowHandle,
+				GWLP_WNDPROC,
+				reinterpret_cast<LONG_PTR>(
+					ControllerInput_WindowProc)));
 }

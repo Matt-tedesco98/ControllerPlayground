@@ -61,6 +61,10 @@ public sealed partial class MainWindow : Window {
 
         _controllerService.ControllerFamilyChanged += ControllerService_ControllerFamilyChanged;
 
+        nint windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
+
+        ControllerInputNative.ControllerInput_SetWindowHandle(windowHandle);
+
         bool controllerInit = ControllerInputNative.ControllerInput_Initialize();
 
         System.Diagnostics.Debug.WriteLine(

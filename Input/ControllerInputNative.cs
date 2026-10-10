@@ -32,4 +32,7 @@ internal static class ControllerInputNative {
     [DllImport("ControllerInput.dll", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static extern bool ControllerInput_GetDeviceInfo(out ControllerDeviceInfo info);
+
+    [DllImport("ControllerInput.dll", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void ControllerInput_SetWindowHandle(nint windowHandle);
 }

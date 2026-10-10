@@ -6,6 +6,7 @@
 #define CONTROLLERINPUT_API __declspec(dllimport)
 #endif
 
+
 struct ControllerState {
 	unsigned int buttons; // Bitmask for button states
 	unsigned int systemButtons; // Bitmask for system button states
@@ -31,4 +32,5 @@ extern "C"
     CONTROLLERINPUT_API bool ControllerInput_Initialize();
 	CONTROLLERINPUT_API bool ControllerInput_GetState(ControllerState* state);
 	CONTROLLERINPUT_API bool ControllerInput_GetDeviceInfo(ControllerDeviceInfo* info);
+	CONTROLLERINPUT_API void ControllerInput_SetWindowHandle(void* windowHandle);
 }
