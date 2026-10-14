@@ -24,15 +24,17 @@ using Windows.Foundation.Collections;
 
 namespace ControllerPlayground.Overlays {
     public sealed partial class FriendsOverlay : UserControl {
+        internal event Action<string>? KeyboardRequested;
         public FriendsOverlay() {
             InitializeComponent();
+            ChatPane.KeyboardRequested += ChatPane_KeyboardRequested;
             ChatPane.SendRequested += ChatPane_SendRequested;
         }
 
         public ObservableCollection<SteamFriend> Friends { get; } = new();
 
-        internal void FocusFirstItem() { 
-            void OnLayoutUpdated(Object? sender, Object e) { 
+        internal void FocusFirstItem() {
+            void OnLayoutUpdated(Object? sender, Object e) {
                 FriendsList.LayoutUpdated -= OnLayoutUpdated;
 
                 if (FocusManager.FindFirstFocusableElement(FriendsList) is Control control) {
@@ -44,7 +46,7 @@ namespace ControllerPlayground.Overlays {
 
         internal void HandleControllerAction(ControllerAction action) {
 
-            if (action == ControllerAction.Accept) { 
+            if (action == ControllerAction.Accept) {
                 DependencyObject? focused = FocusManager.GetFocusedElement(XamlRoot) as DependencyObject;
                 SteamFriendCard? card = FindAncestor<SteamFriendCard>(focused);
                 card?.Activate();
@@ -59,8 +61,8 @@ namespace ControllerPlayground.Overlays {
                 _ => null
             };
 
-            if (direction == null) { 
-                return; 
+            if (direction == null) {
+                return;
             }
 
             FocusManager.TryMoveFocus(direction.Value, new FindNextElementOptions { SearchRoot = OverlayRoot });
@@ -68,8 +70,8 @@ namespace ControllerPlayground.Overlays {
 
         internal event Action<SteamFriend>? FriendSelected;
 
-        private void FriendCard_Activated(object? sender, EventArgs e) { 
-            if(sender is SteamFriendCard card && card.Item is SteamFriend friend) {
+        private void FriendCard_Activated(object? sender, EventArgs e) {
+            if (sender is SteamFriendCard card && card.Item is SteamFriend friend) {
 
                 _lastFocusedCard = card;
 
@@ -81,7 +83,7 @@ namespace ControllerPlayground.Overlays {
 
                 ChatPane.Messages.Clear();
 
-                if (ChatService != null) { 
+                if (ChatService != null) {
                     foreach (SteamChatMessage message in ChatService.GetMessages(friend.SteamId)) {
                         ChatPane.Messages.Add(message);
                     }
@@ -106,7 +108,7 @@ namespace ControllerPlayground.Overlays {
 
         internal bool IsChatOpen => ChatPane.Visibility == Visibility.Visible;
 
-        internal void CloseChatPane() { 
+        internal void CloseChatPane() {
             ChatPane.Visibility = Visibility.Collapsed;
             ChatPane.Friend = null;
             OverlayRoot.Width = 420;
@@ -114,7 +116,7 @@ namespace ControllerPlayground.Overlays {
 
         private SteamFriendCard? _lastFocusedCard;
 
-        internal void RestoreFriendFocus() { 
+        internal void RestoreFriendFocus() {
             _lastFocusedCard?.Focus(FocusState.Keyboard);
         }
 
@@ -123,13 +125,13 @@ namespace ControllerPlayground.Overlays {
             get => _chatService;
 
             set {
-                if (_chatService != null) { 
+                if (_chatService != null) {
                     _chatService.MessageReceived -= ChatService_MessageReceived;
                     _chatService.MessageHistoryUpdated -= ChatService_MessageHistoryUpdated;
                     _chatService.UnreadCountChanged -= ChatService_UnreadCountChanged;
                 }
                 _chatService = value;
-                if (_chatService != null) { 
+                if (_chatService != null) {
                     _chatService.MessageReceived += ChatService_MessageReceived;
                     _chatService.MessageHistoryUpdated += ChatService_MessageHistoryUpdated;
                     _chatService.UnreadCountChanged += ChatService_UnreadCountChanged;
@@ -137,7 +139,7 @@ namespace ControllerPlayground.Overlays {
             }
         }
 
-        private async void ChatPane_SendRequested(SteamFriend friend, string text) { 
+        private async void ChatPane_SendRequested(SteamFriend friend, string text) {
             if (ChatService == null)
                 return;
 
@@ -176,7 +178,7 @@ namespace ControllerPlayground.Overlays {
         }
 
         private void ChatService_MessageHistoryUpdated(string steamId) {
-            DispatcherQueue.TryEnqueue(() => { 
+            DispatcherQueue.TryEnqueue(() => {
                 SteamFriend? currentFriend = ChatPane.Friend;
 
                 if (currentFriend == null || currentFriend.SteamId != steamId || ChatService == null) {
@@ -196,10 +198,14 @@ namespace ControllerPlayground.Overlays {
         private void ChatService_UnreadCountChanged(string steamId, int unreadCount) {
             DispatcherQueue.TryEnqueue(() => {
                 SteamFriend? friend = Friends.FirstOrDefault(f => f.SteamId == steamId);
-                if (friend != null) { 
+                if (friend != null) {
                     friend.UnreadCount = unreadCount;
                 }
             });
+        }
+
+        private void ChatPane_KeyboardRequested(string text) {
+            KeyboardRequested?.Invoke(text);
         }
     }
 }

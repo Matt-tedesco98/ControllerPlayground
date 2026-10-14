@@ -25,6 +25,7 @@
 	  <None Remove="Overlays\FriendsOverlay.xaml" />
 	  <None Remove="Overlays\GameContextMenu.xaml" />
 	  <None Remove="Overlays\GuideMenu.xaml" />
+	  <None Remove="Overlays\OnScreenKeyboard.xaml" />
 	  <None Remove="Overlays\SteamQrLoginOverlay.xaml" />
 	  <None Remove="Views\FriendsView.xaml" />
 	  <None Remove="Views\GameActivityView.xaml" />
@@ -113,6 +114,12 @@
 	<ItemGroup>
 	  <Folder Include="Assets\ControllerGlyphs\Playstation\" />
 	  <Folder Include="Assets\ControllerGlyphs\Xbox\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Overlays\OnScreenKeyboard.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 
 	<ItemGroup>

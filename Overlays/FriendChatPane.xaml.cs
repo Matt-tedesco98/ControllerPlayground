@@ -24,6 +24,7 @@ namespace ControllerPlayground.Overlays {
     public sealed partial class FriendChatPane : UserControl {
 
         internal event Action<SteamFriend, string>? SendRequested;
+        internal event Action<string>? KeyboardRequested;
         public FriendChatPane() {
             InitializeComponent();
 
@@ -96,7 +97,7 @@ namespace ControllerPlayground.Overlays {
             if (friend == null)
                 return;
 
-            if (string.Equals(message.SteamId, friend.SteamId, StringComparison.Ordinal)) { 
+            if (string.Equals(message.SteamId, friend.SteamId, StringComparison.Ordinal)) {
                 return;
             }
 
@@ -108,6 +109,10 @@ namespace ControllerPlayground.Overlays {
                 MessagesScrollViewer.UpdateLayout();
                 MessagesScrollViewer.ChangeView(null, MessagesScrollViewer.ScrollableHeight, null, true);
             });
+        }
+
+        private void MessageInput_GotFocus(object sender, RoutedEventArgs e) {
+            KeyboardRequested?.Invoke(MessageInput.Text);
         }
     }
 }
