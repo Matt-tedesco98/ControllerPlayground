@@ -1,6 +1,6 @@
 ﻿namespace ControllerPlayground.Input;
 
-internal enum ControllerAction {
+public enum ControllerAction {
     none,
     NavigateUp,
     NavigateDown,

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ControllerPlayground.KeyboardHost (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "ControllerPlayground.KeyboardHost (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

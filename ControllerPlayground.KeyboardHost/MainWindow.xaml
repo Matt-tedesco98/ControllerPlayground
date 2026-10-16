@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="ControllerPlayground.KeyboardHost.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ControllerPlayground.KeyboardHost"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="ControllerPlayground.KeyboardHost"
+    xmlns:controls="using:ControllerPlayground.KeyboardHost.Controls">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid Background="#F0202020">
+        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid
+            x:Name="DragArea"
+            Grid.Row="0"
+            Background="Transparent"
+            PointerPressed="DragArea_PointerPressed">
+
+            <Border
+                Width="72"
+                Height="4"
+                CornerRadius="2"
+                Background="#707070"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"/>
+            
+        </Grid>
+        
+        <controls:OnScreenKeyboard
+            x:Name="Keyboard"
+            Grid.Row="1"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"/>
+        
+    </Grid>
+    
+</Window>

@@ -2,7 +2,7 @@
 
 namespace ControllerPlayground.Input;
 
-internal sealed class ControllerService {
+public sealed class ControllerService {
     public bool IsConnected { get; private set; }
 
     public ControllerFamily Family { get; private set; } = ControllerFamily.Unknown;

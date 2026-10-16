@@ -11,6 +11,13 @@
 		<UseWinUI>true</UseWinUI>
 		<EnableMsixTooling>true</EnableMsixTooling>
 		<Nullable>enable</Nullable>
+		
+		<DefaultItemExcludes>
+			$(DefaultItemExcludes);
+			ControllerPlayground.KeyboardHost\**\*;
+			ControllerPlayground.Input\**\*
+		</DefaultItemExcludes>
+		
 	</PropertyGroup>
 	<ItemGroup>
 	  <None Remove="Controls\ActivityFeedCard.xaml" />
@@ -114,6 +121,10 @@
 	<ItemGroup>
 	  <Folder Include="Assets\ControllerGlyphs\Playstation\" />
 	  <Folder Include="Assets\ControllerGlyphs\Xbox\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="ControllerPlayground.Input\ControllerPlayground.Input.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

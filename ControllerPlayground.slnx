@@ -4,6 +4,13 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Project Path="ControllerPlayground.Input/ControllerPlayground.Input.csproj" Id="54f3489e-7240-4363-a103-ba9babc9cac5" />
+  <Project Path="ControllerPlayground.KeyboardHost/ControllerPlayground.KeyboardHost.csproj" Id="4af88632-9688-4a8c-a715-2ed715e9efac">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+    <Deploy />
+  </Project>
   <Project Path="ControllerInput/ControllerInput.vcxproj" Id="67400383-636e-42e0-acee-f5534d258b05">
     <Platform Solution="*|ARM64" Project="x64" />
   </Project>
