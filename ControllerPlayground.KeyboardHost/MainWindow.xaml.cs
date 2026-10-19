@@ -16,6 +16,8 @@ using Microsoft.UI.Windowing;
 using Windows.Graphics;
 using System.Runtime.InteropServices;
 using ControllerPlayground.Input;
+using ControllerPlayground.KeyboardHost.Services;
+using System.Threading.Tasks;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -34,10 +36,19 @@ namespace ControllerPlayground.KeyboardHost {
 
         private readonly ControllerService _controllerService = new();
         private readonly DispatcherTimer _controllerTimer = new();
+        private readonly KeyboardPipeServer _keyboardPipeServer = new();
         public MainWindow() {
             InitializeComponent();
 
+            _keyboardPipeServer.OpenRequested += KeyboardPipeServer_OpenRequested;
+
+            Keyboard.TextCommitted += Keyboard_TextCommitted;
+
+            _ = _keyboardPipeServer.RunAsync();
+
             nint windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
+
+            _keyboardPipeServer.WindowHandle = windowHandle;
 
             ControllerInputNative.ControllerInput_SetWindowHandle(windowHandle);
 
@@ -101,6 +112,34 @@ namespace ControllerPlayground.KeyboardHost {
                 return;
 
             Keyboard.HandleControllerAction(action);
-        }   
+        }
+
+        private Task KeyboardPipeServer_OpenRequested(string initialText) {
+            TaskCompletionSource<bool> completion = new();
+
+            DispatcherQueue.TryEnqueue(() => {
+                Keyboard.SetText(initialText);
+                
+                if (AppWindow.Presenter is OverlappedPresenter presenter) {
+                    presenter.Restore();
+                }
+
+                Activate();
+
+                Keyboard.FocusFirstKey();
+
+                completion.SetResult(true);
+            });
+
+            return completion.Task;
+        }
+
+        private void Keyboard_TextCommitted(string text) {
+            if (AppWindow.Presenter is OverlappedPresenter presenter) {
+                presenter.Minimize();
+            }
+
+            _keyboardPipeServer.Commit(text);
+        }
     }
 }

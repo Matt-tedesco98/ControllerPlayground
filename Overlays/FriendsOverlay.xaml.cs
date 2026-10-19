@@ -207,5 +207,13 @@ namespace ControllerPlayground.Overlays {
         private void ChatPane_KeyboardRequested(string text) {
             KeyboardRequested?.Invoke(text);
         }
+
+        internal void SetChatMessageText(string text) {
+            ChatPane.SetMessageText(text);
+        }
+
+        internal void RestoreChatInputFocus() {
+            ChatPane.RestoreMessageInputFocus();
+        }
     }
 }

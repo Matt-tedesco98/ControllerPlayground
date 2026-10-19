@@ -74,7 +74,11 @@ public sealed partial class MainWindow : Window {
         _controllerTimer.Tick += ControllerTimer_Tick;
         _controllerTimer.Start();
 
-        Activated += (_, _) => { PlayArea.Focus(FocusState.Programmatic); 
+        Activated += (_, args) => {
+            if (args.WindowActivationState == WindowActivationState.Deactivated)
+                return;
+
+            PlayArea.Focus(FocusState.Programmatic);
 
             DispatcherQueue.TryEnqueue(() => {
                 RestoreCurrentScreenFocus();
@@ -132,6 +136,7 @@ public sealed partial class MainWindow : Window {
     private int _totalUnreadMessages;
 
     private bool _isKeyboardOpen;
+    private readonly KeyboardHostClient _keyboardHostClient = new();
 
     // Views
     private readonly HomeView _homeView = new();
@@ -592,17 +597,23 @@ public sealed partial class MainWindow : Window {
         }
     }
 
-    private void FriendsOverlay_KeyboardRequested(
+    private async void FriendsOverlay_KeyboardRequested(
     string text) {
 
-        _isKeyboardOpen = true;
+        string? commitedText = await _keyboardHostClient.RequestTextAsync(text, KeyboardWindowHandle => { 
+            _gameWindowService.TryFocusWindow(KeyboardWindowHandle);
+        });
 
-        KeyboardOverlayLayer.Visibility =
-            Visibility.Visible;
+        if (commitedText == null) 
+            return;
 
-        OnScreenKeyboard.SetText(text);
+        nint windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
 
-        OnScreenKeyboard.FocusFirstKey();
+        _gameWindowService.TryFocusWindow(windowHandle);
+
+        FriendsOverlay.SetChatMessageText(commitedText);
+
+        FriendsOverlay.RestoreChatInputFocus();
     }
 
     private void OnScreenKeyboard_Canceled() {
