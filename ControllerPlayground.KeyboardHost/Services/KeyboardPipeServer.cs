@@ -50,6 +50,8 @@ namespace ControllerPlayground.KeyboardHost.Services {
 
                     string commitedText = await _pendingCommit.Task.WaitAsync(_cancellation.Token);
 
+                    await writer.WriteLineAsync($"COMMIT {Encode(commitedText)}");
+
                     _pendingCommit = null;
 
                 } catch (OperationCanceledException)
