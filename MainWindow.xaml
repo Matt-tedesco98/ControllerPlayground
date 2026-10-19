@@ -57,15 +57,6 @@
         </Grid>
 
         <Grid
-            x:Name="KeyboardOverlayLayer"
-            Visibility="Collapsed"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch">
-            <overlays:OnScreenKeyboard
-                x:Name="OnScreenKeyboard" />
-        </Grid>
-
-        <Grid
             x:Name="SteamQrOverlayLayer"
             Visibility="Collapsed"
             HorizontalAlignment="Stretch"

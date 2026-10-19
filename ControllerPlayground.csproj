@@ -32,7 +32,6 @@
 	  <None Remove="Overlays\FriendsOverlay.xaml" />
 	  <None Remove="Overlays\GameContextMenu.xaml" />
 	  <None Remove="Overlays\GuideMenu.xaml" />
-	  <None Remove="Overlays\OnScreenKeyboard.xaml" />
 	  <None Remove="Overlays\SteamQrLoginOverlay.xaml" />
 	  <None Remove="Views\FriendsView.xaml" />
 	  <None Remove="Views\GameActivityView.xaml" />
@@ -125,12 +124,6 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="ControllerPlayground.Input\ControllerPlayground.Input.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Page Update="Overlays\OnScreenKeyboard.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </Page>
 	</ItemGroup>
 
 	<ItemGroup>

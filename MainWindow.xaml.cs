@@ -106,8 +106,6 @@ public sealed partial class MainWindow : Window {
 
         FriendsOverlay.KeyboardRequested += FriendsOverlay_KeyboardRequested;
 
-        OnScreenKeyboard.Cancelled += OnScreenKeyboard_Canceled;
-
         _steamSessionService.QrChallengeChanged += SteamSessionService_QrChallengeChanged;
 
         _steamSessionService.Authenticated += SteamSessionService_Authenticated;
@@ -134,8 +132,6 @@ public sealed partial class MainWindow : Window {
     // friends overlay
     private bool _isFriendsOpen;
     private int _totalUnreadMessages;
-
-    private bool _isKeyboardOpen;
     private readonly KeyboardHostClient _keyboardHostClient = new();
 
     // Views
@@ -201,11 +197,6 @@ public sealed partial class MainWindow : Window {
                 return;
             }
             FriendsOverlay.HandleControllerAction(action);
-            return;
-        }
-
-        if (_isKeyboardOpen) {
-            OnScreenKeyboard.HandleControllerAction(action);
             return;
         }
 
@@ -614,14 +605,5 @@ public sealed partial class MainWindow : Window {
         FriendsOverlay.SetChatMessageText(commitedText);
 
         FriendsOverlay.RestoreChatInputFocus();
-    }
-
-    private void OnScreenKeyboard_Canceled() {
-        _isKeyboardOpen = false;
-
-        KeyboardOverlayLayer.Visibility =
-            Visibility.Collapsed;
-
-        FriendsOverlay.RestoreFriendFocus();
     }
 }
