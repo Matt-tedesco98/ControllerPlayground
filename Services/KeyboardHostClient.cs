@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO.Pipes;
 using System.IO;
 using System.Threading;
+using Windows.System;
 
 
 namespace ControllerPlayground.Services {
@@ -14,37 +15,56 @@ namespace ControllerPlayground.Services {
 
         public async Task<string>? RequestTextAsync(string initialText, Action<nint>? keyboardReady = null, CancellationToken cancellationToken = default) {
             try {
-                await using NamedPipeClientStream pipe = new(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+                 NamedPipeClientStream pipe = new(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
 
-                await pipe.ConnectAsync(2000, cancellationToken);
+                try {
+                    await pipe.ConnectAsync(250, cancellationToken);
+                } catch (TimeoutException) {
+                    pipe.Dispose();
 
-                using StreamReader reader = new(pipe, Encoding.UTF8, false, 1024, true);
+                    bool launched = await Launcher.LaunchUriAsync(new Uri("controllerplayground-keyboard:"));
 
-                using StreamWriter writer = new(pipe, new UTF8Encoding(false), 1024, true) {
-                    AutoFlush = true
-                };
+                    if (!launched) 
+                        return null;
 
-                string encodedText = Encode(initialText ?? string.Empty);
+                    await Task.Delay(500, cancellationToken);
 
-                await writer.WriteLineAsync($"OPEN {encodedText}");
+                    pipe = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
 
-                string? readyResponse = await reader.ReadLineAsync(cancellationToken);
+                    await pipe.ConnectAsync(3000, cancellationToken);
 
-                if (readyResponse == null || !readyResponse.StartsWith("READY ", StringComparison.Ordinal)) {
-                    return null;
                 }
 
-                if (long.TryParse(readyResponse[6..], out long windowHandleValue)) {
-                    keyboardReady?.Invoke(new nint(windowHandleValue));
+                await using (pipe) {
+
+                    using StreamReader reader = new(pipe, Encoding.UTF8, false, 1024, true);
+
+                    using StreamWriter writer = new(pipe, new UTF8Encoding(false), 1024, true) {
+                        AutoFlush = true
+                    };
+
+                    string encodedText = Encode(initialText ?? string.Empty);
+
+                    await writer.WriteLineAsync($"OPEN {encodedText}");
+
+                    string? readyResponse = await reader.ReadLineAsync(cancellationToken);
+
+                    if (readyResponse == null || !readyResponse.StartsWith("READY ", StringComparison.Ordinal)) {
+                        return null;
+                    }
+
+                    if (long.TryParse(readyResponse[6..], out long windowHandleValue)) {
+                        keyboardReady?.Invoke(new nint(windowHandleValue));
+                    }
+
+                    string? commitResponse = await reader.ReadLineAsync(cancellationToken);
+
+                    if (commitResponse == null || !commitResponse.StartsWith("COMMIT ", StringComparison.Ordinal)) {
+                        return null;
+                    }
+
+                    return Decode(commitResponse[7..]);
                 }
-
-                string? commitResponse = await reader.ReadLineAsync(cancellationToken);
-
-                if (commitResponse == null || !commitResponse.StartsWith("COMMIT ", StringComparison.Ordinal)) {
-                    return null;
-                }
-
-                return Decode(commitResponse[7..]);
 
             } catch (TimeoutException) {
                 return null;
