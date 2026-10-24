@@ -94,13 +94,13 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                     new KeyboardKeyDefinition(
                         "Tab",
                         Action: "TAB",
-                        Width: 120)));
+                        Width: 100)));
 
             foreach (char character in _rows[0]) {
                 Button button = new() {
                     Content = char.ToLowerInvariant(character).ToString(),
                     Tag = character.ToString(),
-                    Width = 92,
+                    Width = 76,
                     Height = 68,
                     FontSize = 24
                 };
@@ -143,7 +143,7 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                 CreateActionButton(
                     "Caps",
                     "CAPS",
-                    130);
+                    90);
 
             homeRowPanel.Children.Add(_capsButton);
 
@@ -151,7 +151,7 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                 Button button = new() {
                     Content = char.ToLowerInvariant(character).ToString(),
                     Tag = character.ToString(),
-                    Width = 92,
+                    Width = 76,
                     Height = 68,
                     FontSize = 24
                 };
@@ -167,19 +167,21 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                 CreateDefinitionButton(
                     new KeyboardKeyDefinition(
                         ";",
-                        ":")));
+                        ":",
+                        Width: 72)));
 
             homeRowPanel.Children.Add(
                 CreateDefinitionButton(
                     new KeyboardKeyDefinition(
                         "'",
-                        "\"")));
+                        "\"",
+                        Width: 72)));
 
             homeRowPanel.Children.Add(
                 CreateActionButton(
                     "Enter",
                     "ENTER",
-                    150));
+                    110));
 
             KeyboardRowsPanel.Children.Add(homeRowPanel);
 
@@ -194,7 +196,7 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                 CreateActionButton(
                     "Shift",
                     "SHIFT",
-                    130);
+                    110);
 
             bottomLetterRowPanel.Children.Add(
                 _shiftButton);
@@ -203,7 +205,7 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                 Button button = new() {
                     Content = char.ToLowerInvariant(character).ToString(),
                     Tag = character.ToString(),
-                    Width = 92,
+                    Width = 76,
                     Height = 68,
                     FontSize = 24
                 };

@@ -9,5 +9,5 @@ namespace ControllerPlayground.KeyboardHost.Models {
         string Primary,
         string? Secondary = null,
         string? Action = null,
-        double Width = 92);
+        double Width = 76);
 }
