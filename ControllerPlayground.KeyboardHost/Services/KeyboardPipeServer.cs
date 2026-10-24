@@ -13,7 +13,7 @@ namespace ControllerPlayground.KeyboardHost.Services {
     internal sealed class KeyboardPipeServer {
         private const string PipeName = "ControllerPlayground.KeyboardHost";
         private readonly CancellationTokenSource _cancellation = new();
-        private TaskCompletionSource<string> _pendingCommit;
+        private TaskCompletionSource<string?>? _pendingCommit;
         public event Func<string, Task>? OpenRequested;
         public nint WindowHandle { get; set; }
 
@@ -38,7 +38,7 @@ namespace ControllerPlayground.KeyboardHost.Services {
 
                     string initialText = Decode(request[5..]);
 
-                    _pendingCommit = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    _pendingCommit = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
 
                     Func<string, Task>? openHandler = OpenRequested;
 
@@ -48,9 +48,13 @@ namespace ControllerPlayground.KeyboardHost.Services {
 
                     await writer.WriteLineAsync($"READY {WindowHandle.ToInt64()}");
 
-                    string commitedText = await _pendingCommit.Task.WaitAsync(_cancellation.Token);
+                    string? commitedText = await _pendingCommit.Task.WaitAsync(_cancellation.Token);
 
+                    if (commitedText == null) {
+                        await writer.WriteLineAsync("CANCEL");
+                    } else {
                     await writer.WriteLineAsync($"COMMIT {Encode(commitedText)}");
+                    }
 
                     _pendingCommit = null;
 
@@ -64,6 +68,10 @@ namespace ControllerPlayground.KeyboardHost.Services {
 
         public void Commit(string text) {
             _pendingCommit?.TrySetResult(text ?? string.Empty);
+        }
+
+        public void Cancel() {
+            _pendingCommit?.TrySetResult(null);
         }
 
         public static string Encode(string text) {

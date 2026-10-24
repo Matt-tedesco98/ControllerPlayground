@@ -59,6 +59,10 @@ namespace ControllerPlayground.Services {
 
                     string? commitResponse = await reader.ReadLineAsync(cancellationToken);
 
+                    if (commitResponse == null) {
+                        return null;
+                    }
+
                     if (commitResponse == null || !commitResponse.StartsWith("COMMIT ", StringComparison.Ordinal)) {
                         return null;
                     }

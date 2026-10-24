@@ -8,6 +8,8 @@ namespace ControllerPlayground.KeyboardHost.Controls {
     public sealed partial class OnScreenKeyboard : UserControl {
         public event Action<string>? TextCommitted;
 
+        public event Action? Cancelled; 
+
         private string _text = string.Empty;
 
         private readonly string[] _rows =
@@ -191,6 +193,9 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                         is Button button) {
                         ActivateKey(button);
                     }
+                    break;
+                case ControllerAction.Back:
+                    Cancelled?.Invoke();
                     break;
             }
         }

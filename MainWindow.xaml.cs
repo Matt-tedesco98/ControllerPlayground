@@ -595,13 +595,17 @@ public sealed partial class MainWindow : Window {
             _gameWindowService.TryFocusWindow(KeyboardWindowHandle);
         });
 
-        if (commitedText == null) 
-            return;
-
         nint windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
 
         _gameWindowService.TryFocusWindow(windowHandle);
 
+        _controllerService.ResyncInputState();
+
+        if (commitedText == null) {
+             FriendsOverlay.RestoreChatInputFocus();
+            return;
+        }
+            
         FriendsOverlay.SetChatMessageText(commitedText);
 
         FriendsOverlay.RestoreChatInputFocus();

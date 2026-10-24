@@ -44,6 +44,8 @@ namespace ControllerPlayground.KeyboardHost {
 
             Keyboard.TextCommitted += Keyboard_TextCommitted;
 
+            Keyboard.Cancelled += Keyboard_Cancelled;
+
             _ = _keyboardPipeServer.RunAsync();
 
             nint windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
@@ -111,6 +113,8 @@ namespace ControllerPlayground.KeyboardHost {
             if (action == ControllerAction.none)
                 return;
 
+            System.Diagnostics.Debug.WriteLine($"Controller action: {action}");
+
             Keyboard.HandleControllerAction(action);
         }
 
@@ -140,6 +144,13 @@ namespace ControllerPlayground.KeyboardHost {
             }
 
             _keyboardPipeServer.Commit(text);
+        }
+
+        public void Keyboard_Cancelled() {
+            if (AppWindow.Presenter is OverlappedPresenter presenter) {
+                presenter.Minimize();
+            }
+            _keyboardPipeServer.Cancel();
         }
     }
 }

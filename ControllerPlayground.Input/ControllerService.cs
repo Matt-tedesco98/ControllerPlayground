@@ -164,6 +164,18 @@ public sealed class ControllerService {
         return ControllerAction.none;
     }
 
+    public void ResyncInputState() {
+        ResetInputState();
+
+        if (ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
+            _previousButtons = state.Buttons;
+            _previousSystemButtons = state.SystemButtons;
+        } else {
+            _previousButtons = 0;
+            _previousSystemButtons = 0;
+        }
+    }
+
     private void SetConnectionState(bool connected) {
         if (IsConnected == connected)
             return;
