@@ -4,11 +4,16 @@ using System;
 using ControllerPlayground.Input;
 using Microsoft.UI.Xaml.Input;
 using System.Collections.Generic;
+using ControllerPlayground.KeyboardHost.Models;
+using Microsoft.UI.Xaml.Media;
+using Windows.UI;
 
 namespace ControllerPlayground.KeyboardHost.Controls {
     public sealed partial class OnScreenKeyboard : UserControl {
         public event Action<string>? TextCommitted;
         public event Action? Cancelled;
+
+        public event Action? MoveRequested;
         private string _text = string.Empty;
 
         private bool _shiftActive;
@@ -17,7 +22,9 @@ namespace ControllerPlayground.KeyboardHost.Controls {
         private readonly List<Button> _letterButtons = new();
 
         private Button? _shiftButton;
+        private Button? _rightShiftButton;
         private Button? _capsButton;
+        private Button? _moveButton;
 
         private bool _symbolMode;
         private Button? _symbolButton;
@@ -26,6 +33,22 @@ namespace ControllerPlayground.KeyboardHost.Controls {
             "QWERTYUIOP",
             "ASDFGHJKL",
             "ZXCVBNM"
+        };
+
+        private readonly KeyboardKeyDefinition[] _numberRow = {
+            new("`", "~"),
+            new("1", "!"),
+            new("2", "@"),
+            new("3", "#"),
+            new("4", "$"),
+            new("5", "%"),
+            new("6", "^"),
+            new("7", "&"),
+            new("8", "*"),
+            new("9", "("),
+            new("0", ")"),
+            new("-", "_"),
+            new("=", "+")
         };
 
         private readonly string[] _symbolRows = {
@@ -45,33 +68,182 @@ namespace ControllerPlayground.KeyboardHost.Controls {
         }
 
         private void BuildKeyboard() {
-            foreach (string row in _rows) {
-                StackPanel rowPanel = new() {
-                    Orientation = Orientation.Horizontal,
-                    HorizontalAlignment =
-                        HorizontalAlignment.Center,
-                    Spacing = 6
+            StackPanel numberRowPanel = new() {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Spacing = 6
+            };
+
+            foreach (KeyboardKeyDefinition definition in _numberRow) {
+                Button button = CreateDefinitionButton(definition);
+
+                numberRowPanel.Children.Add(button);
+            }
+
+            KeyboardRowsPanel.Children.Add(numberRowPanel);
+
+            // QWERTY row
+            StackPanel qwertyRowPanel = new() {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Spacing = 6
+            };
+
+            qwertyRowPanel.Children.Add(
+                CreateDefinitionButton(
+                    new KeyboardKeyDefinition(
+                        "Tab",
+                        Action: "TAB",
+                        Width: 120)));
+
+            foreach (char character in _rows[0]) {
+                Button button = new() {
+                    Content = char.ToLowerInvariant(character).ToString(),
+                    Tag = character.ToString(),
+                    Width = 92,
+                    Height = 68,
+                    FontSize = 24
                 };
 
-                foreach (char character in row) {
-                    Button button = new() {
-                        Content = char.ToLowerInvariant(character).ToString(),
-                        Tag = character.ToString(),
-                        Width = 92,
-                        Height = 68,
-                        FontSize = 24
-                    };
+                button.Click += KeyButton_Click;
 
-                    button.Click += KeyButton_Click;
+                _letterButtons.Add(button);
 
-                    _letterButtons.Add(button);
-
-                    rowPanel.Children.Add(button);
-                }
-
-                KeyboardRowsPanel.Children.Add(
-                    rowPanel);
+                qwertyRowPanel.Children.Add(button);
             }
+
+            qwertyRowPanel.Children.Add(
+                CreateDefinitionButton(
+                    new KeyboardKeyDefinition(
+                        "[",
+                        "{")));
+
+            qwertyRowPanel.Children.Add(
+                CreateDefinitionButton(
+                    new KeyboardKeyDefinition(
+                        "]",
+                        "}")));
+
+            qwertyRowPanel.Children.Add(
+                CreateDefinitionButton(
+                    new KeyboardKeyDefinition(
+                        "\\",
+                        "|")));
+
+            KeyboardRowsPanel.Children.Add(qwertyRowPanel);
+
+            // Home row
+            StackPanel homeRowPanel = new() {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Spacing = 6
+            };
+
+            _capsButton =
+                CreateActionButton(
+                    "Caps",
+                    "CAPS",
+                    130);
+
+            homeRowPanel.Children.Add(_capsButton);
+
+            foreach (char character in _rows[1]) {
+                Button button = new() {
+                    Content = char.ToLowerInvariant(character).ToString(),
+                    Tag = character.ToString(),
+                    Width = 92,
+                    Height = 68,
+                    FontSize = 24
+                };
+
+                button.Click += KeyButton_Click;
+
+                _letterButtons.Add(button);
+
+                homeRowPanel.Children.Add(button);
+            }
+
+            homeRowPanel.Children.Add(
+                CreateDefinitionButton(
+                    new KeyboardKeyDefinition(
+                        ";",
+                        ":")));
+
+            homeRowPanel.Children.Add(
+                CreateDefinitionButton(
+                    new KeyboardKeyDefinition(
+                        "'",
+                        "\"")));
+
+            homeRowPanel.Children.Add(
+                CreateActionButton(
+                    "Enter",
+                    "ENTER",
+                    150));
+
+            KeyboardRowsPanel.Children.Add(homeRowPanel);
+
+            // Bottom letter row
+            StackPanel bottomLetterRowPanel = new() {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Spacing = 6
+            };
+
+            _shiftButton =
+                CreateActionButton(
+                    "Shift",
+                    "SHIFT",
+                    130);
+
+            bottomLetterRowPanel.Children.Add(
+                _shiftButton);
+
+            foreach (char character in _rows[2]) {
+                Button button = new() {
+                    Content = char.ToLowerInvariant(character).ToString(),
+                    Tag = character.ToString(),
+                    Width = 92,
+                    Height = 68,
+                    FontSize = 24
+                };
+
+                button.Click += KeyButton_Click;
+
+                _letterButtons.Add(button);
+
+                bottomLetterRowPanel.Children.Add(button);
+            }
+
+            bottomLetterRowPanel.Children.Add(
+                CreateDefinitionButton(
+                    new KeyboardKeyDefinition(
+                        ",",
+                        "<")));
+
+            bottomLetterRowPanel.Children.Add(
+                CreateDefinitionButton(
+                    new KeyboardKeyDefinition(
+                        ".",
+                        ">")));
+
+            bottomLetterRowPanel.Children.Add(
+                CreateDefinitionButton(
+                    new KeyboardKeyDefinition(
+                        "/",
+                        "?")));
+
+            _rightShiftButton =
+                CreateActionButton(
+                    "Shift",
+                    "SHIFT",
+                    130);
+
+            bottomLetterRowPanel.Children.Add(
+                _rightShiftButton);
+
+            KeyboardRowsPanel.Children.Add(
+                bottomLetterRowPanel);
 
             StackPanel actionRow = new() {
                 Orientation = Orientation.Horizontal,
@@ -87,21 +259,6 @@ namespace ControllerPlayground.KeyboardHost.Controls {
 
             actionRow.Children.Add(_symbolButton);
 
-            _shiftButton = CreateActionButton(
-                "Shift",
-                "SHIFT",
-                140);
-
-            actionRow.Children.Add(_shiftButton);
-
-            _capsButton =
-                CreateActionButton(
-                    "Caps",
-                    "CAPS",
-                    140);
-
-            actionRow.Children.Add(_capsButton);
-
             actionRow.Children.Add(
                 CreateActionButton(
                     "Space",
@@ -115,10 +272,11 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                     160));
 
             actionRow.Children.Add(
+                _moveButton =
                 CreateActionButton(
-                    "Enter",
-                    "ENTER",
-                    180));
+                    "Move keyboard",
+                    "MOVE",
+                    220));
 
             KeyboardRowsPanel.Children.Add(
                 actionRow);
@@ -150,6 +308,30 @@ namespace ControllerPlayground.KeyboardHost.Controls {
         }
 
         private void ActivateKey(Button button) {
+            if (button.Tag is KeyboardKeyDefinition definition) {
+                if (definition.Action == "TAB") {
+                    _text += "\t";
+                    UpdatePreview();
+                    return;
+                }
+
+                string outputValue =
+                    _shiftActive &&
+                    !string.IsNullOrEmpty(definition.Secondary)
+                        ? definition.Secondary
+                        : definition.Primary;
+
+                _text += outputValue;
+
+                if (_shiftActive) {
+                    _shiftActive = false;
+                    UpdateLetterKeys();
+                }
+
+                UpdatePreview();
+                return;
+            }
+
             string? value =
                 button.Tag as string;
 
@@ -170,6 +352,10 @@ namespace ControllerPlayground.KeyboardHost.Controls {
 
                 case "ENTER":
                     TextCommitted?.Invoke(_text);
+                    return;
+
+                case "MOVE":
+                    MoveRequested?.Invoke();
                     return;
 
                 case "SHIFT":
@@ -302,12 +488,31 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                         : "Shift";
             }
 
+            if (_rightShiftButton != null) {
+                _rightShiftButton.Content =
+                    _shiftActive
+                        ? "Shift ✓"
+                        : "Shift";
+            }
+
             if (_capsButton != null) {
                 _capsButton.Content =
                     _capsLock
                         ? "Caps ✓"
                         : "Caps";
             }
+
+            SetActionButtonActive(
+                _shiftButton,
+                _shiftActive);
+
+            SetActionButtonActive(
+                _rightShiftButton,
+                _shiftActive);
+
+            SetActionButtonActive(
+                _capsButton,
+                _capsLock);
         }
 
         private void UpdateKeyboardLayout() {
@@ -358,10 +563,81 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                     !_symbolMode;
             }
 
+            if (_rightShiftButton != null) {
+                _rightShiftButton.IsEnabled =
+                    !_symbolMode;
+            }
+
             if (_capsButton != null) {
                 _capsButton.IsEnabled =
                     !_symbolMode;
             }
+        }
+
+        private Button CreateDefinitionButton( KeyboardKeyDefinition definition) {
+            StackPanel content = new() {
+                Spacing = 2,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            if (!string.IsNullOrEmpty(definition.Secondary)) {
+                content.Children.Add(
+                    new TextBlock {
+                        Text = definition.Secondary,
+                        FontSize = 13,
+                        Opacity = 0.55,
+                        HorizontalAlignment = HorizontalAlignment.Center
+                    });
+            }
+
+            content.Children.Add(
+                new TextBlock {
+                    Text = definition.Primary,
+                    FontSize = 22,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+
+            Button button = new() {
+                Content = content,
+                Tag = definition,
+                Width = definition.Width,
+                Height = 68
+            };
+
+            button.Click += KeyButton_Click;
+
+            return button;
+        }
+
+        public void SetMoveModeActive(bool active) {
+            if (_moveButton == null)
+                return;
+
+            _moveButton.Content =
+                active
+                    ? "Moving…"
+                    : "Move keyboard";
+
+            SetActionButtonActive(
+                _moveButton,
+                active);
+        }
+
+        private static void SetActionButtonActive(Button? button, bool active) {
+            if (button == null)
+                return;
+
+            button.Background =
+                new SolidColorBrush(
+                    active
+                        ? Color.FromArgb(255, 70, 110, 180)
+                        : Color.FromArgb(255, 45, 45, 45));
+
+            button.BorderThickness =
+                active
+                    ? new Thickness(3)
+                    : new Thickness(1);
         }
     }
 }

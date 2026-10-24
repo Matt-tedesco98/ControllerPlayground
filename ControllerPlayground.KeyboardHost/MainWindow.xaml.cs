@@ -18,6 +18,7 @@ using System.Runtime.InteropServices;
 using ControllerPlayground.Input;
 using ControllerPlayground.KeyboardHost.Services;
 using System.Threading.Tasks;
+using Windows.UI;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -37,6 +38,7 @@ namespace ControllerPlayground.KeyboardHost {
         private readonly ControllerService _controllerService = new();
         private readonly DispatcherTimer _controllerTimer = new();
         private readonly KeyboardPipeServer _keyboardPipeServer = new();
+        private bool _isMoveMode;
         public MainWindow() {
             InitializeComponent();
 
@@ -45,6 +47,8 @@ namespace ControllerPlayground.KeyboardHost {
             Keyboard.TextCommitted += Keyboard_TextCommitted;
 
             Keyboard.Cancelled += Keyboard_Cancelled;
+
+            Keyboard.MoveRequested += Keyboard_MoveRequested;
 
             _ = _keyboardPipeServer.RunAsync();
 
@@ -108,12 +112,55 @@ namespace ControllerPlayground.KeyboardHost {
         }
 
         private void ControllerTimer_Tick(object? sender, object e) {
-            ControllerAction action = _controllerService.PollAction();
+            ControllerAction action =
+                _controllerService.PollAction();
 
             if (action == ControllerAction.none)
                 return;
 
-            System.Diagnostics.Debug.WriteLine($"Controller action: {action}");
+            if (_isMoveMode) {
+                PointInt32 position =
+                    AppWindow.Position;
+
+                const int moveStep = 32;
+
+                switch (action) {
+                    case ControllerAction.NavigateUp:
+                        AppWindow.Move(
+                            new PointInt32(
+                                position.X,
+                                position.Y - moveStep));
+                        return;
+
+                    case ControllerAction.NavigateDown:
+                        AppWindow.Move(
+                            new PointInt32(
+                                position.X,
+                                position.Y + moveStep));
+                        return;
+
+                    case ControllerAction.NavigateLeft:
+                        AppWindow.Move(
+                            new PointInt32(
+                                position.X - moveStep,
+                                position.Y));
+                        return;
+
+                    case ControllerAction.NavigateRight:
+                        AppWindow.Move(
+                            new PointInt32(
+                                position.X + moveStep,
+                                position.Y));
+                        return;
+
+                    case ControllerAction.Accept:
+                    case ControllerAction.Back:
+                        _isMoveMode = false;
+
+                        Keyboard.SetMoveModeActive(false);
+                        return;
+                }
+            }
 
             Keyboard.HandleControllerAction(action);
         }
@@ -151,6 +198,12 @@ namespace ControllerPlayground.KeyboardHost {
                 presenter.Minimize();
             }
             _keyboardPipeServer.Cancel();
+        }
+
+        private void Keyboard_MoveRequested() {
+            _isMoveMode = true;
+
+            Keyboard.SetMoveModeActive(true);
         }
     }
 }
