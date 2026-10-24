@@ -77,8 +77,7 @@
                 <TextBox
                     x:Name="MessageInput"
                     Width="300"
-                    PlaceholderText="Message..."
-                    GotFocus="MessageInput_GotFocus"/>
+                    PlaceholderText="Message..."/>
                 
                 <Button
                     Content="Send"

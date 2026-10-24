@@ -47,9 +47,17 @@ namespace ControllerPlayground.Overlays {
         internal void HandleControllerAction(ControllerAction action) {
 
             if (action == ControllerAction.Accept) {
+                if (ChatPane.IsMessaeInputFocused) {
+                    ChatPane.OpenKeyboard();
+                    return;
+                }
+
                 DependencyObject? focused = FocusManager.GetFocusedElement(XamlRoot) as DependencyObject;
+
                 SteamFriendCard? card = FindAncestor<SteamFriendCard>(focused);
+
                 card?.Activate();
+
                 return;
             }
 

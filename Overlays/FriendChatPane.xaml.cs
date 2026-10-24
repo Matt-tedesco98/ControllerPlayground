@@ -25,7 +25,8 @@ namespace ControllerPlayground.Overlays {
 
         internal event Action<SteamFriend, string>? SendRequested;
         internal event Action<string>? KeyboardRequested;
-        private bool _suppressKeybaordRequest;
+
+        internal bool IsMessaeInputFocused => MessageInput.FocusState != FocusState.Unfocused;
         public FriendChatPane() {
             InitializeComponent();
 
@@ -116,17 +117,11 @@ namespace ControllerPlayground.Overlays {
             });
         }
 
-        private void MessageInput_GotFocus(object sender, RoutedEventArgs e) {
-            if (_suppressKeybaordRequest) {
-                _suppressKeybaordRequest = false;
-                return;
-            }
-
+        internal void OpenKeyboard() {
             KeyboardRequested?.Invoke(MessageInput.Text);
         }
 
         internal void RestoreMessageInputFocus() {
-            _suppressKeybaordRequest = true;
             MessageInput.Focus(FocusState.Programmatic);
         }
     }
