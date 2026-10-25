@@ -42,6 +42,10 @@ namespace ControllerPlayground.KeyboardHost {
         public MainWindow() {
             InitializeComponent();
 
+            _controllerService.ControllerFamilyChanged += family => {
+                Keyboard.SetControllerFamily(family);
+            };
+
             _keyboardPipeServer.OpenRequested += KeyboardPipeServer_OpenRequested;
 
             Keyboard.TextCommitted += Keyboard_TextCommitted;

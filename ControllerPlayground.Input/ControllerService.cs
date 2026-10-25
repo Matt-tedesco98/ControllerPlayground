@@ -22,6 +22,8 @@ public sealed class ControllerService {
     private const int InitialRepeatDelayMs = 400;
     private const int RepeatIntervalMs = 120;
 
+    private bool _rightTriggerPressed;
+
     public ControllerAction PollAction() {
         if (!ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
             if (IsConnected) {
@@ -55,6 +57,12 @@ public sealed class ControllerService {
 
         _previousSystemButtons = state.SystemButtons;
 
+        bool rightTriggerPressed = state.RightTrigger >= 0.60f;
+
+        bool rightTriggerPressedThisFrame = rightTriggerPressed && !_rightTriggerPressed;
+
+        _rightTriggerPressed = rightTriggerPressed;
+
         // System buttons get highest priority.
         if ((systemPressedThisFrame & ControllerSystemButtons.Guide) != 0)
             return ControllerAction.Guide;
@@ -67,6 +75,12 @@ public sealed class ControllerService {
         if ((pressedThisFrame & ControllerButtons.Back) != 0)
             return ControllerAction.Back;
 
+        if ((pressedThisFrame & ControllerButtons.X) != 0)
+            return ControllerAction.X;
+
+        if ((pressedThisFrame & ControllerButtons.Y) != 0)
+            return ControllerAction.Y;
+
         if ((pressedThisFrame & ControllerButtons.Menu) != 0)
             return ControllerAction.Menu;
 
@@ -78,6 +92,9 @@ public sealed class ControllerService {
 
         if ((pressedThisFrame & ControllerButtons.RightShoulder) != 0)
             return ControllerAction.NextTab;
+
+        if (rightTriggerPressedThisFrame)
+            return ControllerAction.RightTrigger;
 
 
         ControllerAction dpadAction = ControllerAction.none;
@@ -243,5 +260,6 @@ public sealed class ControllerService {
         _heldNavigationAction = ControllerAction.none;
         _nextNavigationRepeatTime = 0;
         _stickDirection = ControllerAction.none;
+        _rightTriggerPressed = false;
     }
 }

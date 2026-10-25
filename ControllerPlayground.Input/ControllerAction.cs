@@ -8,10 +8,14 @@ public enum ControllerAction {
     NavigateRight,
     Accept,
     Back,
+    X,
+    Y,
     Menu,
     View,
     Guide,
     PreviousTab,
     NextTab,
+    LeftTrigger,
+    RightTrigger,
 
 }

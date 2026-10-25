@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using ControllerPlayground.KeyboardHost.Models;
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.UI.Text;
 
 namespace ControllerPlayground.KeyboardHost.Controls {
     public sealed partial class OnScreenKeyboard : UserControl {
@@ -25,6 +27,11 @@ namespace ControllerPlayground.KeyboardHost.Controls {
         private Button? _rightShiftButton;
         private Button? _capsButton;
         private Button? _moveButton;
+        private Button? _enterButton;
+        private Button? _spaceButton;
+        private Button? _backspaceButton;
+
+        private ControllerFamily _controllerFamily = ControllerFamily.Unknown;
 
         private bool _symbolMode;
         private Button? _symbolButton;
@@ -177,11 +184,13 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                         "\"",
                         Width: 72)));
 
+            _enterButton = CreateActionButton(
+                "Enter",
+                "ENTER",
+                110);
+
             homeRowPanel.Children.Add(
-                CreateActionButton(
-                    "Enter",
-                    "ENTER",
-                    110));
+                _enterButton);
 
             KeyboardRowsPanel.Children.Add(homeRowPanel);
 
@@ -261,17 +270,19 @@ namespace ControllerPlayground.KeyboardHost.Controls {
 
             actionRow.Children.Add(_symbolButton);
 
-            actionRow.Children.Add(
-                CreateActionButton(
-                    "Space",
-                    "SPACE",
-                    300));
+            _spaceButton = CreateActionButton(
+                "Space",
+                "SPACE",
+                300);
 
-            actionRow.Children.Add(
-                CreateActionButton(
-                    "⌫",
-                    "BACKSPACE",
-                    160));
+            actionRow.Children.Add(_spaceButton);
+
+            _backspaceButton = CreateActionButton(
+                 "⌫",
+                "BACKSPACE",
+                160);
+
+            actionRow.Children.Add(_backspaceButton);
 
             actionRow.Children.Add(
                 _moveButton =
@@ -455,6 +466,28 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                         ActivateKey(button);
                     }
                     break;
+
+                case ControllerAction.X:
+                    if (_text.Length > 0) {
+                        _text = _text[..^1];
+                        UpdatePreview();
+                    }
+                    break;
+
+                case ControllerAction.Y:
+                    _text += " ";
+                    UpdatePreview();
+                    break;
+
+                case ControllerAction.RightTrigger:
+                    _shiftActive = !_shiftActive;
+                    UpdateLetterKeys();
+                    break;
+
+                case ControllerAction.Menu:
+                    TextCommitted?.Invoke(_text);
+                    break;
+
                 case ControllerAction.Back:
                     Cancelled?.Invoke();
                     break;
@@ -481,20 +514,6 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                     uppercase
                         ? char.ToUpperInvariant(character).ToString()
                         : char.ToLowerInvariant(character).ToString();
-            }
-
-            if (_shiftButton != null) {
-                _shiftButton.Content =
-                    _shiftActive
-                        ? "Shift ✓"
-                        : "Shift";
-            }
-
-            if (_rightShiftButton != null) {
-                _rightShiftButton.Content =
-                    _shiftActive
-                        ? "Shift ✓"
-                        : "Shift";
             }
 
             if (_capsButton != null) {
@@ -646,6 +665,95 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                 active
                     ? new Thickness(3)
                     : new Thickness(1);
+        }
+
+        public void SetControllerFamily(
+    ControllerFamily family) {
+            _controllerFamily = family;
+
+            UpdateShortcutVisuals();
+        }
+
+        private void UpdateShortcutVisuals() {
+            if (_shiftButton != null) {
+                _shiftButton.Content =
+                    CreateShortcutContent(
+                        "Shift",
+                        ControllerButton.RightTrigger);
+            }
+
+            if (_rightShiftButton != null) {
+                _rightShiftButton.Content =
+                    CreateShortcutContent(
+                        "Shift",
+                        ControllerButton.RightTrigger);
+            }
+
+            if (_enterButton != null) {
+                _enterButton.Content =
+                    CreateShortcutContent(
+                        "Enter",
+                        ControllerButton.Menu);
+            }
+
+            if (_spaceButton != null) {
+                _spaceButton.Content =
+                    CreateShortcutContent(
+                        "Space",
+                        ControllerButton.Y);
+            }
+
+            if (_backspaceButton != null) {
+                _backspaceButton.Content =
+                    CreateShortcutContent(
+                        "Backspace",
+                        ControllerButton.X);
+            }
+        }
+
+        private FrameworkElement CreateShortcutContent(
+            string label,
+            ControllerButton controllerButton) {
+            StackPanel panel = new() {
+                Orientation = Orientation.Horizontal,
+                Spacing = 6,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            string? assetPath =
+                ControllerGlyphs.GetAssetPath(
+                    _controllerFamily,
+                    controllerButton);
+
+            if (!string.IsNullOrEmpty(assetPath)) {
+                panel.Children.Add(
+                    new Image {
+                        Source = new SvgImageSource(
+                            new Uri(assetPath)),
+                        Width = 24,
+                        Height = 24
+                    });
+            } else {
+                panel.Children.Add(
+                    new TextBlock {
+                        Text = ControllerGlyphs.GetGlyph(
+                            _controllerFamily,
+                            controllerButton),
+                        FontSize = 14,
+                        FontWeight = FontWeights.SemiBold,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+            }
+
+            panel.Children.Add(
+                new TextBlock {
+                    Text = label,
+                    FontSize = 18,
+                    VerticalAlignment = VerticalAlignment.Center
+                });
+
+            return panel;
         }
     }
 }
