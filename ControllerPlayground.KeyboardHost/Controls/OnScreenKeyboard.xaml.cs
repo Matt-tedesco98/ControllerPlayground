@@ -33,9 +33,6 @@ namespace ControllerPlayground.KeyboardHost.Controls {
 
         private ControllerFamily _controllerFamily = ControllerFamily.Unknown;
 
-        private bool _symbolMode;
-        private Button? _symbolButton;
-
         private readonly string[] _rows = {
             "QWERTYUIOP",
             "ASDFGHJKL",
@@ -56,12 +53,6 @@ namespace ControllerPlayground.KeyboardHost.Controls {
             new("0", ")"),
             new("-", "_"),
             new("=", "+")
-        };
-
-        private readonly string[] _symbolRows = {
-            "1234567890",
-            "@#$%&*()-",
-            ".,_!?/:"
         };
 
         public OnScreenKeyboard() {
@@ -263,13 +254,6 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                 Spacing = 6
             };
 
-            _symbolButton = CreateActionButton(
-                "123",
-                "SYMBOLS",
-                120);
-
-            actionRow.Children.Add(_symbolButton);
-
             _spaceButton = CreateActionButton(
                 "Space",
                 "SPACE",
@@ -381,12 +365,6 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                     UpdateLetterKeys();
                     break;
 
-                case "SYMBOLS":
-                    _symbolMode = !_symbolMode;
-                    _shiftActive = false;
-                    UpdateKeyboardLayout();
-                    break;
-
                 default:
                     if (value.Length == 1 &&
                         char.IsLetter(value[0])) {
@@ -495,10 +473,6 @@ namespace ControllerPlayground.KeyboardHost.Controls {
         }
 
         private void UpdateLetterKeys() {
-            if (_symbolMode) {
-                return;
-            }
-
             bool uppercase =
                 _capsLock ^ _shiftActive;
 
@@ -534,65 +508,6 @@ namespace ControllerPlayground.KeyboardHost.Controls {
             SetActionButtonActive(
                 _capsButton,
                 _capsLock);
-        }
-
-        private void UpdateKeyboardLayout() {
-            string[] layout =
-                _symbolMode
-                    ? _symbolRows
-                    : _rows;
-
-            int buttonIndex = 0;
-
-            foreach (string row in layout) {
-                foreach (char character in row) {
-                    if (buttonIndex >= _letterButtons.Count)
-                        return;
-
-                    Button button =
-                        _letterButtons[buttonIndex];
-
-                    button.Tag =
-                        character.ToString();
-
-                    if (_symbolMode) {
-                        button.Content =
-                            character.ToString();
-                    } else {
-                        bool uppercase =
-                            _capsLock ^ _shiftActive;
-
-                        button.Content =
-                            uppercase
-                                ? char.ToUpperInvariant(character).ToString()
-                                : char.ToLowerInvariant(character).ToString();
-                    }
-
-                    buttonIndex++;
-                }
-            }
-
-            if (_symbolButton != null) {
-                _symbolButton.Content =
-                    _symbolMode
-                        ? "ABC"
-                        : "123";
-            }
-
-            if (_shiftButton != null) {
-                _shiftButton.IsEnabled =
-                    !_symbolMode;
-            }
-
-            if (_rightShiftButton != null) {
-                _rightShiftButton.IsEnabled =
-                    !_symbolMode;
-            }
-
-            if (_capsButton != null) {
-                _capsButton.IsEnabled =
-                    !_symbolMode;
-            }
         }
 
         private Button CreateDefinitionButton(
