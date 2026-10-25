@@ -693,7 +693,8 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                 _enterButton.Content =
                     CreateShortcutContent(
                         "Enter",
-                        ControllerButton.Menu);
+                        ControllerButton.Menu,
+                        30);
             }
 
             if (_spaceButton != null) {
@@ -711,9 +712,7 @@ namespace ControllerPlayground.KeyboardHost.Controls {
             }
         }
 
-        private FrameworkElement CreateShortcutContent(
-            string label,
-            ControllerButton controllerButton) {
+        private FrameworkElement CreateShortcutContent(string label, ControllerButton controllerButton, double glyphSize = 24) {
             StackPanel panel = new() {
                 Orientation = Orientation.Horizontal,
                 Spacing = 6,
@@ -731,8 +730,8 @@ namespace ControllerPlayground.KeyboardHost.Controls {
                     new Image {
                         Source = new SvgImageSource(
                             new Uri(assetPath)),
-                        Width = 24,
-                        Height = 24
+                        Width = glyphSize,
+                        Height = glyphSize
                     });
             } else {
                 panel.Children.Add(
