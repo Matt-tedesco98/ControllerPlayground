@@ -248,7 +248,8 @@ internal static class Program {
         int ownership = OwnershipTests.Run();
         int navigation = NavigationRegressionTests.Run();
         int phase0 = KeyboardPhase0Tests.Run();
-        Console.WriteLine($"PASS: {_passed} managed input groups + {ownership} ownership groups + {navigation} navigation regression groups + {phase0} Phase 0 probe groups; no hardware required.");
+        int keyboard = KeyboardProtocolTests.Run().GetAwaiter().GetResult();
+        Console.WriteLine($"PASS: {_passed} managed input groups + {ownership} ownership groups + {navigation} navigation regression groups + {phase0} Phase 0 probe groups + {keyboard} keyboard protocol/session groups; no hardware required.");
     }
 
     private static void NativeSmoke() {
@@ -278,6 +279,7 @@ internal static class Program {
     private static int Main(string[] args) {
         try {
             if (args.Contains("--native-smoke")) NativeSmoke();
+            else if (args.Contains("--keyboard-protocol-tests")) Console.WriteLine($"PASS: {KeyboardProtocolTests.Run().GetAwaiter().GetResult()} keyboard protocol/session groups.");
             else if (args.Contains("--ownership-monitor")) ControllerMonitor.Run(ownership: true,
                 seconds: args.Length > 1 && int.TryParse(args[1], out int duration) ? duration : 120);
             else if (args.Contains("--monitor")) ControllerMonitor.Run();

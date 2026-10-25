@@ -1,5 +1,8 @@
 # Managed per-device input — Increment 2
 
+Increment 4's disconnected protocol/session foundation is documented in
+[Keyboard/README.md](Keyboard/README.md). Production keyboard IPC is unchanged.
+
 For the current shell ownership integration and Increment 3 verification steps,
 see [OWNERSHIP.md](OWNERSHIP.md). The description below records Increment 2;
 MainWindow now uses the attributed batch and root navigation accepts either
