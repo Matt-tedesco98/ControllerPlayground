@@ -125,6 +125,18 @@
             
         </ScrollViewer>
 
+        <controls:ControllerPromptBar
+            x:Name="PromptBar"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Margin="24"
+            ShowAccept="True"
+            ShowBack="False"
+            ShowView="False"
+            ShowMenu="True"
+            AcceptLabel="Select"
+            MenuLabel="Game Options" />
+
         <Grid 
             x:Name="ContextMenuLayer"
             Visibility="Collapsed">

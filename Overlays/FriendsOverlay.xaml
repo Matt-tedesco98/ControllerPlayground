@@ -23,35 +23,60 @@
         
         
         <!-- Friends List -->
-        <StackPanel 
-            Grid.Column="0"
-            Margin="24" 
-            Spacing="16">
+        <Grid
+    Grid.Column="0"
+    Margin="24">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
             <TextBlock
-                Text="Friends"
-                FontSize="28"
-                FontWeight="SemiBold"/>
+        Grid.Row="0"
+        Text="Friends"
+        FontSize="28"
+        FontWeight="SemiBold"
+        Margin="0,0,0,16"/>
 
-            <ItemsControl
-                x:Name="FriendsList"
-                ItemsSource="{x:Bind Friends, Mode=OneWay}">
+            <ScrollViewer
+        Grid.Row="1"
+        VerticalScrollMode="Enabled"
+        VerticalScrollBarVisibility="Hidden">
 
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="models:SteamFriend">
+                <ItemsControl
+            x:Name="FriendsList"
+            ItemsSource="{x:Bind Friends, Mode=OneWay}">
 
-                        <Control:SteamFriendCard
-                            Item="{x:Bind}"
-                            Activated="FriendCard_Activated"/>
-                        
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:SteamFriend">
 
-            </ItemsControl>
+                            <Control:SteamFriendCard
+                        Item="{x:Bind}"
+                        Activated="FriendCard_Activated"/>
 
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
 
-        </StackPanel>
-        
+                </ItemsControl>
+
+            </ScrollViewer>
+
+            <Control:ControllerPromptBar
+                x:Name="PromptBar"
+                Grid.Row="2"
+                Margin="0,16,0,0"
+                ShowAccept="True"
+                ShowBack="True"
+                ShowView="True"
+                ShowMenu="False"
+                AcceptLabel="Select"
+                BackLabel="Back"
+                ViewLabel="Close" />
+
+        </Grid>
+
         <!-- Chat Pane -->
             <local:FriendChatPane
                 x:Name="ChatPane"

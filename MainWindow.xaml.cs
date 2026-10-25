@@ -257,7 +257,12 @@ public sealed partial class MainWindow : Window {
     private void ControllerService_ControllerFamilyChanged(ControllerFamily family) {
 
         _homeView.ControllerFamily = family;
-        _GamePageView.controllerFamily = family;
+        _libraryView.ControllerFamily = family;
+        _GamePageView.ControllerFamily = family;
+        _settingsView.ControllerFamily = family;
+
+        GuideMenu.ControllerFamily = family;
+        FriendsOverlay.ControllerFamily = family;
 
         System.Diagnostics.Debug.WriteLine($"Controller family changed: {family}");
     }

@@ -22,6 +22,7 @@ namespace ControllerPlayground.Views {
     public sealed partial class SettingsView : UserControl {
 
         internal event Action<AppScreen>? NavigateRequested;
+        public ControllerFamily ControllerFamily { get => PromptBar.Family; set => PromptBar.Family = value; }
 
         internal void HandleControllerAction(ControllerAction action) {
             switch (action) {

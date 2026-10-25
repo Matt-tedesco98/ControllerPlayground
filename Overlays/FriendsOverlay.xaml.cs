@@ -25,6 +25,7 @@ using Windows.Foundation.Collections;
 namespace ControllerPlayground.Overlays {
     public sealed partial class FriendsOverlay : UserControl {
         internal event Action<string>? KeyboardRequested;
+        public ControllerFamily ControllerFamily { get => PromptBar.Family; set => PromptBar.Family = value; }
         public FriendsOverlay() {
             InitializeComponent();
             ChatPane.KeyboardRequested += ChatPane_KeyboardRequested;

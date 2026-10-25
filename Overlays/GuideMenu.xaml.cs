@@ -25,6 +25,7 @@ namespace ControllerPlayground.Overlays {
         internal event Action<AppScreen>? NavigateRequested;
         private Button? _lastFocusedButton;
         internal event Action? ResumeGameRequested;
+        public ControllerFamily ControllerFamily { get => PromptBar.Family; set => PromptBar.Family = value; }
 
         public void FocusFirstItem() {
             if (CurrentGamePanel.Visibility == Visibility.Visible && ResumeGameButton.IsEnabled) {

@@ -37,6 +37,7 @@ namespace ControllerPlayground.Views {
         private readonly HashSet<uint> _installedAppIds = new();
         public ObservableCollection<SteamLibraryGame> Games { get; } = new();
         internal event Action<GameItem, GamePageTab>? GamePageRequested;
+        public ControllerFamily ControllerFamily { get => PromptBar.Family; set => PromptBar.Family = value; }
 
         public LibraryView() {
             InitializeComponent();

@@ -187,7 +187,7 @@ namespace ControllerPlayground.Views {
 
         internal event Action<AppScreen>? NavigateRequested;
 
-        public ControllerFamily controllerFamily {
+        public ControllerFamily ControllerFamily {
             get => PromptBar.Family;
             set {
                 PromptBar.Family = value;
