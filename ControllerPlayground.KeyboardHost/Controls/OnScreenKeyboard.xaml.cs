@@ -576,35 +576,41 @@ namespace ControllerPlayground.KeyboardHost.Controls {
             }
         }
 
-        private Button CreateDefinitionButton( KeyboardKeyDefinition definition) {
-            StackPanel content = new() {
-                Spacing = 2,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
-            };
+        private Button CreateDefinitionButton(
+    KeyboardKeyDefinition definition) {
+            Grid content = new();
 
             if (!string.IsNullOrEmpty(definition.Secondary)) {
-                content.Children.Add(
-                    new TextBlock {
-                        Text = definition.Secondary,
-                        FontSize = 13,
-                        Opacity = 0.55,
-                        HorizontalAlignment = HorizontalAlignment.Center
-                    });
+                TextBlock secondaryText = new() {
+                    Text = definition.Secondary,
+                    FontSize = 12,
+                    Opacity = 0.55,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(8, 4, 0, 0)
+                };
+
+                content.Children.Add(secondaryText);
             }
 
-            content.Children.Add(
-                new TextBlock {
-                    Text = definition.Primary,
-                    FontSize = 22,
-                    HorizontalAlignment = HorizontalAlignment.Center
-                });
+            TextBlock primaryText = new() {
+                Text = definition.Primary,
+                FontSize = 22,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = !string.IsNullOrEmpty(definition.Secondary)
+                    ? new Thickness(0, 10, 0, 0)
+                    : new Thickness(0)
+            };
+
+            content.Children.Add(primaryText);
 
             Button button = new() {
                 Content = content,
                 Tag = definition,
                 Width = definition.Width,
-                Height = 68
+                Height = 68,
+                Padding = new Thickness(0)
             };
 
             button.Click += KeyButton_Click;
