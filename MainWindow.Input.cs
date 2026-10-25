@@ -16,6 +16,7 @@ namespace ControllerPlayground;
 
 public sealed partial class MainWindow {
     private readonly ControllerInputRouter _inputRouter;
+    private readonly ControllerPlayground.Input.Diagnostics.KeyboardPhase0Probe? _keyboardPhase0;
     private ControllerDevice? _dispatchController;
     private bool _updatingScopes;
     private bool _shellForeground = true;
@@ -121,6 +122,7 @@ public sealed partial class MainWindow {
             RefreshOwnershipPresentation();
             return;
         }
+        _keyboardPhase0?.AfterPoll();
         var awaiting = _controllerService.AwaitingNeutralDevices.Select(d => (d.Id, d.ConnectionGeneration)).ToHashSet();
         foreach (var device in _controllerService.Devices) {
             var key = (device.Id, device.ConnectionGeneration);

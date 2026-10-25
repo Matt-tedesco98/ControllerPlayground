@@ -38,9 +38,13 @@ namespace ControllerPlayground.KeyboardHost {
         private readonly ControllerService _controllerService = new();
         private readonly DispatcherTimer _controllerTimer = new();
         private readonly KeyboardPipeServer _keyboardPipeServer = new();
+        private readonly ControllerPlayground.Input.Diagnostics.KeyboardPhase0Probe? _phase0;
         private bool _isMoveMode;
         public MainWindow() {
             InitializeComponent();
+            _phase0 = ControllerPlayground.Input.Diagnostics.KeyboardPhase0Probe.TryStart("helper", _controllerService,
+                action => DispatcherQueue.TryEnqueue(() => action()));
+            Closed += (_, _) => _phase0?.Dispose();
 
             _controllerService.ControllerFamilyChanged += family => {
                 Keyboard.SetControllerFamily(family);
@@ -118,6 +122,7 @@ namespace ControllerPlayground.KeyboardHost {
         private void ControllerTimer_Tick(object? sender, object e) {
             ControllerAction action =
                 _controllerService.PollAction();
+            _phase0?.AfterPoll();
 
             if (action == ControllerAction.none)
                 return;

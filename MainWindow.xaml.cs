@@ -25,6 +25,9 @@ public sealed partial class MainWindow : Window {
     public MainWindow() {
         InitializeComponent();
         _inputRouter = InitializeInputOwnership();
+        _keyboardPhase0 = ControllerPlayground.Input.Diagnostics.KeyboardPhase0Probe.TryStart("shell", _controllerService,
+            action => DispatcherQueue.TryEnqueue(() => action()), () => _inputRouter.Current?.Owner);
+        Closed += (_, _) => _keyboardPhase0?.Dispose();
 
         _ = InitializeDatabaseAsync();
 

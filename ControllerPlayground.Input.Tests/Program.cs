@@ -247,7 +247,8 @@ internal static class Program {
         });
         int ownership = OwnershipTests.Run();
         int navigation = NavigationRegressionTests.Run();
-        Console.WriteLine($"PASS: {_passed} managed input groups + {ownership} ownership groups + {navigation} navigation regression groups; no hardware required.");
+        int phase0 = KeyboardPhase0Tests.Run();
+        Console.WriteLine($"PASS: {_passed} managed input groups + {ownership} ownership groups + {navigation} navigation regression groups + {phase0} Phase 0 probe groups; no hardware required.");
     }
 
     private static void NativeSmoke() {
