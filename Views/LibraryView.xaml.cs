@@ -37,7 +37,7 @@ namespace ControllerPlayground.Views {
         private readonly HashSet<uint> _installedAppIds = new();
         public ObservableCollection<SteamLibraryGame> Games { get; } = new();
         internal event Action<GameItem, GamePageTab>? GamePageRequested;
-        public ControllerFamily ControllerFamily { get => PromptBar.Family; set => PromptBar.Family = value; }
+        public ControllerFamily ControllerFamily { get => PromptBar.Family; set { PromptBar.Family = value; GameMenu.ControllerFamily = value; } }
 
         public LibraryView() {
             InitializeComponent();
@@ -78,12 +78,12 @@ namespace ControllerPlayground.Views {
 
         internal void HandleControllerAction(ControllerAction action) {
             System.Diagnostics.Debug.WriteLine($"Library controller action: {action}");
-            var focusOption  = new FindNextElementOptions {
+            var focusOption = new FindNextElementOptions {
                 SearchRoot = LibraryRoot
             };
 
-            if (_isContextMenuOpen) { 
-                if (action== ControllerAction.Back || action == ControllerAction.Menu) {
+            if (_isContextMenuOpen) {
+                if (action == ControllerAction.Back || action == ControllerAction.Menu) {
                     CloseContextMenu();
                     return;
                 }
@@ -96,7 +96,7 @@ namespace ControllerPlayground.Views {
                     if (!TryNavigateGameGridUp()) {
                         FocusManager.TryMoveFocus(FocusNavigationDirection.Up, focusOption);
                     }
-                        break;
+                    break;
 
 
                 case ControllerAction.NavigateDown:
@@ -149,7 +149,7 @@ namespace ControllerPlayground.Views {
         internal void RestoreFocus() {
             int targetIndex = 0;
 
-            uint?targetAppId = _lastFocusedAppId ?? _lastOpenedAppId;
+            uint? targetAppId = _lastFocusedAppId ?? _lastOpenedAppId;
 
             if (targetAppId.HasValue) {
                 for (int i = 0; i < Games.Count; i++) {
@@ -163,18 +163,18 @@ namespace ControllerPlayground.Views {
         }
 
         internal void RestoreFocusToIndex(int index) {
-            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => { 
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => {
                 if (Games.Count == 0)
                     return;
 
                 if (index < 0 || index >= Games.Count) {
                     index = 0;
                 }
-                    
+
                 LibraryRepeater.UpdateLayout();
 
                 if (LibraryRepeater.GetOrCreateElement(index) is not GameTile firstTile)
-                   return;
+                    return;
 
                 DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => {
                     bool focused = firstTile.FocusTile();
@@ -190,7 +190,7 @@ namespace ControllerPlayground.Views {
 
             int index = LibraryRepeater.GetElementIndex(tile);
 
-            if(index < 0 || index >= Games.Count)
+            if (index < 0 || index >= Games.Count)
                 return;
 
             SteamLibraryGame steamGame = Games[index];
@@ -239,9 +239,9 @@ namespace ControllerPlayground.Views {
                 current = VisualTreeHelper.GetParent(current);
             }
         }
-        private void CloseContextMenu() { 
+        private void CloseContextMenu() {
             _isContextMenuOpen = false;
-            ContextMenuLayer .Visibility = Visibility.Collapsed;
+            ContextMenuLayer.Visibility = Visibility.Collapsed;
 
             DispatcherQueue.TryEnqueue(() => {
                 _contextMenuTile?.FocusTile();
@@ -274,7 +274,7 @@ namespace ControllerPlayground.Views {
                     }
                     break;
             }
-                
+
         }
 
         private void AllGamesFilterButton_Click(object sender, RoutedEventArgs e) {
@@ -284,7 +284,7 @@ namespace ControllerPlayground.Views {
         private void InstalledFilterButton_Click(object sender, RoutedEventArgs e) {
             ShowInstalledGames();
         }
-        
+
         private void ShowAllGames() {
             UpdateFilterVisuals(false);
             Games.Clear();
@@ -315,11 +315,11 @@ namespace ControllerPlayground.Views {
             while (current != null) {
                 if (current is GameTile tile) {
                     int currentIndex = LibraryRepeater.GetElementIndex(tile);
-                    if (currentIndex < 0 )
+                    if (currentIndex < 0)
                         return false;
                     int columns = Math.Max(1, (int)Math.Floor(LibraryRepeater.ActualWidth / 245.0));
                     int targetIndex = currentIndex - columns;
-                    if (targetIndex < 0 ) 
+                    if (targetIndex < 0)
                         return false;
                     FocusGameAtIndex(targetIndex);
                     return true;
@@ -359,13 +359,13 @@ namespace ControllerPlayground.Views {
                 if (LibraryRepeater.GetOrCreateElement(index) is not GameTile tile)
                     return;
                 tile.StartBringIntoView();
-                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => { 
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => {
                     tile.FocusTile();
                 });
             });
         }
 
-        private void UpdateFilterVisuals(bool installed) { 
+        private void UpdateFilterVisuals(bool installed) {
             AllGamesFilterIndicator.Visibility = installed ? Visibility.Collapsed : Visibility.Visible;
             InstalledFilterIndicator.Visibility = installed ? Visibility.Visible : Visibility.Collapsed;
         }

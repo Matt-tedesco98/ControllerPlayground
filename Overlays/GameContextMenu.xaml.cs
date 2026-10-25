@@ -22,6 +22,7 @@ namespace ControllerPlayground.Overlays {
     public sealed partial class GameContextMenu : UserControl {
 
         internal event Action<GameContextAction>? ActionRequested;
+        public ControllerFamily ControllerFamily { get => PromptBar.Family; set => PromptBar.Family = value; }
 
         public static readonly DependencyProperty GameTitleProperty = DependencyProperty.Register(
             nameof(GameTitle),

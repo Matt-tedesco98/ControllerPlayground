@@ -41,7 +41,10 @@ namespace ControllerPlayground.Views {
 
         public ControllerFamily ControllerFamily {
             get => PromptBar.Family;
-            set => PromptBar.Family = value;
+            set { 
+                PromptBar.Family = value;
+                GameMenu.ControllerFamily = value;
+            }
         }
 
         internal void HandleControllerAction(ControllerAction action) {
