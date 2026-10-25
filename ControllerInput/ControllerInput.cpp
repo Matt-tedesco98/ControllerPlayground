@@ -31,6 +31,7 @@ struct DeviceCapture {
     HistoryCursor legacyCursor;
     ConnectionState connection;
     ControllerDeviceSnapshotV2 snapshot{};
+    ControllerState navigationProjection{};
     bool pendingGuide = false;
     bool pendingLegacyGuide = false;
 };
@@ -117,6 +118,7 @@ DeviceCapture* TrackDevice(IGameInputDevice* device, bool connected, uint64_t ti
         capture.pendingLegacyGuide = false;
         capture.snapshot.timestamp = timestamp;
         capture.snapshot.state = {};
+        capture.navigationProjection = {};
         capture.snapshot.pressedButtons = capture.snapshot.releasedButtons = 0;
         capture.snapshot.guidePressed = capture.snapshot.historyDiscontinuity = 0;
         capture.snapshot.readingAvailable = 0;
@@ -357,6 +359,7 @@ void PollCapture(DeviceCapture& capture) {
     uint64_t timestamp = capture.snapshot.timestamp;
     capture.snapshot.readingAvailable = PollHistory(capture, capture.cursor, actual, projected,
         capture.snapshot.pressedButtons, capture.snapshot.releasedButtons, reset, timestamp, true) ? 1u : 0u;
+    capture.navigationProjection = projected;
     capture.snapshot.historyDiscontinuity = reset ? 1u : 0u;
     capture.snapshot.guidePressed = capture.pendingGuide ? 1u : 0u;
     capture.pendingGuide = false;
@@ -539,6 +542,21 @@ void ControllerInput_SetWindowHandle(void* handle) {
 }
 
 uint32_t ControllerInput_GetApiVersion() { return 2; }
+
+int32_t ControllerInput_CopyNavigationProjectionV2(const ControllerDeviceIdV2* deviceId,
+    uint64_t generation, ControllerState* state) {
+    if (!deviceId || !state) return E_INVALIDARG;
+    *state = {};
+    std::lock_guard api(g_apiMutex);
+    std::lock_guard lock(g_captureMutex);
+    if (!g_initialized) return E_UNEXPECTED;
+    const auto found = g_devices.find(Key(*deviceId));
+    if (found == g_devices.end() || !found->second.connection.connected ||
+        found->second.connection.generation != generation) return GAMEINPUT_E_DEVICE_DISCONNECTED;
+    if (!found->second.snapshot.readingAvailable) return GAMEINPUT_E_READING_NOT_FOUND;
+    *state = found->second.navigationProjection;
+    return S_OK;
+}
 
 int32_t ControllerInput_PollDevicesV2(ControllerDeviceSnapshotV2* devices, uint32_t capacity, uint32_t stride, uint32_t* required) {
     if (!required || stride != sizeof(ControllerDeviceSnapshotV2) || (!devices && capacity)) return E_INVALIDARG;

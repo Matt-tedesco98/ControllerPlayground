@@ -1,265 +1,125 @@
-﻿using System;
-
 namespace ControllerPlayground.Input;
 
+// Call on one host thread. Notifications execute synchronously on that thread.
 public sealed class ControllerService {
+    private sealed record KnownConnection(ControllerDevice Device, bool Connected);
+    private readonly IControllerInputSource _source;
+    private readonly Func<long> _clock;
+    private readonly Dictionary<ControllerDeviceId, ControllerDeviceState> _states = new();
+    // Tombstones prevent late snapshots/events from reviving retired generations.
+    private readonly Dictionary<ControllerDeviceId, KnownConnection> _known = new();
+    private ulong _sequence;
+    private bool _polling;
+    private bool _legacyGuideRequested;
+    private ControllerDeviceId? _compatibilityDevice;
+
+    public Guid CollectorSessionId { get; } = Guid.NewGuid();
     public bool IsConnected { get; private set; }
-
     public ControllerFamily Family { get; private set; } = ControllerFamily.Unknown;
+    public ControllerDeviceId? CompatibilityDeviceId => _compatibilityDevice;
+    public IReadOnlyCollection<ControllerDevice> Devices => _states.Values.Select(s => s.Device).ToArray();
     public event Action<ControllerFamily>? ControllerFamilyChanged;
-
     public event Action<bool>? ConnectionChanged;
-    private uint _previousButtons;
+    public event Action<ControllerConnectionEvent>? DeviceConnectionChanged;
+    public event Action<ControllerActionEvent>? ActionReceived;
 
-    private uint _previousSystemButtons;
+    public ControllerService() : this(new NativeControllerInputSource()) { }
+    public ControllerService(IControllerInputSource source, Func<long>? clock = null) {
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _clock = clock ?? (() => Environment.TickCount64);
+    }
 
-    // navigational repeat state
-    private ControllerAction _heldNavigationAction = ControllerAction.none;
-    private long _nextNavigationRepeatTime;
-    private ControllerAction _stickDirection = ControllerAction.none;
+    private static ControllerDevice Describe(ControllerDeviceSnapshotV2 snapshot) => new(
+        snapshot.DeviceId, snapshot.DeviceRootId, snapshot.ConnectionGeneration,
+        snapshot.VendorId, snapshot.ProductId, snapshot.VendorId switch {
+            0x045E => ControllerFamily.Xbox,
+            0x054C => ControllerFamily.PlayStation,
+            _ => ControllerFamily.Unknown
+        });
 
-    // Constants for repeat behavior
-    private const int InitialRepeatDelayMs = 400;
-    private const int RepeatIntervalMs = 120;
-
-    private bool _rightTriggerPressed;
-
-    public ControllerAction PollAction() {
-        if (!ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
-            if (IsConnected) {
-                ResetInputState();
-            }
-            SetConnectionState(false);
-            SetControllerFamily(ControllerFamily.Unknown);
-            return ControllerAction.none;
-        }
-
-        SetConnectionState(true);
-
-        if (Family == ControllerFamily.Unknown) {
-            UpdateControllerFamily();
-        }
-
-        ControllerButtons currentButtons = (ControllerButtons)state.Buttons;
-
-        ControllerButtons previousButton = (ControllerButtons)_previousButtons;
-
-        ControllerButtons pressedThisFrame = currentButtons & ~previousButton;
-
-        _previousButtons = state.Buttons;
-
-
-        ControllerSystemButtons currentSystemButtons = (ControllerSystemButtons)state.SystemButtons;
-
-        ControllerSystemButtons previousSystemButtons = (ControllerSystemButtons)_previousSystemButtons;
-
-        ControllerSystemButtons systemPressedThisFrame = currentSystemButtons & ~previousSystemButtons;
-
-        _previousSystemButtons = state.SystemButtons;
-
-        bool rightTriggerPressed = state.RightTrigger >= 0.60f;
-
-        bool rightTriggerPressedThisFrame = rightTriggerPressed && !_rightTriggerPressed;
-
-        _rightTriggerPressed = rightTriggerPressed;
-
-        // System buttons get highest priority.
-        if ((systemPressedThisFrame & ControllerSystemButtons.Guide) != 0)
-            return ControllerAction.Guide;
-
-        // One-shot buttons should be handled before held navigation.
-        // Otherwise a D-pad repeat can consume this poll and the button edge is lost.
-        if ((pressedThisFrame & ControllerButtons.Accept) != 0)
-            return ControllerAction.Accept;
-
-        if ((pressedThisFrame & ControllerButtons.Back) != 0)
-            return ControllerAction.Back;
-
-        if ((pressedThisFrame & ControllerButtons.X) != 0)
-            return ControllerAction.X;
-
-        if ((pressedThisFrame & ControllerButtons.Y) != 0)
-            return ControllerAction.Y;
-
-        if ((pressedThisFrame & ControllerButtons.Menu) != 0)
-            return ControllerAction.Menu;
-
-        if ((pressedThisFrame & ControllerButtons.View) != 0)
-            return ControllerAction.View;
-
-        if ((pressedThisFrame & ControllerButtons.LeftShoulder) != 0)
-            return ControllerAction.PreviousTab;
-
-        if ((pressedThisFrame & ControllerButtons.RightShoulder) != 0)
-            return ControllerAction.NextTab;
-
-        if (rightTriggerPressedThisFrame)
-            return ControllerAction.RightTrigger;
-
-
-        ControllerAction dpadAction = ControllerAction.none;
-
-        if ((currentButtons & ControllerButtons.DpadUp) != 0)
-            dpadAction = ControllerAction.NavigateUp;
-
-        if ((currentButtons & ControllerButtons.DpadDown) != 0)
-            dpadAction = ControllerAction.NavigateDown;
-
-        if ((currentButtons & ControllerButtons.DpadLeft) != 0)
-            dpadAction = ControllerAction.NavigateLeft;
-
-        if ((currentButtons & ControllerButtons.DpadRight) != 0)
-            dpadAction = ControllerAction.NavigateRight;
-
-
-        const float pressThreshold = 0.65f;
-        const float releaseThreshold = 0.30f;
-
-        float x = state.LeftThumbstickX;
-        float y = state.LeftThumbstickY;
-
-        ControllerAction stickAction = ControllerAction.none;
-
-        // Stick is pushed far enough to choose a direction
-        const float directionSwitchMargin = 0.15f;
-
-        if (Math.Abs(x) <= releaseThreshold &&
-            Math.Abs(y) <= releaseThreshold) {
-
-            _stickDirection = ControllerAction.none;
-        } else if (Math.Abs(x) >= pressThreshold ||
-                   Math.Abs(y) >= pressThreshold) {
-
-            ControllerAction candidateDirection;
-
-            if (Math.Abs(x) >= Math.Abs(y)) {
-                candidateDirection =
-                    x > 0
-                        ? ControllerAction.NavigateRight
-                        : ControllerAction.NavigateLeft;
-            } else {
-                candidateDirection =
-                    y > 0
-                        ? ControllerAction.NavigateUp
-                        : ControllerAction.NavigateDown;
-            }
-
-            if (_stickDirection == ControllerAction.none) {
-                _stickDirection = candidateDirection;
-            } else if (candidateDirection != _stickDirection) {
-                bool oppositeDirection =
-                    (_stickDirection == ControllerAction.NavigateLeft &&
-                     candidateDirection == ControllerAction.NavigateRight) ||
-                    (_stickDirection == ControllerAction.NavigateRight &&
-                     candidateDirection == ControllerAction.NavigateLeft) ||
-                    (_stickDirection == ControllerAction.NavigateUp &&
-                     candidateDirection == ControllerAction.NavigateDown) ||
-                    (_stickDirection == ControllerAction.NavigateDown &&
-                     candidateDirection == ControllerAction.NavigateUp);
-
-                float axisDifference =
-                    Math.Abs(Math.Abs(x) - Math.Abs(y));
-
-                if (oppositeDirection ||
-                    axisDifference >= directionSwitchMargin) {
-
-                    _stickDirection = candidateDirection;
+    private void ApplyConnection(ControllerDeviceSnapshotV2 snapshot, bool connected,
+        ulong? nativeSequence, List<ControllerConnectionEvent> changes) {
+        var device = Describe(snapshot);
+        if (connected && device.ConnectionGeneration == 0)
+            throw new InvalidOperationException("Connected controller has no connection generation.");
+        _known.TryGetValue(device.Id, out var previous);
+        if (previous != null) {
+            if (device.ConnectionGeneration < previous.Device.ConnectionGeneration) return;
+            if (device.ConnectionGeneration == previous.Device.ConnectionGeneration) {
+                // A disconnect can arrive during native poll -> drain. That
+                // frame's older connected snapshot must not resurrect it.
+                if (!previous.Connected && connected) return;
+                if (previous.Connected == connected) {
+                    _known[device.Id] = new(device, connected);
+                    if (_states.TryGetValue(device.Id, out var existing)) existing.Device = device;
+                    return;
                 }
             }
-          }
-
-        stickAction = _stickDirection;
-
-        ControllerAction navigationAction = dpadAction != ControllerAction.none ? dpadAction : stickAction;
-
-
-        // Handle repeat behavior
-        ControllerAction navigationResult = HandleRepeat(navigationAction, ref _heldNavigationAction, ref _nextNavigationRepeatTime);
-        if (navigationResult != ControllerAction.none)
-            return navigationResult;
-
-        return ControllerAction.none;
+            if (previous.Connected) {
+                _states.Remove(device.Id);
+                changes.Add(new(previous.Device, false, snapshot.Timestamp, nativeSequence));
+            }
+        }
+        _known[device.Id] = new(device, connected);
+        if (connected) {
+            _states[device.Id] = new(device, previous != null || device.ConnectionGeneration > 1);
+            changes.Add(new(device, true, snapshot.Timestamp, nativeSequence));
+        }
     }
 
+    // Subscribe to ActionReceived OR route the returned batch, not both copies.
+    // No actions carry over to a later poll.
+    public IReadOnlyList<ControllerActionEvent> PollActions() {
+        if (_polling) throw new InvalidOperationException("Controller polling cannot be reentered.");
+        _polling = true;
+        try {
+            var frame = _source.ReadFrame();
+            _legacyGuideRequested = frame.LegacyGuideRequested;
+            long now = _clock();
+            List<ControllerConnectionEvent> changes = new();
+            foreach (var input in frame.ConnectionEvents)
+                ApplyConnection(input.Device, input.Kind == ControllerCaptureEventKindV2.Connected, input.Sequence, changes);
+            foreach (var sample in frame.Devices)
+                ApplyConnection(sample, sample.Connected != 0, null, changes);
+            if (frame.ContinuityLost)
+                foreach (var state in _states.Values) state.RequireNeutral();
+            if (!_compatibilityDevice.HasValue || !_states.ContainsKey(_compatibilityDevice.Value))
+                _compatibilityDevice = _states.Keys.OrderBy(id => id.ToString(), StringComparer.Ordinal)
+                    .Select(id => (ControllerDeviceId?)id).FirstOrDefault();
+            var family = _compatibilityDevice.HasValue ? _states[_compatibilityDevice.Value].Device.Family : ControllerFamily.Unknown;
+            List<ControllerActionEvent> actions = new();
+            foreach (var sample in frame.Devices) {
+                if (!_states.TryGetValue(sample.DeviceId, out var state) || state.Device.ConnectionGeneration != sample.ConnectionGeneration || sample.Connected == 0) continue;
+                ControllerState? projection = frame.NavigationProjections != null && frame.NavigationProjections.TryGetValue(sample.DeviceId, out var projected) ? projected : null;
+                foreach (var action in state.Process(sample, now, projection))
+                    actions.Add(new(CollectorSessionId, ++_sequence, state.Device, action.Action,
+                        sample.Timestamp, now, action.IsRepeat));
+            }
+            bool connected = _states.Count != 0;
+            if (IsConnected != connected) { IsConnected = connected; ConnectionChanged?.Invoke(connected); }
+            if (Family != family) { Family = family; ControllerFamilyChanged?.Invoke(family); }
+            foreach (var change in changes) DeviceConnectionChanged?.Invoke(change);
+            foreach (var action in actions) ActionReceived?.Invoke(action);
+            return actions.ToArray();
+        } finally { _polling = false; }
+    }
+
+    // Compatibility only, NOT modal ownership: one stable endpoint until it
+    // disconnects, with Guide accepted from any device as in the native ABI.
+    // The complete batch is still published through ActionReceived.
+    public ControllerAction PollAction() {
+        var actions = PollActions();
+        // Preserve the native legacy Raw Input fallback without inventing an ID
+        // for a pulse whose endpoint could not be correlated.
+        if (_legacyGuideRequested) return ControllerAction.Guide;
+        var guide = actions.FirstOrDefault(a => a.Action == ControllerAction.Guide);
+        if (guide != null) return guide.Action;
+        return actions.FirstOrDefault(a => a.Device.Id == _compatibilityDevice)?.Action ?? ControllerAction.none;
+    }
+
+    // Existing keyboard focus handoff: suppress held controls until neutral,
+    // without consuming the legacy native cursor or changing host IPC.
     public void ResyncInputState() {
-        ResetInputState();
-
-        if (ControllerInputNative.ControllerInput_GetState(out ControllerState state)) {
-            _previousButtons = state.Buttons;
-            _previousSystemButtons = state.SystemButtons;
-        } else {
-            _previousButtons = 0;
-            _previousSystemButtons = 0;
-        }
-    }
-
-    private void SetConnectionState(bool connected) {
-        if (IsConnected == connected)
-            return;
-
-        IsConnected = connected;
-        ConnectionChanged?.Invoke(connected);
-    }
-
-    private static ControllerAction HandleRepeat(
-        ControllerAction action,
-        ref ControllerAction heldAction,
-        ref long nextRepeatTime) {
-
-        long now = Environment.TickCount64;
-
-        if (action == ControllerAction.none) {
-            heldAction = ControllerAction.none;
-            nextRepeatTime = 0;
-            return ControllerAction.none;
-        }
-
-        if (action != heldAction) {
-            // New direction pressed move immediately
-            heldAction = action;
-            nextRepeatTime = now + InitialRepeatDelayMs;
-            return action;
-        }
-
-        if (now >= nextRepeatTime) {
-            // Still held after delay, repeat the action
-            nextRepeatTime = now + RepeatIntervalMs;
-            return action;
-        }
-
-        return ControllerAction.none;
-    }
-
-    private void UpdateControllerFamily() {
-        if (!ControllerInputNative.ControllerInput_GetDeviceInfo(out ControllerDeviceInfo info)) {
-            SetControllerFamily(ControllerFamily.Unknown);
-            return;
-        }
-
-        if (info.VendorId == 0x045E) {
-            SetControllerFamily(ControllerFamily.Xbox);
-        } else if (info.VendorId == 0x054C) {
-            SetControllerFamily(ControllerFamily.PlayStation);
-        } else {
-            SetControllerFamily(ControllerFamily.Unknown);
-        }
-
-        System.Diagnostics.Debug.WriteLine(
-            $"Controller VID 0x{info.VendorId:X4}, PID 0x{info.ProductId:X4}, Family: {Family}");
-    }
-
-    private void SetControllerFamily(ControllerFamily family) {
-        if (Family == family)
-            return;
-
-        Family = family;
-        ControllerFamilyChanged?.Invoke(family);
-    }
-
-    private void ResetInputState() {
-        _heldNavigationAction = ControllerAction.none;
-        _nextNavigationRepeatTime = 0;
-        _stickDirection = ControllerAction.none;
-        _rightTriggerPressed = false;
+        foreach (var state in _states.Values) state.RequireNeutral();
     }
 }

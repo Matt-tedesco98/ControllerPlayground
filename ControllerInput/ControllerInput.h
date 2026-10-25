@@ -102,6 +102,10 @@ extern "C"
     CONTROLLERINPUT_API int32_t ControllerInput_DrainEventsV2(
         ControllerCaptureEventV2* events, uint32_t capacity,
         uint32_t stride, uint32_t* written);
+    // Increment 2 additive query: the last v2 poll's short-tap/stick-flick
+    // projection for this exact connection. Does not poll or consume input.
+    CONTROLLERINPUT_API int32_t ControllerInput_CopyNavigationProjectionV2(
+        const ControllerDeviceIdV2* deviceId, uint64_t generation, ControllerState* state);
     CONTROLLERINPUT_API int32_t ControllerInput_GetDiagnosticsV2(
         ControllerCaptureDiagnosticsV2* diagnostics, uint32_t size);
     CONTROLLERINPUT_API void ControllerInput_SetDiagnosticsEnabledV2(bool enabled);

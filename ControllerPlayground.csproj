@@ -15,7 +15,8 @@
 		<DefaultItemExcludes>
 			$(DefaultItemExcludes);
 			ControllerPlayground.KeyboardHost\**\*;
-			ControllerPlayground.Input\**\*
+			ControllerPlayground.Input\**\*;
+			ControllerPlayground.Input.Tests\**\*
 		</DefaultItemExcludes>
 		
 	</PropertyGroup>
