@@ -39,6 +39,7 @@
         
         <Grid
             x:Name="OverlayLayer"
+            Canvas.ZIndex="20"
             Visibility="Collapsed">
 
             <overlays:GuideMenu
@@ -47,6 +48,8 @@
 
         <Grid
             x:Name="FriendsOverlayLayer"
+            Canvas.ZIndex="10"
+            Background="Transparent"
             Visibility="Collapsed"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch">
@@ -58,6 +61,7 @@
 
         <Grid
             x:Name="SteamQrOverlayLayer"
+            Canvas.ZIndex="30"
             Visibility="Collapsed"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch">
@@ -67,6 +71,21 @@
 
         </Grid>
 
+        <StackPanel x:Name="ShellNavigationButtons" Canvas.ZIndex="5"
+                    Orientation="Horizontal" Spacing="12" Margin="24"
+                    HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <Button x:Name="ShellGuideButton" Content="Guide" Click="ShellGuideButton_Click" />
+            <Button x:Name="ShellFriendsButton" Content="Friends" Click="ShellFriendsButton_Click" />
+        </StackPanel>
+        <Border x:Name="OwnershipPanel" Canvas.ZIndex="40" Visibility="Collapsed"
+                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="16"
+                Background="#E0202830" Padding="12" CornerRadius="8">
+            <StackPanel Orientation="Horizontal" Spacing="16">
+                <TextBlock x:Name="OwnershipStatusText" MaxWidth="600" TextWrapping="Wrap"
+                           Foreground="White" VerticalAlignment="Center" />
+                <Button x:Name="CloseOwnershipButton" Content="Close" Click="CloseOwnershipButton_Click" />
+            </StackPanel>
+        </Border>
     </Grid>
 
 </Window>

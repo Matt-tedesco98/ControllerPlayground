@@ -27,6 +27,7 @@
             
             <Button
                 x:Name="PlayButton"
+                Click="ContextButton_Click"
                 Content="Play"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Left"
@@ -36,6 +37,7 @@
 
             <Button
                 x:Name="DetailsButton"
+                Click="ContextButton_Click"
                 Content="Game Details"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Left"
@@ -45,6 +47,7 @@
             
             <Button
                 x:Name="ManageButton"
+                Click="ContextButton_Click"
                 Content="Manage"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Left"
@@ -54,6 +57,7 @@
             
             <Button
                 x:Name="PropertiesButton"
+                Click="ContextButton_Click"
                 Content="Properties"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Left"

@@ -11,6 +11,7 @@ namespace ControllerPlayground.Services.Steam {
         public event Action<uint>? GameLaunchRequested;
         public GameSessionService? SessionService { get; set; }
         public async Task<bool> LaunchGameAsync(uint appId) {
+            OwnershipTrace.Command($"COMMAND SteamLaunchService.LaunchGameAsync appId={appId}");
             if (SessionService != null && !SessionService.BeginLaunch(appId)) {
                 Debug.WriteLine($"Steam launch blocked: {SessionService.State} | AppId: {SessionService.CurrentAppId}");
                 return false;

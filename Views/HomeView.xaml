@@ -54,6 +54,7 @@
 
         <Grid
             x:Name="ContextMenuLayer"
+            Background="#66000000"
             Visibility="Collapsed">
 
             <overlays:GameContextMenu

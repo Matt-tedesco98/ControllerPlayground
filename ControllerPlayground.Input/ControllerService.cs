@@ -12,12 +12,21 @@ public sealed class ControllerService {
     private bool _polling;
     private bool _legacyGuideRequested;
     private ControllerDeviceId? _compatibilityDevice;
+    private Action<string>? _diagnosticSink;
+    public Action<string>? DiagnosticSink {
+        get => _diagnosticSink;
+        set { _diagnosticSink = value; if (_source is NativeControllerInputSource native) native.DiagnosticSink = value; }
+    }
 
     public Guid CollectorSessionId { get; } = Guid.NewGuid();
     public bool IsConnected { get; private set; }
     public ControllerFamily Family { get; private set; } = ControllerFamily.Unknown;
     public ControllerDeviceId? CompatibilityDeviceId => _compatibilityDevice;
+    // Scalar compatibility fallback has no reliable originating ID. An ownership
+    // host may use it only to open an unowned root surface, never bypass a scope.
+    public bool UnattributedGuideRequested => _legacyGuideRequested;
     public IReadOnlyCollection<ControllerDevice> Devices => _states.Values.Select(s => s.Device).ToArray();
+    public IReadOnlyCollection<ControllerDevice> AwaitingNeutralDevices => _states.Values.Where(s => s.IsAwaitingNeutral).Select(s => s.Device).ToArray();
     public event Action<ControllerFamily>? ControllerFamilyChanged;
     public event Action<bool>? ConnectionChanged;
     public event Action<ControllerConnectionEvent>? DeviceConnectionChanged;
@@ -91,7 +100,10 @@ public sealed class ControllerService {
             foreach (var sample in frame.Devices) {
                 if (!_states.TryGetValue(sample.DeviceId, out var state) || state.Device.ConnectionGeneration != sample.ConnectionGeneration || sample.Connected == 0) continue;
                 ControllerState? projection = frame.NavigationProjections != null && frame.NavigationProjections.TryGetValue(sample.DeviceId, out var projected) ? projected : null;
-                foreach (var action in state.Process(sample, now, projection))
+                DiagnosticSink?.Invoke($"SAMPLE id={sample.DeviceId} gen={sample.ConnectionGeneration} nativeTime={sample.Timestamp} observedMs={now} available={sample.ReadingAvailable} buttons=0x{sample.State.Buttons:X8} pressed=0x{sample.PressedButtons:X8} released=0x{sample.ReleasedButtons:X8} guide={sample.GuidePressed} stick=({sample.State.LeftThumbstickX:R},{sample.State.LeftThumbstickY:R}) projected=({projection?.LeftThumbstickX:R},{projection?.LeftThumbstickY:R}) neutralWait={state.IsAwaitingNeutral} historyReset={sample.HistoryDiscontinuity}");
+                var translated = state.Process(sample, now, projection);
+                DiagnosticSink?.Invoke($"TRANSLATE id={sample.DeviceId} gen={sample.ConnectionGeneration} nativeTime={sample.Timestamp} observedMs={now} actions=[{string.Join(",", translated.Select(a => $"{a.Action}:repeat={a.IsRepeat}"))}] {state.DiagnosticState}");
+                foreach (var action in translated)
                     actions.Add(new(CollectorSessionId, ++_sequence, state.Device, action.Action,
                         sample.Timestamp, now, action.IsRepeat));
             }
@@ -121,5 +133,12 @@ public sealed class ControllerService {
     // without consuming the legacy native cursor or changing host IPC.
     public void ResyncInputState() {
         foreach (var state in _states.Values) state.RequireNeutral();
+    }
+
+    // Guide is a native edge pulse, not a held-repeat action. Keep that explicit
+    // escape available after minimizing to a game, where ordinary neutral samples
+    // may be unavailable. Existing reconnect/strict gates remain strict.
+    public void SuppressForOwnershipTransition() {
+        foreach (var state in _states.Values) state.RequireNeutral(allowFreshGuide: true);
     }
 }

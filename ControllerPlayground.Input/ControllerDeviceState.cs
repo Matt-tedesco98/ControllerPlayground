@@ -11,14 +11,19 @@ internal sealed class ControllerDeviceState {
     private ulong _lastTimestamp;
     private bool _hasTimestamp;
     private bool _awaitingNeutral;
+    private bool _allowFreshGuide;
 
     public ControllerDevice Device { get; set; }
+    public bool IsAwaitingNeutral => _awaitingNeutral;
+    internal string DiagnosticState => $"previousButtons=0x{_previousButtons:X8} stickDirection={_stickDirection} heldNavigation={_heldNavigation} nextRepeatMs={_nextRepeat} neutralWait={_awaitingNeutral} freshGuideAllowed={_allowFreshGuide} lastNativeTime={_lastTimestamp}";
     public ControllerDeviceState(ControllerDevice device, bool requireNeutral) {
         Device = device;
         _awaitingNeutral = requireNeutral;
     }
 
-    public void RequireNeutral() {
+    public void RequireNeutral(bool allowFreshGuide = false) {
+        // A scope transition must never weaken an already-strict reconnect gate.
+        _allowFreshGuide = allowFreshGuide && (!_awaitingNeutral || _allowFreshGuide);
         _awaitingNeutral = true;
         _previousButtons = 0;
         _rightTriggerPressed = false;
@@ -54,7 +59,10 @@ internal sealed class ControllerDeviceState {
                 _awaitingNeutral = false;
                 _lastTimestamp = sample.Timestamp;
                 _hasTimestamp = true;
+                _allowFreshGuide = false;
             }
+            else if (_allowFreshGuide && sample.GuidePressed != 0)
+                actions.Add(new(ControllerAction.Guide));
             return actions;
         }
         // A consumed-on-poll native Guide pulse may share the last sample timestamp.

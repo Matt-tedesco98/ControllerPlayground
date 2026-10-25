@@ -139,6 +139,8 @@
 
         <Grid 
             x:Name="ContextMenuLayer"
+            Grid.RowSpan="2"
+            Background="#66000000"
             Visibility="Collapsed">
 
             <overlays:GameContextMenu

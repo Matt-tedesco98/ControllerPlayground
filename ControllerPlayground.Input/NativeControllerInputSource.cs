@@ -14,6 +14,7 @@ public sealed class NativeControllerInputSource : IControllerInputSource {
     private bool _validated;
 
     public ControllerCaptureDiagnosticsV2 Diagnostics { get; private set; }
+    public Action<string>? DiagnosticSink { get; set; }
 
     public ControllerInputFrame ReadFrame() {
         if (!_validated) {
@@ -65,6 +66,7 @@ public sealed class NativeControllerInputSource : IControllerInputSource {
                     throw new InvalidOperationException("Invalid native capture event size.");
                 if (input.Sequence != _lastSequence + 1) lost = true;
                 _lastSequence = input.Sequence;
+                DiagnosticSink?.Invoke($"NATIVE_EVENT seq={input.Sequence} kind={input.Kind} id={input.Device.DeviceId} gen={input.Device.ConnectionGeneration} nativeTime={input.Device.Timestamp} buttons=0x{input.Device.State.Buttons:X8} pressed=0x{input.Device.PressedButtons:X8} released=0x{input.Device.ReleasedButtons:X8} stick=({input.Device.State.LeftThumbstickX:R},{input.Device.State.LeftThumbstickY:R})");
                 if (input.Kind is ControllerCaptureEventKindV2.Connected or ControllerCaptureEventKindV2.Disconnected)
                     lifecycle.Add(input);
             }

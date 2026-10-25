@@ -28,6 +28,10 @@ namespace ControllerPlayground.Views {
 
         private bool _isContextMenuOpen;
         internal bool IsContextMenuOpen => _isContextMenuOpen;
+        internal event Action<bool>? ContextMenuStateChanged;
+        internal Func<bool>? CanRestoreFocus { get; set; }
+        internal UIElement ContextFocusRoot => GameMenu;
+        internal void FocusContextMenu() => GameMenu.FocusFirstItem();
         private uint? _lastOpenedAppId;
         private uint? _lastFocusedAppId;
         private GameTile? _contextMenuTile;
@@ -164,6 +168,7 @@ namespace ControllerPlayground.Views {
 
         internal void RestoreFocusToIndex(int index) {
             DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => {
+                if (CanRestoreFocus?.Invoke() == false) return;
                 if (Games.Count == 0)
                     return;
 
@@ -177,6 +182,7 @@ namespace ControllerPlayground.Views {
                     return;
 
                 DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => {
+                    if (CanRestoreFocus?.Invoke() == false) return;
                     bool focused = firstTile.FocusTile();
 
                     Debug.WriteLine($"Library restored AppID {_lastOpenedAppId} " + $"at index {index}: {focused}");
@@ -229,9 +235,11 @@ namespace ControllerPlayground.Views {
                     GameMenu.GameTitle = _contextMenuGame.Name;
 
                     _isContextMenuOpen = true;
+                    ContextMenuStateChanged?.Invoke(true);
                     ContextMenuLayer.Visibility = Visibility.Visible;
 
                     DispatcherQueue.TryEnqueue(() => {
+                        if (!_isContextMenuOpen || CanRestoreFocus?.Invoke() == false) return;
                         GameMenu.FocusFirstItem();
                     });
                     return;
@@ -239,11 +247,14 @@ namespace ControllerPlayground.Views {
                 current = VisualTreeHelper.GetParent(current);
             }
         }
-        private void CloseContextMenu() {
+        internal void CloseContextMenu() {
+            if (!_isContextMenuOpen) return;
             _isContextMenuOpen = false;
             ContextMenuLayer.Visibility = Visibility.Collapsed;
+            ContextMenuStateChanged?.Invoke(false);
 
             DispatcherQueue.TryEnqueue(() => {
+                if (CanRestoreFocus?.Invoke() == false) return;
                 _contextMenuTile?.FocusTile();
             });
         }
@@ -360,6 +371,7 @@ namespace ControllerPlayground.Views {
                     return;
                 tile.StartBringIntoView();
                 DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => {
+                    if (CanRestoreFocus?.Invoke() == false) return;
                     tile.FocusTile();
                 });
             });

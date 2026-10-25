@@ -24,6 +24,14 @@ namespace ControllerPlayground.Overlays {
         internal event Action<GameContextAction>? ActionRequested;
         public ControllerFamily ControllerFamily { get => PromptBar.Family; set => PromptBar.Family = value; }
 
+        private void ContextButton_Click(object sender, RoutedEventArgs e) {
+            ControllerPlayground.Services.OwnershipTrace.Command($"COMMAND GameMenu.Click target={(sender as FrameworkElement)?.Name}");
+            if (ReferenceEquals(sender, PlayButton)) ActionRequested?.Invoke(GameContextAction.Play);
+            else if (ReferenceEquals(sender, DetailsButton)) ActionRequested?.Invoke(GameContextAction.GameDetails);
+            else if (ReferenceEquals(sender, ManageButton)) ActionRequested?.Invoke(GameContextAction.Manage);
+            else if (ReferenceEquals(sender, PropertiesButton)) ActionRequested?.Invoke(GameContextAction.Properties);
+        }
+
         public static readonly DependencyProperty GameTitleProperty = DependencyProperty.Register(
             nameof(GameTitle),
             typeof(string),

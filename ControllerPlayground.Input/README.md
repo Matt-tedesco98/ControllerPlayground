@@ -1,5 +1,10 @@
 # Managed per-device input — Increment 2
 
+For the current shell ownership integration and Increment 3 verification steps,
+see [OWNERSHIP.md](OWNERSHIP.md). The description below records Increment 2;
+MainWindow now uses the attributed batch and root navigation accepts either
+controller. KeyboardHost still uses the scalar compatibility adapter.
+
 Increment 1 is checkpointed in commit `22bf245`. Increment 2 adds managed device
 identity, per-device normalization, and attributed actions. Shell modal ownership,
 KeyboardHost IPC, and native foreground/background policies remain unchanged.
@@ -167,5 +172,6 @@ smoke checks passed and marshalled the live DualSense ID/root ID/generation/fami
 the legacy native smoke test passed. The host probe saw one controller (DualSense).
 Subsequent supplied Xbox + DualSense monitor logs confirmed separate identities,
 independent repeats, reconnection generations, stale-event prevention, and zero
-event drops. An explicit held-input reconnect test is still required to verify
-neutral gating on hardware; reconnect logs alone do not establish it.
+event drops. The user subsequently confirmed the explicit held-input reconnect
+neutral-gating hardware check passed on October 25, 2026. This is user-reported
+hardware verification, separate from the earlier reconnect logs and automated tests.

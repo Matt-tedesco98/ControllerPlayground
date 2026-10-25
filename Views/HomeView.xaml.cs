@@ -23,6 +23,10 @@ namespace ControllerPlayground.Views {
         }
 
         internal event Action<AppScreen>? NavigateRequested;
+        internal event Action<bool>? ContextMenuStateChanged;
+        internal Func<bool>? CanRestoreFocus { get; set; }
+        internal UIElement ContextFocusRoot => GameMenu;
+        internal void FocusContextMenu() => GameMenu.FocusFirstItem();
 
         private readonly Dictionary<GameTile, GameItem> _gamesByTile = new();
         internal SteamLaunchService LaunchService {get; set;} = new();
@@ -127,6 +131,7 @@ namespace ControllerPlayground.Views {
         internal void RestoreFocus() {
             // Restore focus to the last focused GameTile
             DispatcherQueue.TryEnqueue(() => {
+                if (CanRestoreFocus?.Invoke() == false) return;
                 if (_lastFocusedTitle != null) {
                     _lastFocusedTitle.FocusTile();
                     return;
@@ -154,17 +159,21 @@ namespace ControllerPlayground.Views {
             if (_lastFocusedTitle == null)
                 return;
             _isContextMenuOpen = true;
+            ContextMenuStateChanged?.Invoke(true);
             GameMenu.GameTitle = _lastFocusedTitle.Title;
             ContextMenuLayer.Visibility = Visibility.Visible;
 
             DispatcherQueue.TryEnqueue(() => {
+                if (!_isContextMenuOpen || CanRestoreFocus?.Invoke() == false) return;
                 GameMenu.FocusFirstItem();
             });
         }
 
-        private void CloseGameContextMenu() {
+        internal void CloseGameContextMenu() {
+            if (!_isContextMenuOpen) return;
             _isContextMenuOpen = false;
             ContextMenuLayer.Visibility = Visibility.Collapsed;
+            ContextMenuStateChanged?.Invoke(false);
             RestoreFocus();
         }
 
@@ -172,6 +181,7 @@ namespace ControllerPlayground.Views {
             switch (action) {
                 case GameContextAction.Play: {
                         if (_lastFocusedTitle != null && _gamesByTile.TryGetValue(_lastFocusedTitle, out GameItem? playGame) && playGame.SteamAppId.HasValue) {
+                            CloseGameContextMenu();
                             _ = LaunchService.LaunchGameAsync(playGame.SteamAppId.Value);
                             break;
                         }
@@ -225,6 +235,7 @@ namespace ControllerPlayground.Views {
             }
 
             DispatcherQueue.TryEnqueue(() => {
+                if (CanRestoreFocus?.Invoke() == false) return;
                 if (GameTitlePanel.Children.Count > 0 && GameTitlePanel.Children[0] is GameTile firstTile) {
                     _lastFocusedTitle = firstTile;
                     firstTile.FocusTile();

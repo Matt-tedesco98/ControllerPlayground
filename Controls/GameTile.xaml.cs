@@ -76,12 +76,14 @@ namespace ControllerPlayground.Controls {
         public event EventHandler? Activated;
 
         public void Activate() {
+            Services.OwnershipTrace.Command("COMMAND GameTile.Activate");
             Activated?.Invoke(this, EventArgs.Empty);
         }
         public GameTile() {
             InitializeComponent();
 
             TileButton.Click += (_, _) => {
+                Services.OwnershipTrace.Command("COMMAND GameTile.Click");
                 Activated?.Invoke(this, EventArgs.Empty);
             };
 

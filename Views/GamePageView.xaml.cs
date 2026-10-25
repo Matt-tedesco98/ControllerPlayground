@@ -46,6 +46,10 @@ namespace ControllerPlayground.Views {
         internal bool IsSupportPageOpen => _isSupportPageOpen;
         private bool _isKnownIssuesPageOpen;
         internal bool IsKnownIssuesPageOpen => _isKnownIssuesPageOpen;
+        internal event Action<ControllerScopeKind, bool>? ModalStateChanged;
+        internal Func<bool>? CanRestoreFocus { get; set; }
+        internal UIElement SupportFocusRoot => SupportContent;
+        internal UIElement KnownIssuesFocusRoot => KnownIssuesContent;
 
         //DLC state
         private IReadOnlyList<uint> _currentDlcAppIds = Array.Empty<uint>();
@@ -55,7 +59,10 @@ namespace ControllerPlayground.Views {
 
         internal void FocusInitialElement() {
             DispatcherQueue.TryEnqueue(() => {
-                if (SelectedTab == GamePageTab.Activity) {
+                if (CanRestoreFocus?.Invoke() == false) return;
+                if (_isKnownIssuesPageOpen) KnownIssuesDiscussionsButton.Focus(FocusState.Programmatic);
+                else if (_isSupportPageOpen) VerifyGameFilesButton.Focus(FocusState.Programmatic);
+                else if (SelectedTab == GamePageTab.Activity) {
                     PlayButton.Focus(FocusState.Programmatic);
                 } else {
                     GetSelectedTabButton().Focus(FocusState.Programmatic);
@@ -90,6 +97,12 @@ namespace ControllerPlayground.Views {
             CommunityContent.Visibility = SelectedTab == GamePageTab.Community ? Visibility.Visible : Visibility.Collapsed;
 
             if (SelectedTab != GamePageTab.GameInfo) {
+                if (_isKnownIssuesPageOpen) {
+                    _isKnownIssuesPageOpen = false;
+                    KnownIssuesContent.Visibility = Visibility.Collapsed;
+                    ModalStateChanged?.Invoke(ControllerScopeKind.KnownIssues, false);
+                }
+                if (_isSupportPageOpen) ModalStateChanged?.Invoke(ControllerScopeKind.Support, false);
                 _isSupportPageOpen = false;
             }
             GameInfoContent.Visibility = SelectedTab == GamePageTab.GameInfo && !_isSupportPageOpen ? Visibility.Visible : Visibility.Collapsed;
@@ -384,12 +397,12 @@ namespace ControllerPlayground.Views {
         }
 
         private async void GamePageView_Loaded(object sender, RoutedEventArgs e) {
-            if (SelectedTab == GamePageTab.Activity) {
+            if (CanRestoreFocus?.Invoke() != false && SelectedTab == GamePageTab.Activity) {
                 PlayButton.Focus(FocusState.Keyboard);
                 DispatcherQueue.TryEnqueue(() => {
                     PageScrollViewer.ChangeView(null, 0, null, true);
                 });
-            } else {
+            } else if (CanRestoreFocus?.Invoke() != false) {
                 GetSelectedTabButton().Focus(FocusState.Keyboard);
             }
             _ = LoadSteamServiceAsync();
@@ -647,6 +660,7 @@ namespace ControllerPlayground.Views {
         }
 
         private async void PlayButton_Click(object sender, RoutedEventArgs e) {
+            ControllerPlayground.Services.OwnershipTrace.Command("COMMAND GamePage.PlayButton_Click");
             await LaunchCurrentGameAsync();
         }
 
@@ -681,12 +695,15 @@ namespace ControllerPlayground.Views {
         }
 
         private void OpenNativeSupportPage() {
+            if (_isSupportPageOpen) return;
             _isSupportPageOpen = true;
+            ModalStateChanged?.Invoke(ControllerScopeKind.Support, true);
 
             GameInfoContent.Visibility = Visibility.Collapsed;
             SupportContent.Visibility = Visibility.Visible;
 
             DispatcherQueue.TryEnqueue(() => {
+                if (CanRestoreFocus?.Invoke() == false) return;
                 VerifyGameFilesButton.Focus(FocusState.Programmatic);
             });
 
@@ -695,13 +712,16 @@ namespace ControllerPlayground.Views {
         internal void CloseNativeSupportPage() {
             if (!_isSupportPageOpen)
                 return;
+            if (_isKnownIssuesPageOpen) ModalStateChanged?.Invoke(ControllerScopeKind.KnownIssues, false);
             _isKnownIssuesPageOpen = false;
             _isSupportPageOpen = false;
             KnownIssuesContent.Visibility = Visibility.Collapsed;
             SupportContent.Visibility = Visibility.Collapsed;
             GameInfoContent.Visibility = Visibility.Visible;
+            ModalStateChanged?.Invoke(ControllerScopeKind.Support, false);
 
             DispatcherQueue.TryEnqueue(() => {
+                if (CanRestoreFocus?.Invoke() == false) return;
                 SupportButton.Focus(FocusState.Programmatic);
             });
         }
@@ -938,10 +958,13 @@ namespace ControllerPlayground.Views {
             OpenControllerTroubleshooting();
         }
         private void OpenKnownIssuesPage() {
+            if (_isKnownIssuesPageOpen) return;
             _isKnownIssuesPageOpen = true;
+            ModalStateChanged?.Invoke(ControllerScopeKind.KnownIssues, true);
             SupportContent.Visibility = Visibility.Collapsed;
             KnownIssuesContent.Visibility = Visibility.Visible;
             DispatcherQueue.TryEnqueue(() => {
+                if (CanRestoreFocus?.Invoke() == false) return;
                 KnownIssuesDiscussionsButton.Focus(FocusState.Programmatic);
             });
         }
@@ -949,9 +972,11 @@ namespace ControllerPlayground.Views {
             if (!_isKnownIssuesPageOpen)
                 return;
             _isKnownIssuesPageOpen = false;
+            ModalStateChanged?.Invoke(ControllerScopeKind.KnownIssues, false);
             KnownIssuesContent.Visibility = Visibility.Collapsed;
             SupportContent.Visibility = Visibility.Visible;
             DispatcherQueue.TryEnqueue(() => {
+                if (CanRestoreFocus?.Invoke() == false) return;
                 KnownIssuesButton.Focus(FocusState.Programmatic);
             });
         }

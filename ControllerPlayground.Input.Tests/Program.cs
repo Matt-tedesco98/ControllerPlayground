@@ -245,7 +245,9 @@ internal static class Program {
             r.Source.Next = new(new[] { Sample(1, 2) }, Array.Empty<ControllerCaptureEventV2>());
             Check(r.Service.PollAction() == ControllerAction.none, "legacy Guide cannot be replayed next poll");
         });
-        Console.WriteLine($"PASS: {_passed} managed test groups; no hardware required.");
+        int ownership = OwnershipTests.Run();
+        int navigation = NavigationRegressionTests.Run();
+        Console.WriteLine($"PASS: {_passed} managed input groups + {ownership} ownership groups + {navigation} navigation regression groups; no hardware required.");
     }
 
     private static void NativeSmoke() {
@@ -275,6 +277,8 @@ internal static class Program {
     private static int Main(string[] args) {
         try {
             if (args.Contains("--native-smoke")) NativeSmoke();
+            else if (args.Contains("--ownership-monitor")) ControllerMonitor.Run(ownership: true,
+                seconds: args.Length > 1 && int.TryParse(args[1], out int duration) ? duration : 120);
             else if (args.Contains("--monitor")) ControllerMonitor.Run();
             else ManagedTests();
             return 0;

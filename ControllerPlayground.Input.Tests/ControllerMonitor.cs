@@ -5,9 +5,11 @@ using ControllerPlayground.Input;
 internal static class ControllerMonitor {
     private delegate nint WindowProc(nint window, uint message, nuint wParam, nint lParam);
     private static bool _closing;
+    private static Func<bool>? _escape;
     private static readonly WindowProc Procedure = HandleMessage;
     private static nint HandleMessage(nint window, uint message, nuint wParam, nint lParam) {
         if (message == 0x0010) { _closing = true; return 0; } // WM_CLOSE: defer destruction until shutdown.
+        if (message == 0x0100 && wParam == 27 && _escape?.Invoke() == true) return 0;
         return DefWindowProcW(window, message, wParam, lParam);
     }
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -38,9 +40,14 @@ internal static class ControllerMonitor {
     [DllImport("user32.dll")] private static extern nint DispatchMessageW(ref Message message);
     [DllImport("user32.dll")] private static extern bool DestroyWindow(nint window);
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(nint window);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern bool SetWindowTextW(nint window, string title);
 
-    public static void Run() {
+    public static void Run(bool ownership = false, int seconds = 120) {
+        if (seconds is < 1 or > 3600) throw new ArgumentOutOfRangeException(nameof(seconds));
         _closing = false;
+        using StreamWriter? log = ownership ? new(Path.Combine(Environment.CurrentDirectory,
+            $"controller-ownership-{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}-{Environment.ProcessId}.log")) { AutoFlush = true } : null;
+        void Write(string value) { Console.WriteLine(value); log?.WriteLine(value); }
         var cls = new WindowClass { Name = "ControllerPlaygroundManagedInputDiagnostic", Instance = GetModuleHandleW(null), Procedure = Marshal.GetFunctionPointerForDelegate(Procedure) };
         if (RegisterClassW(ref cls) == 0) throw new InvalidOperationException("Cannot register diagnostic window.");
         nint window = CreateWindowExW(0, cls.Name, "Managed input: focus here; use both controllers; close to stop", 0x10CF0000, 100, 100, 900, 180, 0, 0, cls.Instance, 0);
@@ -51,17 +58,20 @@ internal static class ControllerMonitor {
             SetForegroundWindow(window);
             var source = new NativeControllerInputSource();
             var service = new ControllerService(source);
-            service.DeviceConnectionChanged += e => Console.WriteLine($"DEVICE id={e.Device.Id} gen={e.Device.ConnectionGeneration} connected={e.Connected} family={e.Device.Family}");
-            service.ActionReceived += e => Console.WriteLine($"ACTION seq={e.Sequence} id={e.Device.Id} gen={e.Device.ConnectionGeneration} family={e.Device.Family} action={e.Action} repeat={e.IsRepeat} nativeTime={e.NativeTimestampMicroseconds} observedMs={e.ObservedAtMilliseconds}");
-            long end = Environment.TickCount64 + 120_000;
-            Console.WriteLine($"session={service.CollectorSessionId}; capture only, no modal ownership or IPC; close window to stop.");
+            service.DeviceConnectionChanged += e => Write($"DEVICE id={e.Device.Id} gen={e.Device.ConnectionGeneration} connected={e.Connected} family={e.Device.Family}");
+            if (!ownership) service.ActionReceived += e => Write($"ACTION seq={e.Sequence} id={e.Device.Id} gen={e.Device.ConnectionGeneration} family={e.Device.Family} action={e.Action} repeat={e.IsRepeat} nativeTime={e.NativeTimestampMicroseconds} observedMs={e.ObservedAtMilliseconds}");
+            var owned = ownership ? new OwnershipDiagnosticSession(service, Write, title => SetWindowTextW(window, title)) : null;
+            _escape = owned == null ? null : owned.CloseTop;
+            long end = Environment.TickCount64 + seconds * 1000L;
+            Write($"session={service.CollectorSessionId}; mode={(ownership ? "router ownership diagnostic (not WinUI focus)" : "capture only")}; close window to stop.");
             while (!_closing && Environment.TickCount64 < end) {
                 while (PeekMessageW(out var message, 0, 0, 0, 1)) { TranslateMessage(ref message); DispatchMessageW(ref message); }
-                service.PollActions();
+                if (owned != null) owned.Pump(); else service.PollActions();
                 Thread.Sleep(16);
             }
-            Console.WriteLine($"Finished. devices={service.Devices.Count} drops={source.Diagnostics.DroppedEvents} historyRecoveries={source.Diagnostics.HistoryResets}");
+            Write($"Finished. devices={service.Devices.Count} drops={source.Diagnostics.DroppedEvents} historyRecoveries={source.Diagnostics.HistoryResets}");
         } finally {
+            _escape = null;
             ControllerInputNative.ControllerInput_Shutdown();
             DestroyWindow(window);
             GC.KeepAlive(Procedure);

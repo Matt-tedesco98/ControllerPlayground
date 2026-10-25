@@ -24,6 +24,7 @@ namespace ControllerPlayground;
 public sealed partial class MainWindow : Window {
     public MainWindow() {
         InitializeComponent();
+        _inputRouter = InitializeInputOwnership();
 
         _ = InitializeDatabaseAsync();
 
@@ -59,7 +60,7 @@ public sealed partial class MainWindow : Window {
 
         _controllerService.ConnectionChanged += ControllerService_ConnectionChanged;
 
-        _controllerService.ControllerFamilyChanged += ControllerService_ControllerFamilyChanged;
+        // Visible prompts follow the accepted controller / current scope owner.
 
         nint windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
 
@@ -72,20 +73,16 @@ public sealed partial class MainWindow : Window {
 
         _controllerTimer.Interval = TimeSpan.FromMilliseconds(16);
         _controllerTimer.Tick += ControllerTimer_Tick;
-        _controllerTimer.Start();
+        if (controllerInit) _controllerTimer.Start();
+        else {
+            _controllerInputFaulted = true;
+            _ownershipTrace.Write("INPUT_FAULT initialization failed; mouse/keyboard recovery remains available.");
+        }
 
         Activated += (_, args) => {
-            if (args.WindowActivationState == WindowActivationState.Deactivated)
-                return;
-
-            PlayArea.Focus(FocusState.Programmatic);
-
-            DispatcherQueue.TryEnqueue(() => {
-                RestoreCurrentScreenFocus();
-            });
-
+            _shellForeground = args.WindowActivationState != WindowActivationState.Deactivated;
+            if (_shellForeground) QueueActiveScopeFocus();
         };
-
         _steamChatService = new SteamChatService(_steamSessionService);
 
         _steamAppInfoService = new SteamAppInfoService(_steamSessionService);
@@ -144,111 +141,7 @@ public sealed partial class MainWindow : Window {
     private readonly ControllerPlaygroundDatabase _database = new();
     private readonly SteamArtworkCacheService _artworkCache = new();
 
-    private void ControllerTimer_Tick(object? sender, object e) {
-        ControllerAction action = _controllerService.PollAction();
-        if (action == ControllerAction.none) {
-            return;
-        }
-        // guide button overlay
-        if (action == ControllerAction.Guide) {
-            Debug.WriteLine("Guide requested");
-
-            if (!_isGuideOpen && _gameSessionService.State == GameSessionState.Running) {
-                if (AppWindow.Presenter is OverlappedPresenter presenter) {
-                    presenter.Restore();
-                }
-                Activate();
-
-                IntPtr windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
-
-                _gameWindowService.TryFocusWindow(windowHandle);
-            }
-            ToggleGuide();
-            return;
-        }
-        if (_isGuideOpen) {
-            if (action == ControllerAction.Back || action == ControllerAction.Guide) {
-                ToggleGuide();
-                return;
-            }
-
-            GuideMenu.HandleControllerAction(action);
-            return;
-        }
-        // friends overlay
-        if (action == ControllerAction.View) {
-            ToggleFriendsOverlay();
-            return;
-        }
-        if (_isFriendsOpen) {
-            if (action == ControllerAction.Back) {
-                if (FriendsOverlay.IsChatOpen) {
-                    FriendsOverlay.CloseChatPane();
-                    FriendsOverlay.RestoreFriendFocus();
-
-                } else {
-                    CloseFriendsOverlay();
-                }
-                return;
-            }
-
-            if (action == ControllerAction.View) {
-                ToggleFriendsOverlay();
-                return;
-            }
-            FriendsOverlay.HandleControllerAction(action);
-            return;
-        }
-
-        // Focus Recovery
-        object? focusedElement = FocusManager.GetFocusedElement(PlayArea.XamlRoot);
-
-        if (focusedElement == null || focusedElement == PlayArea) { 
-            Debug.WriteLine($"Controller focus lost on {_currentScreen}; restoring focus");
-
-            RestoreCurrentScreenFocus();
-            return;
-        }
-
-        // handle back
-        if (action == ControllerAction.Back) {
-            if (_currentScreen == AppScreen.Home && _homeView.IsContextMenuOpen) {
-                _homeView.HandleControllerAction(action);
-                return;
-            }
-            if (_currentScreen == AppScreen.Library && _libraryView.IsContextMenuOpen) {
-                _libraryView.HandleControllerAction(action);
-                return;
-            }
-            if (_currentScreen == AppScreen.GamePage && _GamePageView.IsKnownIssuesPageOpen) {
-                _GamePageView.CloseKnownIssuesPage();
-                return;
-            }
-            if (_currentScreen == AppScreen.GamePage && _GamePageView.IsSupportPageOpen) {
-                _GamePageView.CloseNativeSupportPage();
-                return;
-            }
-            GoBack();
-            return;
-        }
-
-
-        switch (_currentScreen) {
-            case AppScreen.Home:
-                _homeView.HandleControllerAction(action);
-                break;
-            case AppScreen.Settings:
-                _settingsView.HandleControllerAction(action);
-                break;
-            case AppScreen.GamePage:
-                _GamePageView.HandleControllerAction(action);
-                break;
-            case AppScreen.Library:
-                _libraryView.HandleControllerAction(action);
-                break;
-        }
-    }
-
+    private void ControllerTimer_Tick(object? sender, object e) => ProcessControllerBatch();
 
     private void ControllerService_ConnectionChanged(bool connected) {
         System.Diagnostics.Debug.WriteLine(connected ? "Controller connected" : "Controller disconnected");
@@ -274,6 +167,8 @@ public sealed partial class MainWindow : Window {
     }
 
     private void NavigateTo(AppScreen screen, bool addToHistory) {
+        OwnershipTrace.Command($"COMMAND NavigateTo from={_currentScreen} to={screen} addHistory={addToHistory}");
+        ResetShellScopesForNavigation();
         if (addToHistory && screen != _currentScreen) {
             _navigationHistory.Push(_currentScreen);
         }
@@ -300,6 +195,7 @@ public sealed partial class MainWindow : Window {
     }
 
     private void GoBack() {
+        OwnershipTrace.Command("COMMAND GoBack");
         if (_navigationHistory.Count == 0)
             return;
         AppScreen previousScreen = _navigationHistory.Pop();
@@ -308,7 +204,7 @@ public sealed partial class MainWindow : Window {
 
     private bool _isGuideOpen;
 
-    private void RestoreCurrentScreenFocus() {
+    private void RestoreScreenFocus() {
         switch (_currentScreen) {
             case AppScreen.Home:
                 _homeView.RestoreFocus();
@@ -324,24 +220,6 @@ public sealed partial class MainWindow : Window {
                 break;
         }
     }
-    private void ToggleGuide() {
-        _isGuideOpen = !_isGuideOpen;
-
-
-        if (_isGuideOpen) {
-
-            OverlayLayer.Visibility = _isGuideOpen ? Visibility.Visible : Visibility.Collapsed;
-
-            DispatcherQueue.TryEnqueue(() => {
-                GuideMenu.FocusFirstItem();
-            });
-        } else {
-            OverlayLayer.Visibility = Visibility.Collapsed;
-            RestoreCurrentScreenFocus();
-        }
-        ;
-    }
-
     private void HomeView_GamePageRequested(GameItem game, GamePageTab tab) {
         _GamePageView.Game = game;
         _GamePageView.SelectedTab = tab;
@@ -368,24 +246,6 @@ public sealed partial class MainWindow : Window {
         //#endif
     }
 
-    private void ToggleFriendsOverlay() {
-        _isFriendsOpen = !_isFriendsOpen;
-
-        if (_isFriendsOpen) {
-            FriendsOverlayLayer.Visibility = Visibility.Visible;
-            FriendsOverlay.FocusFirstItem();
-        } else {
-            FriendsOverlayLayer.Visibility = Visibility.Collapsed;
-            RestoreCurrentScreenFocus();
-        }
-    }
-
-    private void CloseFriendsOverlay() {
-        _isFriendsOpen = false;
-        FriendsOverlayLayer.Visibility = Visibility.Collapsed;
-        RestoreCurrentScreenFocus();
-    }
-
     private async void SteamSessionService_Connected() {
         try {
             bool startedSavedLogin = await _steamSessionService.TrySavedAuthenticationAsync();
@@ -399,7 +259,7 @@ public sealed partial class MainWindow : Window {
 
     private void SteamSessionService_QrChallengeChanged(string challangeUrl) {
         DispatcherQueue.TryEnqueue(async () => {
-            SteamQrOverlayLayer.Visibility = Visibility.Visible;
+            ShowAuthenticationScope();
             await SteamQrLoginOverlay.SetChallangeUrlAsync(challangeUrl);
         });
         Debug.WriteLine($"Steam QR Challenge changed: {challangeUrl}");
@@ -407,7 +267,7 @@ public sealed partial class MainWindow : Window {
 
     private void SteamSessionService_Authenticated() {
         DispatcherQueue.TryEnqueue(() => {
-            SteamQrOverlayLayer.Visibility = Visibility.Collapsed;
+            CloseShellScope(ControllerScopeKind.Authentication, descendants: false);
         });
         _ = LoadRecentSteamGamesAsync();
     }
@@ -480,13 +340,13 @@ public sealed partial class MainWindow : Window {
         });
     }
     private void GuideMenu_NavigationRequested(AppScreen screen) {
-        _isGuideOpen = false;
-        OverlayLayer.Visibility = Visibility.Collapsed;
         NavigateTo(screen);
+        QueueActiveScopeFocus();
     }
     private void SteamGameSessionMonitor_GameStarted(uint appId) {
         Debug.WriteLine($"Steam game started: {appId}");
         DispatcherQueue.TryEnqueue(() => {
+            ResetShellScopesForNavigation();
             if (AppWindow.Presenter is OverlappedPresenter presenter) {
                 presenter.Minimize();
             }
@@ -549,12 +409,16 @@ public sealed partial class MainWindow : Window {
         if (_gameSessionService.State != GameSessionState.Running || !_gameSessionService.CurrentAppId.HasValue)
             return;
 
+        var guideScope = _inputRouter.Find(ControllerScopeKind.Guide);
+        if (guideScope == null) return;
         uint addId = _gameSessionService.CurrentAppId.Value;
 
         string? gamePath = await _steamLocalService.GetInstalledGamePathAsync(addId);
 
-        _isGuideOpen = false;
-        OverlayLayer.Visibility = Visibility.Collapsed;
+        if (_inputRouter.Current?.Id != guideScope.Id ||
+            (guideScope.Owner != null && !_inputRouter.CurrentOwnerAvailable)) return;
+
+        CloseShellScope(ControllerScopeKind.Guide, restore: false);
 
         if (AppWindow.Presenter is OverlappedPresenter presenter) {
             presenter.Minimize();
@@ -593,26 +457,7 @@ public sealed partial class MainWindow : Window {
         }
     }
 
-    private async void FriendsOverlay_KeyboardRequested(
-    string text) {
-
-        string? commitedText = await _keyboardHostClient.RequestTextAsync(text, KeyboardWindowHandle => { 
-            _gameWindowService.TryFocusWindow(KeyboardWindowHandle);
-        });
-
-        nint windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
-
-        _gameWindowService.TryFocusWindow(windowHandle);
-
-        _controllerService.ResyncInputState();
-
-        if (commitedText == null) {
-             FriendsOverlay.RestoreChatInputFocus();
-            return;
-        }
-            
-        FriendsOverlay.SetChatMessageText(commitedText);
-
-        FriendsOverlay.RestoreChatInputFocus();
+    private async void FriendsOverlay_KeyboardRequested(string text) {
+        await RequestOwnedKeyboardAsync(text);
     }
 }

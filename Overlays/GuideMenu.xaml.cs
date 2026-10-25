@@ -1,4 +1,5 @@
 using ControllerPlayground.Input;
+using ControllerPlayground.Services;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -26,6 +27,13 @@ namespace ControllerPlayground.Overlays {
         private Button? _lastFocusedButton;
         internal event Action? ResumeGameRequested;
         public ControllerFamily ControllerFamily { get => PromptBar.Family; set => PromptBar.Family = value; }
+
+        private void GuideButton_Click(object sender, RoutedEventArgs e) {
+            OwnershipTrace.Command($"COMMAND Guide.Click target={(sender as FrameworkElement)?.Name}");
+            if (ReferenceEquals(sender, ResumeGameButton)) ResumeGameRequested?.Invoke();
+            else if (ReferenceEquals(sender, LibraryButton)) NavigateRequested?.Invoke(AppScreen.Library);
+            else if (ReferenceEquals(sender, SettingsButton)) NavigateRequested?.Invoke(AppScreen.Settings);
+        }
 
         public void FocusFirstItem() {
             if (CurrentGamePanel.Visibility == Visibility.Visible && ResumeGameButton.IsEnabled) {
@@ -90,6 +98,7 @@ namespace ControllerPlayground.Overlays {
                     break;
 
                 case ControllerAction.Accept: {
+                        OwnershipTrace.Command("COMMAND Guide.Accept");
                         var focused = FocusManager.GetFocusedElement(GuideRoot.XamlRoot) as Button;
                         if (focused == ResumeGameButton) {
                             ResumeGameRequested?.Invoke();

@@ -25,6 +25,9 @@ using Windows.Foundation.Collections;
 namespace ControllerPlayground.Overlays {
     public sealed partial class FriendsOverlay : UserControl {
         internal event Action<string>? KeyboardRequested;
+        internal event Action<ControllerScopeKind, bool>? ModalStateChanged;
+        internal Func<bool>? CanRestoreFocus { get; set; }
+        internal long ChatContextVersion { get; private set; }
         public ControllerFamily ControllerFamily { get => PromptBar.Family; set => PromptBar.Family = value; }
         public FriendsOverlay() {
             InitializeComponent();
@@ -35,8 +38,11 @@ namespace ControllerPlayground.Overlays {
         public ObservableCollection<SteamFriend> Friends { get; } = new();
 
         internal void FocusFirstItem() {
+            if (CanRestoreFocus?.Invoke() == false) return;
+            if (FocusManager.FindFirstFocusableElement(FriendsList) is Control current && current.Focus(FocusState.Keyboard)) return;
             void OnLayoutUpdated(Object? sender, Object e) {
                 FriendsList.LayoutUpdated -= OnLayoutUpdated;
+                if (CanRestoreFocus?.Invoke() == false) return;
 
                 if (FocusManager.FindFirstFocusableElement(FriendsList) is Control control) {
                     control.Focus(FocusState.Keyboard);
@@ -81,6 +87,8 @@ namespace ControllerPlayground.Overlays {
 
         private void FriendCard_Activated(object? sender, EventArgs e) {
             if (sender is SteamFriendCard card && card.Item is SteamFriend friend) {
+                bool wasOpen = IsChatOpen;
+                ++ChatContextVersion;
 
                 _lastFocusedCard = card;
 
@@ -101,6 +109,7 @@ namespace ControllerPlayground.Overlays {
                 ChatPane.Visibility = Visibility.Visible;
 
                 OverlayRoot.Width = 840;
+                if (!wasOpen) ModalStateChanged?.Invoke(ControllerScopeKind.Chat, true);
 
                 FriendSelected?.Invoke(friend);
             }
@@ -118,14 +127,18 @@ namespace ControllerPlayground.Overlays {
         internal bool IsChatOpen => ChatPane.Visibility == Visibility.Visible;
 
         internal void CloseChatPane() {
+            if (!IsChatOpen) return;
+            ++ChatContextVersion;
             ChatPane.Visibility = Visibility.Collapsed;
             ChatPane.Friend = null;
             OverlayRoot.Width = 420;
+            ModalStateChanged?.Invoke(ControllerScopeKind.Chat, false);
         }
 
         private SteamFriendCard? _lastFocusedCard;
 
         internal void RestoreFriendFocus() {
+            if (CanRestoreFocus?.Invoke() == false) return;
             _lastFocusedCard?.Focus(FocusState.Keyboard);
         }
 
@@ -222,6 +235,7 @@ namespace ControllerPlayground.Overlays {
         }
 
         internal void RestoreChatInputFocus() {
+            if (CanRestoreFocus?.Invoke() == false) return;
             ChatPane.RestoreMessageInputFocus();
         }
     }

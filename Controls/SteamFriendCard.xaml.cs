@@ -23,6 +23,7 @@ namespace ControllerPlayground.Controls {
     public sealed partial class SteamFriendCard : UserControl {
         public SteamFriendCard() {
             InitializeComponent();
+            FriendButton.Click += (_, _) => Activate();
         }
 
         public SteamFriend? Item {
