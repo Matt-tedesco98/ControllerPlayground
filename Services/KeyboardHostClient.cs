@@ -17,13 +17,13 @@ namespace ControllerPlayground.Services {
         private const string PipeName = "ControllerPlayground.KeyboardHost";
         private static readonly Guid ShellInstance = Guid.NewGuid();
 
-        // Lifecycle migration only. Required controller ownership must never use
-        // this compatibility executor, nor silently downgrade to the legacy pipe.
+        // Full ownership requires the mediated bridge and all protocol capabilities.
+        // Lifecycle-only diagnostic clients never silently gain execution rights.
         public async Task<KeyboardLifecycleResult> RequestV2TextAsync(string initialText, KeyboardDeviceRef? owner,
             Func<Func<bool>, CancellationToken, Task<bool>> activateValidatedWindow,
             bool requireControllerOwnership = false, Action<string>? trace = null, CancellationToken cancellationToken = default,
-            Action<uint>? peerVerified = null) {
-            if (requireControllerOwnership) return new(KeyboardLifecycleStatus.Failed, Failure: "ControllerOwnershipNotAvailableUntilPhase3");
+            Action<uint>? peerVerified = null, KeyboardControllerBridge? controllers = null) {
+            if (requireControllerOwnership && controllers == null) return new(KeyboardLifecycleStatus.Failed, Failure: "ControllerBridgeRequired");
             NamedPipeClientStream? pipe = null;
             try {
                 var policy = new KeyboardPeerPolicy("2d72be25-6768-4b4e-96a4-f3705bd815ff_" + Package.Current.Id.PublisherId,
@@ -64,7 +64,7 @@ namespace ControllerPlayground.Services {
                     ready => peer.ValidateWindow(ready), async (ready, token) => {
                         trace?.Invoke($"V2 window-validated pid={ready.ProcessId} hwnd={ready.WindowHandle}");
                         return await activateValidatedWindow(() => peer.TryActivate(ready), token);
-                    }, trace: trace);
+                    }, required: controllers != null ? KeyboardProtocol.RequiredCapabilities : KeyboardProtocol.LifecycleCapabilities, trace: trace, controllers: controllers);
                 return (await session.RunAsync(cancellationToken)) with { HelperProcessId = peer.ProcessId };
             } catch (Exception error) when (error is IOException or OperationCanceledException or TimeoutException or UnauthorizedAccessException or
                 System.ComponentModel.Win32Exception or InvalidOperationException or ArgumentException or System.Runtime.InteropServices.COMException) {

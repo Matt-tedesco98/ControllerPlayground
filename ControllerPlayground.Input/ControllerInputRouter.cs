@@ -77,6 +77,16 @@ public sealed class ControllerInputRouter {
 
     public ControllerInputScope? Find(ControllerScopeKind kind) => _scopes.LastOrDefault(s => s.Kind == kind);
 
+    // Called only after the mediated keyboard transport validates a full binding.
+    // It cannot transfer an unrelated/newer interaction or revive an old generation.
+    public bool TransferKeyboardOwner(Guid handoffId, ControllerDevice device) {
+        if (Current is not { Kind: ControllerScopeKind.KeyboardHandoff } scope || scope.Id != handoffId || !IsConnected(device)) return false;
+        var previous = scope.Owner;
+        foreach (var item in _scopes)
+            if (item.Owner == null || SameConnection(item.Owner, previous)) item.Owner = device;
+        Transition(); return true;
+    }
+
     // Closing a parent normally unwinds descendants. Asynchronous completion can
     // remove just its scope while preserving a newer blocking surface above it.
     public IReadOnlyList<ControllerInputScope> Remove(Guid id, bool descendants = true) {

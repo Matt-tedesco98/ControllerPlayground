@@ -26,6 +26,9 @@ internal sealed partial class KeyboardPipeServer {
     public Action<string>? Trace { get; set; }
     public Guid? ActiveSessionId => Volatile.Read(ref _lease)?.Id;
     public bool ActiveVersion2 => Volatile.Read(ref _lease)?.Version2 == true;
+    public bool ActiveMediated => Volatile.Read(ref _lease)?.Transport?.Mediated == true;
+    public KeyboardControllerBridge? ControllerBridge { get; set; }
+    public bool PublishCapture(KeyboardCaptureSnapshot snapshot) => Volatile.Read(ref _lease)?.Transport?.PublishCapture(snapshot) == true;
     public bool IsCurrent(Guid id) => Volatile.Read(ref _lease)?.Id == id;
     private KeyboardPeerPolicy ShellPolicy => new("1f976d86-31bc-42a4-a14e-40fb2eb4fc98_" + Package.Current.Id.PublisherId, "ControllerPlayground.exe");
     private Lease Acquire(Guid id, bool v2, CancellationToken token) {
@@ -59,7 +62,7 @@ internal sealed partial class KeyboardPipeServer {
                         lease.Cancel();
                         if (CloseRequested is { } close) await close(id).WaitAsync(token);
                     }
-                }, trace: Trace);
+                }, trace: Trace, controllers: ControllerBridge);
                 await transport.RunAsync(_cancellation.Token);
             } catch (Exception error) when (error is IOException or UnauthorizedAccessException or OperationCanceledException or
                 System.ComponentModel.Win32Exception or InvalidOperationException or TimeoutException) {

@@ -9,10 +9,11 @@ public sealed record KeyboardTransportTimeouts(TimeSpan Startup, TimeSpan Heartb
     public static KeyboardTransportTimeouts Default { get; } = new(TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(3));
 }
 
-// Phase 2: lifecycle only. It never forwards or executes controller actions.
+// Lifecycle-only clients remain supported. A complete controller bridge and
+// explicit full-capability negotiation enable the mediated execution path.
 // A bounded actor queue owns all model changes; IO and UI completion producers
 // cannot race sequence/epoch assignment or terminal-result selection.
-public sealed class KeyboardLifecycleTransport {
+public sealed partial class KeyboardLifecycleTransport {
     private sealed record Event(KeyboardEnvelope? Frame = null, string? Kind = null, object? Value = null);
     private readonly KeyboardPeer _role;
     private readonly KeyboardDuplexConnection _pipe;
@@ -41,21 +42,27 @@ public sealed class KeyboardLifecycleTransport {
         KeyboardOpen? request, Func<Guid, KeyboardOpen, CancellationToken, Task<KeyboardReady>>? open,
         Func<Guid, CancellationToken, Task>? close, Func<KeyboardReady, CancellationToken, Task<bool>>? ready,
         Func<KeyboardReady, bool>? validateWindow, KeyboardCapabilities required,
-        KeyboardTransportTimeouts? timeouts, Action<string>? trace) {
+        KeyboardTransportTimeouts? timeouts, Action<string>? trace, KeyboardControllerBridge? controllers = null) {
         _role = role; _pipe = pipe; _instance = instance; _request = request; _open = open; _close = close;
         _ready = ready; _validateWindow = validateWindow; _required = required;
+        _controllers = controllers;
+        if (controllers != null && (role == KeyboardPeer.Shell
+            ? controllers.ShellDevices == null || controllers.ShellOwnerChanged == null
+            : controllers.HostOwnerChanged == null || controllers.HostExecute == null))
+            throw new ArgumentException("Controller bridge callbacks are incomplete.");
         _timeouts = timeouts ?? KeyboardTransportTimeouts.Default; _trace = trace;
         if (instance == Guid.Empty || _timeouts.Startup <= TimeSpan.Zero || _timeouts.Heartbeat <= TimeSpan.Zero ||
             _timeouts.Idle <= _timeouts.Heartbeat || _timeouts.Close <= TimeSpan.Zero) throw new ArgumentException("Invalid lifecycle configuration.");
     }
     public static KeyboardLifecycleTransport Client(KeyboardDuplexConnection pipe, Guid shellInstance, KeyboardOpen request,
         Func<KeyboardReady, bool> validateWindow, Func<KeyboardReady, CancellationToken, Task<bool>> ready,
-        KeyboardCapabilities required = KeyboardProtocol.LifecycleCapabilities, KeyboardTransportTimeouts? timeouts = null, Action<string>? trace = null) =>
-        new(KeyboardPeer.Shell, pipe, shellInstance, request, null, null, ready, validateWindow, required, timeouts, trace);
+        KeyboardCapabilities required = KeyboardProtocol.LifecycleCapabilities, KeyboardTransportTimeouts? timeouts = null, Action<string>? trace = null,
+        KeyboardControllerBridge? controllers = null) =>
+        new(KeyboardPeer.Shell, pipe, shellInstance, request, null, null, ready, validateWindow, required, timeouts, trace, controllers);
     public static KeyboardLifecycleTransport Host(KeyboardDuplexConnection pipe, Guid hostInstance,
         Func<Guid, KeyboardOpen, CancellationToken, Task<KeyboardReady>> open, Func<Guid, CancellationToken, Task> close,
-        KeyboardTransportTimeouts? timeouts = null, Action<string>? trace = null) =>
-        new(KeyboardPeer.Host, pipe, hostInstance, null, open, close, null, null, KeyboardProtocol.LifecycleCapabilities, timeouts, trace);
+        KeyboardTransportTimeouts? timeouts = null, Action<string>? trace = null, KeyboardControllerBridge? controllers = null) =>
+        new(KeyboardPeer.Host, pipe, hostInstance, null, open, close, null, null, KeyboardProtocol.LifecycleCapabilities, timeouts, trace, controllers);
     private void Trace(string message) => _trace?.Invoke($"V2 role={_role} session={_session} {message}");
     private void Post(Event value) {
         if (!_events.Writer.TryWrite(value)) { _ui.Cancel(); _stop.Cancel(); }
@@ -80,7 +87,9 @@ public sealed class KeyboardLifecycleTransport {
         if (_identity == null || _model == null) throw new KeyboardProtocolException("Session not established.");
         var envelope = new KeyboardEnvelope(new(2, _identity.ConnectionId, _identity.ShellInstanceId, _identity.HostInstanceId,
             _session, _role, epoch ?? Math.Max(1, _model.OwnershipEpoch), ++_sequence), message);
-        if (_model.Apply(envelope).Disposition != KeyboardDisposition.Accepted) throw new KeyboardProtocolException("Invalid outgoing lifecycle transition.");
+        KeyboardSessionDecision decision;
+        lock (_modelGate) decision = _model.Apply(envelope);
+        if (decision.Disposition is not (KeyboardDisposition.Accepted or KeyboardDisposition.Suspended)) throw new KeyboardProtocolException("Invalid outgoing lifecycle transition.");
         Trace("send=" + message.GetType().Name);
         await _pipe.SendAsync(envelope, _stop.Token).ConfigureAwait(false);
     }
@@ -113,11 +122,11 @@ public sealed class KeyboardLifecycleTransport {
         if (_identity == null) {
             if (frame.Header.Sequence != 1) throw new KeyboardProtocolException("Invalid handshake sequence.");
             if (_role == KeyboardPeer.Host) {
-                if (frame.Message is not KeyboardHello hello || (hello.RequiredCapabilities & KeyboardProtocol.LifecycleCapabilities) != hello.RequiredCapabilities)
+                if (frame.Message is not KeyboardHello hello || (_controllers == null && (hello.RequiredCapabilities & KeyboardProtocol.LifecycleCapabilities) != hello.RequiredCapabilities))
                     throw new KeyboardProtocolException("Requested capabilities are unavailable in Phase 2.");
                 _hello = frame;
                 var ack = new KeyboardEnvelope(frame.Header with { HostInstanceId = _instance, Sender = KeyboardPeer.Host },
-                    new KeyboardHelloAck(2, KeyboardProtocol.LifecycleCapabilities));
+                    new KeyboardHelloAck(2, hello.RequiredCapabilities));
                 _identity = KeyboardConnectionIdentity.Negotiate(frame, ack);
                 await _pipe.SendAsync(ack, _stop.Token).ConfigureAwait(false);
             } else {
@@ -134,18 +143,21 @@ public sealed class KeyboardLifecycleTransport {
             _session = frame.Header.SessionId; _model = new(_identity, _session, _role);
         }
         if (frame.Message is not (KeyboardOpen or KeyboardReady or KeyboardCommit or KeyboardCancel or KeyboardClose or KeyboardClosed or KeyboardPing or KeyboardPong or KeyboardError))
-            throw new KeyboardProtocolException("Controller execution is not enabled in Phase 2.");
-        var decision = _model.Apply(frame);
+            if (!Mediated || frame.Message is not (KeyboardSetOwner or KeyboardOwnerReady or KeyboardDevicesChanged or KeyboardCaptureBatch or KeyboardExecute or KeyboardExecuted or KeyboardSuspend))
+                throw new KeyboardProtocolException("Controller execution was not negotiated.");
+        KeyboardSessionDecision decision;
+        lock (_modelGate) decision = _model.Apply(frame);
         Trace($"receive={frame.Message.GetType().Name} decision={decision.Disposition} reason={decision.Reason}");
         if (decision.Disposition == KeyboardDisposition.Discarded) return;
-        if (decision.Disposition != KeyboardDisposition.Accepted) throw new KeyboardProtocolException("Invalid incoming lifecycle transition.");
+        if (decision.Disposition is not (KeyboardDisposition.Accepted or KeyboardDisposition.Suspended)) throw new KeyboardProtocolException("Invalid incoming lifecycle transition.");
         _lastActivity = Stopwatch.GetTimestamp();
+        if (Mediated && await ControllerIncoming(frame, decision).ConfigureAwait(false)) return;
         switch (frame.Message) {
             case KeyboardOpen open:
                 _stageStarted = Stopwatch.GetTimestamp(); _ = OpenUi(open); break;
             case KeyboardReady ready:
                 if (!_validateWindow!(ready)) throw new UnauthorizedAccessException("Invalid helper window.");
-                _opened = true; _ = ReadyUi(ready); break;
+                _captureDevices = ready.Devices; _opened = true; _ = ReadyUi(ready); break;
             case KeyboardPing ping: await Send(new KeyboardPong(ping.Nonce)).ConfigureAwait(false); break;
             case KeyboardCommit commit:
                 _terminal ??= new(KeyboardLifecycleStatus.Committed, commit.Text);
@@ -163,7 +175,7 @@ public sealed class KeyboardLifecycleTransport {
     public async Task<KeyboardLifecycleResult> RunAsync(CancellationToken cancellationToken = default) {
         if (_role == KeyboardPeer.Shell) _session = Guid.NewGuid();
         using var registration = cancellationToken.Register(() => Post(new(Kind: "request-cancel")));
-        var pump = Pump(); var ticks = Ticks();
+        var pump = Pump(); var ticks = Ticks(); var executor = ExecutionLoop();
         try {
             if (_role == KeyboardPeer.Shell) {
                 _hello = new(new(2, Guid.NewGuid(), _instance, Guid.Empty, Guid.Empty, KeyboardPeer.Shell, 0, 1),
@@ -173,6 +185,7 @@ public sealed class KeyboardLifecycleTransport {
             while (!_finished) {
                 var value = await _events.Reader.ReadAsync(_stop.Token).ConfigureAwait(false);
                 if (value.Frame != null) { await Incoming(value.Frame).ConfigureAwait(false); continue; }
+                if (Mediated && await ControllerEvent(value).ConfigureAwait(false)) continue;
                 switch (value.Kind) {
                     case "eof": throw new IOException("Peer EOF.");
                     case "request-cancel":
@@ -183,6 +196,7 @@ public sealed class KeyboardLifecycleTransport {
                         await Send((KeyboardReady)value.Value!).ConfigureAwait(false); _opened = true; break;
                     case "ready-handled" when !_closing:
                         if (value.Value is not true) { _terminal = new(KeyboardLifecycleStatus.Failed, Failure: "FocusOrContextRejected"); await BeginClose(KeyboardCloseReason.TargetGone).ConfigureAwait(false); }
+                        else if (Mediated && _request?.ShellOwner is { } owner) await AssignController(owner).ConfigureAwait(false);
                         break;
                     case "commit" when !_closing && _opened:
                         var commit = ((Guid Session, string Text))value.Value!;
@@ -209,16 +223,17 @@ public sealed class KeyboardLifecycleTransport {
             }
         } catch (Exception error) when (error is IOException or OperationCanceledException or TimeoutException or UnauthorizedAccessException or InvalidOperationException) {
             Trace("failure=" + error.GetType().Name);
-            _model?.NotifyTransportLost();
+            lock (_modelGate) _model?.NotifyTransportLost();
             _result = cancellationToken.IsCancellationRequested ? new(KeyboardLifecycleStatus.Cancelled) :
                 new(KeyboardLifecycleStatus.Failed, Failure: error.GetType().Name);
         } finally {
-            _ui.Cancel(); _stop.Cancel();
+            _ui.Cancel(); _stop.Cancel(); _executions.Writer.TryComplete();
+            lock (_modelGate) _model?.NotifyTransportLost();
             if (_role == KeyboardPeer.Host && _session != Guid.Empty) {
                 try { using var cleanup = new CancellationTokenSource(_timeouts.Close); await _close!(_session, cleanup.Token).WaitAsync(_timeouts.Close).ConfigureAwait(false); }
                 catch (Exception error) { Trace("cleanup=" + error.GetType().Name); }
             }
-            try { await Task.WhenAll(pump, ticks).ConfigureAwait(false); } catch (OperationCanceledException) { }
+            try { await Task.WhenAll(pump, ticks, executor).ConfigureAwait(false); } catch (OperationCanceledException) { }
         }
         return _result ?? new(KeyboardLifecycleStatus.Failed, Failure: "SessionEnded");
     }

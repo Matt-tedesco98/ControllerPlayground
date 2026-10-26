@@ -119,13 +119,25 @@ ControllerPlayground is being developed toward a more complete Windows couch-gam
 - Deeper Steam and other launcher integration
 - Global controller-first overlays
 - Display and audio switching
-- Controller-native text entry
+- Broader controller-native text-entry integration
 - Windows and GPU update surfaces
 - Better suspend/resume behavior
 - Discord integration
 - TV-style system controls and settings
 
 These are roadmap goals and are not all implemented yet.
+
+### Multi-controller roadmap progress — October 25, 2026
+
+Increment 4, Phase 3 (controller-owned KeyboardHost execution) has passed final
+Xbox + DualSense acceptance, including the deployed callback-deadline safeguards.
+The keyboard inherits the initiating controller, rejects non-owner/stale input,
+preserves simultaneous RT/Shift actions, updates owner glyphs, and supports neutral
+gating, disconnect takeover and helper failure recovery. All 109 test groups pass
+in Debug and Release; all 28 protocol/session groups also pass without JSON reflection.
+Full Debug builds pass; Release compilation uses the existing command-line
+ReadyToRun workaround. See [the final acceptance record](tools/phase3/README.md)
+for exact scope, validation and remaining limitations. Phase 4 has not started.
 
 ## Why I Built It
 

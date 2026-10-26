@@ -10,6 +10,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Collections.Immutable;
+using System.IO;
 using Windows.System;
 
 namespace ControllerPlayground;
@@ -343,10 +345,11 @@ public sealed partial class MainWindow {
         long chatVersion = FriendsOverlay.ChatContextVersion;
         var handoff = OpenShellScope(ControllerScopeKind.KeyboardHandoff);
         using var cancellation = new System.Threading.CancellationTokenSource();
+        bool legacy = Environment.GetEnvironmentVariable("CONTROLLERPLAYGROUND_KEYBOARD_LEGACY") == "1";
         _keyboardRequestCancellation = cancellation;
         bool ContextValid() => !_windowClosed && FriendsOverlay.ChatContextVersion == chatVersion &&
             _inputRouter.Find(ControllerScopeKind.Chat)?.Id == parent.Id && _inputRouter.Current?.Id == handoff.Id &&
-            (handoff.Owner == null || _controllerService.Devices.Any(d => d.Id == handoff.Owner.Id && d.ConnectionGeneration == handoff.Owner.ConnectionGeneration));
+            (!legacy || handoff.Owner == null || _controllerService.Devices.Any(d => d.Id == handoff.Owner.Id && d.ConnectionGeneration == handoff.Owner.ConnectionGeneration));
         _keyboardContextValid = ContextValid;
         _keyboardRequestPending = true;
         KeyboardFailureInfo.IsOpen = false;
@@ -354,13 +357,30 @@ public sealed partial class MainWindow {
         RefreshOwnershipPresentation();
         try {
             string? text;
-            if (Environment.GetEnvironmentVariable("CONTROLLERPLAYGROUND_KEYBOARD_LEGACY") == "1") {
+            if (legacy) {
                 text = await _keyboardHostClient.RequestTextAsync(initialText, handle => {
                     if (ContextValid()) _gameWindowService.TryFocusWindow(handle);
                 }, cancellation.Token)!;
             } else {
                 var owner = handoff.Owner is { } device ? new ControllerPlayground.Input.Keyboard.KeyboardDeviceRef(_controllerService.CollectorSessionId,
                     device.Id.ToString(), device.RootId.ToString(), device.ConnectionGeneration, device.Family) : null;
+                async Task<T> OnKeyboardUi<T>(Func<T> action, System.Threading.CancellationToken token) {
+                    var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    if (!DispatcherQueue.TryEnqueue(() => {
+                        try { token.ThrowIfCancellationRequested(); completion.TrySetResult(action()); }
+                        catch (Exception error) { completion.TrySetException(error); }
+                    })) completion.TrySetException(new IOException("Shell dispatcher closed."));
+                    return await completion.Task.WaitAsync(token);
+                }
+                var bridge = new ControllerPlayground.Input.Keyboard.KeyboardControllerBridge {
+                    ShellDevices = token => OnKeyboardUi(() => _controllerService.Devices.Select(d =>
+                        ControllerPlayground.Input.Keyboard.KeyboardControllerBinding.Describe(_controllerService.CollectorSessionId, d)).ToImmutableArray(), token),
+                    ShellOwnerChanged = (binding, token) => OnKeyboardUi(() => {
+                        var device = _controllerService.Devices.SingleOrDefault(d =>
+                            ControllerPlayground.Input.Keyboard.KeyboardControllerBinding.Describe(_controllerService.CollectorSessionId, d) == binding.ShellDevice);
+                        return ContextValid() && device != null && _inputRouter.TransferKeyboardOwner(handoff.Id, device);
+                    }, token)
+                };
                 var result = await _keyboardHostClient.RequestV2TextAsync(initialText, owner, async (activate, token) => {
                     var done = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                     if (!DispatcherQueue.TryEnqueue(() => {
@@ -368,7 +388,7 @@ public sealed partial class MainWindow {
                         catch (Exception) { done.TrySetResult(false); }
                     })) done.TrySetResult(false);
                     return await done.Task.WaitAsync(token);
-                }, trace: _ownershipTrace.Write, cancellationToken: cancellation.Token);
+                }, requireControllerOwnership: true, trace: _ownershipTrace.Write, cancellationToken: cancellation.Token, controllers: bridge);
                 helperPid = result.HelperProcessId;
                 text = result.Status == ControllerPlayground.Input.Keyboard.KeyboardLifecycleStatus.Committed ? result.Text : null;
                 if (result.Status == ControllerPlayground.Input.Keyboard.KeyboardLifecycleStatus.Failed && ContextValid()) {

@@ -55,7 +55,24 @@ namespace ControllerPlayground.KeyboardHost {
             Closed += (_, _) => _phase0?.Dispose();
 
             _controllerService.ControllerFamilyChanged += family => {
-                Keyboard.SetControllerFamily(family);
+                if (!_keyboardPipeServer.ActiveVersion2) Keyboard.SetControllerFamily(family);
+            };
+
+            _keyboardPipeServer.ControllerBridge = new() {
+                HostOwnerChanged = (binding, current, token) => OnKeyboardUi(() => {
+                    if (!current()) throw new OperationCanceledException();
+                    _controllerService.ResyncInputState();
+                    Keyboard.SetControllerFamily(binding.ShellDevice.Family);
+                    return true;
+                }, token),
+                HostExecute = (input, authorize, token) => OnKeyboardUi(() => {
+                    // Refresh live connection/focus before a queued UI command. This
+                    // uses the same capture method as the timer and retains its batch.
+                    CaptureMediatedInput();
+                    return _keyboardPipeServer.ActiveMediated && IsKeyboardForeground() &&
+                        _controllerService.Devices.Any(d => KeyboardControllerBinding.Describe(_controllerService.CollectorSessionId, d) == input.Device) &&
+                        authorize(() => HandleKeyboardControllerAction(input.Action));
+                }, token)
             };
 
             _keyboardPipeServer.OpenRequested += KeyboardPipeServer_OpenRequested;
@@ -94,6 +111,12 @@ namespace ControllerPlayground.KeyboardHost {
 
             if (Content is FrameworkElement root) {
                 root.Loaded += Root_Loaded;
+                root.PreviewKeyDown += (_, args) => {
+                    if (_keyboardPipeServer.ActiveVersion2 && ShellKeyPolicy.SuppressUnattributedControllerKey((uint)args.Key, (uint)args.OriginalKey)) args.Handled = true;
+                };
+                root.PreviewKeyUp += (_, args) => {
+                    if (_keyboardPipeServer.ActiveVersion2 && ShellKeyPolicy.SuppressUnattributedControllerKey((uint)args.Key, (uint)args.OriginalKey)) args.Handled = true;
+                };
             }
 
             if (AppWindow.Presenter is OverlappedPresenter presenter) {
@@ -139,12 +162,42 @@ namespace ControllerPlayground.KeyboardHost {
         }
 
         private void ControllerTimer_Tick(object? sender, object e) {
+            if (_keyboardPipeServer.ActiveMediated) {
+                CaptureMediatedInput();
+                _phase0?.AfterPoll();
+                return; // Never also execute the scalar path for a mediated session.
+            }
             ControllerAction action =
                 _controllerService.PollAction();
             _phase0?.AfterPoll();
 
             if (action == ControllerAction.none)
                 return;
+
+            HandleKeyboardControllerAction(action);
+        }
+        private ulong _mediatedCaptureSequence;
+        private void CaptureMediatedInput() {
+            if (!_keyboardPipeServer.ActiveMediated || _keyboardPipeServer.ActiveSessionId is not { } session) return;
+            var actions = _controllerService.PollActions();
+            var devices = _controllerService.Devices.Select(d => KeyboardControllerBinding.Describe(_controllerService.CollectorSessionId, d)).ToImmutableArray();
+            var awaiting = _controllerService.AwaitingNeutralDevices.Select(d => KeyboardControllerBinding.Describe(_controllerService.CollectorSessionId, d)).ToImmutableHashSet();
+            var snapshot = new KeyboardCaptureSnapshot(session, _controllerService.CollectorSessionId, devices,
+                devices.Where(d => !awaiting.Contains(d)).ToImmutableHashSet(), IsKeyboardForeground(),
+                KeyboardControllerBinding.OrderBatch(actions, ref _mediatedCaptureSequence));
+            if (_keyboardPipeServer.PublishCapture(snapshot)) _controllerService.ResyncInputState();
+        }
+        [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
+        private bool IsKeyboardForeground() => GetForegroundWindow() == WinRT.Interop.WindowNative.GetWindowHandle(this);
+        private Task<T> OnKeyboardUi<T>(Func<T> action, CancellationToken token) {
+            var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (!DispatcherQueue.TryEnqueue(() => {
+                try { token.ThrowIfCancellationRequested(); completion.TrySetResult(action()); }
+                catch (Exception error) { completion.TrySetException(error); }
+            })) completion.TrySetException(new IOException("Keyboard dispatcher closed."));
+            return completion.Task.WaitAsync(token);
+        }
+        private void HandleKeyboardControllerAction(ControllerAction action) {
 
             if (_isMoveMode) {
                 PointInt32 position =
@@ -204,6 +257,8 @@ namespace ControllerPlayground.KeyboardHost {
                         await Task.Delay(500, request.Cancellation);
 #endif
                     Keyboard.SetText(request.Text);
+                    if (request.Version2) _controllerService.ResyncInputState();
+                    else Keyboard.SetControllerFamily(_controllerService.Family);
                     if (request.Version2) AppWindow.Show(false);
                     else {
                         if (AppWindow.Presenter is OverlappedPresenter presenter) presenter.Restore();

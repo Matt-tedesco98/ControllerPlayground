@@ -4,6 +4,8 @@ Historical Phase 1 record, checkpointed as `3093db8` after validation and diff
 review. Phase 2 integrates lifecycle transport; see
 [`tools/phase2/README.md`](../../tools/phase2/README.md). Statements below about
 unimplemented transport describe the Phase 1 boundary, not the current tree.
+Phase 3 mediated controller execution is documented in
+[`tools/phase3/README.md`](../../tools/phase3/README.md).
 
 Phase 0 was reviewed and checkpointed as
 `3a3f71d0432389488be3fba31f24cce603cdcbfa` before this work. Its opt-in feasibility

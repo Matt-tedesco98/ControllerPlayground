@@ -1,5 +1,33 @@
 # Shell controller ownership — Increment 3
 
+This document retains the Increment 3 shell acceptance record. Cross-process
+KeyboardHost ownership subsequently passed Increment 4 Phase 3 final acceptance;
+see the current milestone record below and
+[the Phase 3 report](../tools/phase3/README.md). Statements below that exclude
+KeyboardHost ownership describe the historical Increment 3 boundary.
+
+## Current milestone: Increment 4 Phase 3 accepted — October 25, 2026
+
+The user verified the final callback-deadline deployment with matching shell/helper
+hashes. Repeated opening/closing, delayed-callback cancellation, disconnect takeover,
+stale-command rejection and helper termination/reopening all passed. Earlier Xbox
+and DualSense tests also verified owner-only typing/commit/cancel, simultaneous
+RT/Shift, authorized glyph updates, reconnect gating and safe focus restoration.
+Recovery consumes a fresh A/Cross claim without typing and never silently revives
+an expired generation. Shell Guide/View shortcuts stay blocked during the handoff.
+
+All 109 Debug/Release test groups and all 28 reflection-free protocol/session groups
+passed. Full Debug builds passed; default Release ReadyToRun NETSDK1094 remains
+tracked with the existing command-only workaround. Unmatched cross-process full
+device identities fail closed; other package/controller combinations remain
+unverified. Steam Input Desktop Layout mappings can still inject independent
+keyboard/mouse input and were disabled for accepted hardware tests.
+
+Phase 3 is finalized on the separate Phase 2 checkpoint `9cba473`; no GameInput
+focus-policy changes or Phase 4 work are included.
+
+## Historical Increment 3 acceptance
+
 Increment 3 passed all manual Xbox + DualSense hardware tests on October 25,
 2026, as confirmed by the user. Verified behaviors are shared shell navigation,
 exclusive Guide ownership, rejection of non-owner Guide inputs, nested focus

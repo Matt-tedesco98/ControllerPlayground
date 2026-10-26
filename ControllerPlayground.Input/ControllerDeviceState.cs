@@ -85,7 +85,9 @@ internal sealed class ControllerDeviceState {
             if ((pressed & (uint)mapping.Button) != 0) actions.Add(new(mapping.Action));
         if (triggerEdge) actions.Add(new(ControllerAction.RightTrigger));
         // Preserve priority, but retain all simultaneous one-shot presses in the stream.
-        if (actions.Count != 0) return actions;
+        // RT is a keyboard modifier: retain a simultaneous direction as well.
+        // Other one-shot buttons keep the existing navigation priority boundary.
+        if (actions.Any(a => a.Action != ControllerAction.RightTrigger)) return actions;
 
         if (sample.HistoryDiscontinuity != 0) ResetNavigation();
         ControllerAction dpad = ControllerAction.none;
