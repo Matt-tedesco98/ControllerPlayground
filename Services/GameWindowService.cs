@@ -5,6 +5,9 @@ using System.Runtime.InteropServices;
 
 namespace ControllerPlayground.Services {
     public sealed class GameWindowService {
+        [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
+        public bool IsForegroundProcess(uint processId) => processId != 0 &&
+            GetWindowThreadProcessId(GetForegroundWindow(), out uint actual) != 0 && actual == processId;
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
         [DllImport("user32.dll")]

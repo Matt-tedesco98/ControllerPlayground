@@ -11,6 +11,7 @@ internal sealed class OwnershipTrace : IDisposable {
     internal static string? ActionContext;
     internal static void Command(string command) => TemporaryInputSink?.Invoke($"UI {ActionContext ?? "source=pointer-or-keyboard-or-async"} {command}");
     private StreamWriter? _writer;
+    private readonly object _gate = new();
     public OwnershipTrace() {
 #if DEBUG
         try {
@@ -24,11 +25,15 @@ internal sealed class OwnershipTrace : IDisposable {
     }
     public void Write(string message) {
         Debug.WriteLine(message);
-        try { _writer?.WriteLine($"{DateTime.UtcNow:O} tickMs={Environment.TickCount64} {message}"); }
-        catch (Exception error) { Debug.WriteLine($"Ownership logging failed: {error.Message}"); _writer = null; }
+        lock (_gate) {
+            try { _writer?.WriteLine($"{DateTime.UtcNow:O} tickMs={Environment.TickCount64} {message}"); }
+            catch (Exception error) { Debug.WriteLine($"Ownership logging failed: {error.Message}"); _writer = null; }
+        }
     }
     public void Dispose() {
-        try { _writer?.Dispose(); } catch (Exception error) { Debug.WriteLine(error.Message); }
-        _writer = null;
+        lock (_gate) {
+            try { _writer?.Dispose(); } catch (Exception error) { Debug.WriteLine(error.Message); }
+            _writer = null;
+        }
     }
 }

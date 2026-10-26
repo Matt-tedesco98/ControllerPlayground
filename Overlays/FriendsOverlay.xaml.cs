@@ -28,6 +28,7 @@ namespace ControllerPlayground.Overlays {
         internal event Action<ControllerScopeKind, bool>? ModalStateChanged;
         internal Func<bool>? CanRestoreFocus { get; set; }
         internal long ChatContextVersion { get; private set; }
+        internal event Action? ChatContextChanged;
         public ControllerFamily ControllerFamily { get => PromptBar.Family; set => PromptBar.Family = value; }
         public FriendsOverlay() {
             InitializeComponent();
@@ -89,6 +90,7 @@ namespace ControllerPlayground.Overlays {
             if (sender is SteamFriendCard card && card.Item is SteamFriend friend) {
                 bool wasOpen = IsChatOpen;
                 ++ChatContextVersion;
+                ChatContextChanged?.Invoke();
 
                 _lastFocusedCard = card;
 
@@ -129,6 +131,7 @@ namespace ControllerPlayground.Overlays {
         internal void CloseChatPane() {
             if (!IsChatOpen) return;
             ++ChatContextVersion;
+            ChatContextChanged?.Invoke();
             ChatPane.Visibility = Visibility.Collapsed;
             ChatPane.Friend = null;
             OverlayRoot.Width = 420;

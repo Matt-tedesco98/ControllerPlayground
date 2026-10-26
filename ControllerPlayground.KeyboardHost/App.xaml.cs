@@ -38,9 +38,17 @@ namespace ControllerPlayground.KeyboardHost {
         /// Invoked when the application is launched.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args) {
-            _window = new MainWindow();
-            _window.Activate();
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args) {
+            var activation = Microsoft.Windows.AppLifecycle.AppInstance.GetCurrent().GetActivatedEventArgs();
+            var instance = Microsoft.Windows.AppLifecycle.AppInstance.FindOrRegisterForKey("ControllerPlayground.KeyboardHost");
+            if (!instance.IsCurrent) {
+                await instance.RedirectActivationToAsync(activation);
+                Environment.Exit(0);
+                return;
+            }
+            bool version2 = activation.Data is ProtocolActivatedEventArgs protocol && protocol.Uri.Query.Contains("transport=v2", StringComparison.Ordinal);
+            _window = new MainWindow(version2);
+            if (!version2) _window.Activate();
         }
     }
 }

@@ -395,8 +395,9 @@ namespace ControllerPlayground.KeyboardHost.Controls {
             PreviewText.Text = _text;
         }
 
-        public void FocusFirstKey() {
+        public void FocusFirstKey(Func<bool>? stillCurrent = null) {
             DispatcherQueue.TryEnqueue(() => {
+                if (stillCurrent?.Invoke() == false) return;
                 if (KeyboardRowsPanel.Children.Count == 0)
                     return;
 

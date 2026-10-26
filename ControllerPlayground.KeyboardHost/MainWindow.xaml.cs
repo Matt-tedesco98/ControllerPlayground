@@ -19,6 +19,10 @@ using ControllerPlayground.Input;
 using ControllerPlayground.KeyboardHost.Services;
 using System.Threading.Tasks;
 using Windows.UI;
+using ControllerPlayground.Input.Keyboard;
+using System.Threading;
+using System.Collections.Immutable;
+using System.Diagnostics;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -40,7 +44,11 @@ namespace ControllerPlayground.KeyboardHost {
         private readonly KeyboardPipeServer _keyboardPipeServer = new();
         private readonly ControllerPlayground.Input.Diagnostics.KeyboardPhase0Probe? _phase0;
         private bool _isMoveMode;
-        public MainWindow() {
+        private readonly bool _deferInitialActivation;
+        private Guid? _focusedV2Session;
+        private readonly TaskCompletionSource _rootReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public MainWindow(bool deferInitialActivation = false) {
+            _deferInitialActivation = deferInitialActivation;
             InitializeComponent();
             _phase0 = ControllerPlayground.Input.Diagnostics.KeyboardPhase0Probe.TryStart("helper", _controllerService,
                 action => DispatcherQueue.TryEnqueue(() => action()));
@@ -51,6 +59,16 @@ namespace ControllerPlayground.KeyboardHost {
             };
 
             _keyboardPipeServer.OpenRequested += KeyboardPipeServer_OpenRequested;
+            _keyboardPipeServer.CloseRequested += KeyboardPipeServer_CloseRequested;
+            _keyboardPipeServer.Trace = message => Debug.WriteLine(message);
+            Closed += (_, _) => { _controllerTimer.Stop(); _keyboardPipeServer.Dispose(); };
+            Activated += (_, args) => {
+                if (args.WindowActivationState != WindowActivationState.Deactivated && _keyboardPipeServer.ActiveVersion2 &&
+                    _keyboardPipeServer.ActiveSessionId is { } id && _focusedV2Session != id) {
+                    _focusedV2Session = id;
+                    Keyboard.FocusFirstKey(() => _keyboardPipeServer.IsCurrent(id));
+                }
+            };
 
             Keyboard.TextCommitted += Keyboard_TextCommitted;
 
@@ -114,7 +132,8 @@ namespace ControllerPlayground.KeyboardHost {
                 new SizeInt32(
                     width,
                     height));
-            Keyboard.FocusFirstKey();
+            _rootReady.TrySetResult();
+            if (!_deferInitialActivation && !_keyboardPipeServer.ActiveVersion2) Keyboard.FocusFirstKey();
 
             root.Loaded -= Root_Loaded;
         }
@@ -174,23 +193,41 @@ namespace ControllerPlayground.KeyboardHost {
             Keyboard.HandleControllerAction(action);
         }
 
-        private Task KeyboardPipeServer_OpenRequested(string initialText) {
-            TaskCompletionSource<bool> completion = new();
-
-            DispatcherQueue.TryEnqueue(() => {
-                Keyboard.SetText(initialText);
-                
-                if (AppWindow.Presenter is OverlappedPresenter presenter) {
-                    presenter.Restore();
+        private Task<KeyboardReady> KeyboardPipeServer_OpenRequested(KeyboardUiRequest request) {
+            var completion = new TaskCompletionSource<KeyboardReady>(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (!DispatcherQueue.TryEnqueue(async () => {
+                try {
+                    request.Cancellation.ThrowIfCancellationRequested();
+                    if (!_keyboardPipeServer.IsCurrent(request.SessionId)) throw new OperationCanceledException();
+#if DEBUG
+                    if (request.Version2 && System.IO.File.Exists(System.IO.Path.Combine(AppContext.BaseDirectory, "phase2-delay-open.log")))
+                        await Task.Delay(500, request.Cancellation);
+#endif
+                    Keyboard.SetText(request.Text);
+                    if (request.Version2) AppWindow.Show(false);
+                    else {
+                        if (AppWindow.Presenter is OverlappedPresenter presenter) presenter.Restore();
+                        Activate(); Keyboard.FocusFirstKey(() => _keyboardPipeServer.IsCurrent(request.SessionId));
+                    }
+                    await _rootReady.Task.WaitAsync(request.Cancellation);
+                    request.Cancellation.ThrowIfCancellationRequested();
+                    if (!_keyboardPipeServer.IsCurrent(request.SessionId)) throw new OperationCanceledException();
+                    var devices = _controllerService.Devices.Select(d => new KeyboardDeviceRef(_controllerService.CollectorSessionId,
+                        d.Id.ToString(), d.RootId.ToString(), d.ConnectionGeneration, d.Family)).ToImmutableArray();
+                    completion.TrySetResult(new(WinRT.Interop.WindowNative.GetWindowHandle(this).ToInt64(),
+                        (uint)Environment.ProcessId, _controllerService.CollectorSessionId, devices));
+                } catch (Exception error) { completion.TrySetException(error); }
+            })) completion.TrySetException(new IOException("Keyboard dispatcher closed."));
+            return completion.Task.WaitAsync(request.Cancellation);
+        }
+        private Task KeyboardPipeServer_CloseRequested(Guid session) {
+            var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (!DispatcherQueue.TryEnqueue(() => {
+                if (_keyboardPipeServer.IsCurrent(session)) {
+                    if (AppWindow.Presenter is OverlappedPresenter presenter) presenter.Minimize();
                 }
-
-                Activate();
-
-                Keyboard.FocusFirstKey();
-
-                completion.SetResult(true);
-            });
-
+                completion.TrySetResult();
+            })) completion.TrySetResult();
             return completion.Task;
         }
 

@@ -21,6 +21,10 @@ public sealed partial class MainWindow {
     private bool _updatingScopes;
     private bool _shellForeground = true;
     private bool _keyboardRequestPending;
+    private bool _windowClosed;
+    private readonly System.Threading.CancellationTokenSource _keyboardSmokeStop = new();
+    private System.Threading.CancellationTokenSource? _keyboardRequestCancellation;
+    private Func<bool>? _keyboardContextValid;
     private bool _controllerInputFaulted;
     private readonly Services.OwnershipTrace _ownershipTrace = new();
     private readonly Dictionary<(ControllerDeviceId Id, ulong Generation), bool> _neutralTrace = new();
@@ -35,14 +39,18 @@ public sealed partial class MainWindow {
         }
         var router = new ControllerInputRouter(_controllerService.CollectorSessionId, _controllerService.SuppressForOwnershipTransition);
         router.Changed += () => {
+            CancelKeyboardIfContextChanged();
             _ownershipTrace.Write($"SCOPE revision={router.Revision} kind={router.Current?.Kind} owner={router.Current?.Owner?.Id} gen={router.Current?.Owner?.ConnectionGeneration} recovery={router.NeedsRecovery}");
             RefreshOwnershipPresentation(); QueueActiveScopeFocus();
         };
         _controllerService.DeviceConnectionChanged += e => _ownershipTrace.Write($"DEVICE id={e.Device.Id} gen={e.Device.ConnectionGeneration} connected={e.Connected} family={e.Device.Family}");
         Closed += (_, _) => { _controllerTimer.Stop(); Services.OwnershipTrace.TemporaryInputSink = null; _ownershipTrace.Dispose(); };
+        Closed += (_, _) => { _windowClosed = true; _keyboardRequestCancellation?.Cancel(); };
+        Closed += (_, _) => _keyboardSmokeStop.Cancel();
         _homeView.ContextMenuStateChanged += open => ModalStateChanged(ControllerScopeKind.HomeContextMenu, open);
         _libraryView.ContextMenuStateChanged += open => ModalStateChanged(ControllerScopeKind.LibraryContextMenu, open);
         FriendsOverlay.ModalStateChanged += ModalStateChanged;
+        FriendsOverlay.ChatContextChanged += CancelKeyboardIfContextChanged;
         _GamePageView.ModalStateChanged += ModalStateChanged;
         _homeView.CanRestoreFocus = () => _shellForeground && _currentScreen == AppScreen.Home && CanFocusScope(ControllerScopeKind.HomeContextMenu);
         _libraryView.CanRestoreFocus = () => _shellForeground && _currentScreen == AppScreen.Library && CanFocusScope(ControllerScopeKind.LibraryContextMenu);
@@ -334,27 +342,60 @@ public sealed partial class MainWindow {
         if (parent == null) return;
         long chatVersion = FriendsOverlay.ChatContextVersion;
         var handoff = OpenShellScope(ControllerScopeKind.KeyboardHandoff);
+        using var cancellation = new System.Threading.CancellationTokenSource();
+        _keyboardRequestCancellation = cancellation;
+        bool ContextValid() => !_windowClosed && FriendsOverlay.ChatContextVersion == chatVersion &&
+            _inputRouter.Find(ControllerScopeKind.Chat)?.Id == parent.Id && _inputRouter.Current?.Id == handoff.Id &&
+            (handoff.Owner == null || _controllerService.Devices.Any(d => d.Id == handoff.Owner.Id && d.ConnectionGeneration == handoff.Owner.ConnectionGeneration));
+        _keyboardContextValid = ContextValid;
         _keyboardRequestPending = true;
+        KeyboardFailureInfo.IsOpen = false;
+        uint helperPid = 0;
         RefreshOwnershipPresentation();
         try {
-            var request = _keyboardHostClient.RequestTextAsync(initialText, handle => {
-                if (_inputRouter.Current?.Id == handoff.Id) _gameWindowService.TryFocusWindow(handle);
-            });
-            string? text = request == null ? null : await request;
-            bool ownerConnected = handoff.Owner == null || _controllerService.Devices.Any(d =>
-                d.Id == handoff.Owner.Id && d.ConnectionGeneration == handoff.Owner.ConnectionGeneration);
-            if (text != null && ownerConnected && FriendsOverlay.ChatContextVersion == chatVersion && _inputRouter.Find(ControllerScopeKind.Chat)?.Id == parent.Id)
+            string? text;
+            if (Environment.GetEnvironmentVariable("CONTROLLERPLAYGROUND_KEYBOARD_LEGACY") == "1") {
+                text = await _keyboardHostClient.RequestTextAsync(initialText, handle => {
+                    if (ContextValid()) _gameWindowService.TryFocusWindow(handle);
+                }, cancellation.Token)!;
+            } else {
+                var owner = handoff.Owner is { } device ? new ControllerPlayground.Input.Keyboard.KeyboardDeviceRef(_controllerService.CollectorSessionId,
+                    device.Id.ToString(), device.RootId.ToString(), device.ConnectionGeneration, device.Family) : null;
+                var result = await _keyboardHostClient.RequestV2TextAsync(initialText, owner, async (activate, token) => {
+                    var done = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    if (!DispatcherQueue.TryEnqueue(() => {
+                        try { done.TrySetResult(!token.IsCancellationRequested && ContextValid() && activate()); }
+                        catch (Exception) { done.TrySetResult(false); }
+                    })) done.TrySetResult(false);
+                    return await done.Task.WaitAsync(token);
+                }, trace: _ownershipTrace.Write, cancellationToken: cancellation.Token);
+                helperPid = result.HelperProcessId;
+                text = result.Status == ControllerPlayground.Input.Keyboard.KeyboardLifecycleStatus.Committed ? result.Text : null;
+                if (result.Status == ControllerPlayground.Input.Keyboard.KeyboardLifecycleStatus.Failed && ContextValid()) {
+                    _ownershipTrace.Write($"KEYBOARD_FAILED reason={result.Failure} helperPid={result.HelperProcessId}");
+                    KeyboardFailureInfo.Message = result.Failure == "V2UnavailableOrBusy"
+                        ? "KeyboardHost is busy or its deployment is out of date. Close it and deploy the matching keyboard build."
+                        : "Couldn't open text entry. Check the keyboard session log, then close the keyboard and try again.";
+                    KeyboardFailureInfo.IsOpen = true;
+                }
+            }
+            if (text != null && ContextValid())
                 FriendsOverlay.SetChatMessageText(text);
         } catch (Exception error) { Debug.WriteLine($"Keyboard request failed: {error}"); }
         finally {
             _keyboardRequestPending = false;
-            bool restore = _inputRouter.Find(ControllerScopeKind.KeyboardHandoff)?.Id == handoff.Id &&
-                _inputRouter.Find(ControllerScopeKind.Chat)?.Id == parent.Id;
-            CloseShellScope(ControllerScopeKind.KeyboardHandoff, descendants: false);
-            if (restore) {
+            _keyboardContextValid = null; _keyboardRequestCancellation = null;
+            bool restore = ContextValid() && (_gameWindowService.IsForegroundProcess((uint)Environment.ProcessId) ||
+                _gameWindowService.IsForegroundProcess(helperPid));
+            if (!_windowClosed && _inputRouter.Find(ControllerScopeKind.KeyboardHandoff)?.Id == handoff.Id)
+                CloseShellScope(ControllerScopeKind.KeyboardHandoff, restore: false, descendants: false);
+            if (restore && !_windowClosed) {
                 _gameWindowService.TryFocusWindow(WinRT.Interop.WindowNative.GetWindowHandle(this));
                 QueueActiveScopeFocus();
             }
         }
+    }
+    private void CancelKeyboardIfContextChanged() {
+        if (_keyboardContextValid?.Invoke() == false) _keyboardRequestCancellation?.Cancel();
     }
 }

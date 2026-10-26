@@ -86,6 +86,8 @@
                 <Button x:Name="CloseOwnershipButton" Content="Close" Click="CloseOwnershipButton_Click" />
             </StackPanel>
         </Border>
+        <InfoBar x:Name="KeyboardFailureInfo" Canvas.ZIndex="50" IsOpen="False" IsClosable="True"
+                 Severity="Error" Title="Text entry" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="24" />
     </Grid>
 
 </Window>

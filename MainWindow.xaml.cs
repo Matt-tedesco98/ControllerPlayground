@@ -113,6 +113,7 @@ public sealed partial class MainWindow : Window {
         _steamSessionService.SavedAuthenticationFailed += SteamSessionService_SavedAuthenticationFailed;
 
         _steamSessionService.Connect();
+        _ = KeyboardV2Smoke.RunIfRequested(_keyboardHostClient, DispatcherQueue, _ownershipTrace.Write, _keyboardSmokeStop.Token);
 
     }
 

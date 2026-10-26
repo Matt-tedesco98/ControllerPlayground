@@ -20,6 +20,7 @@ public static class KeyboardProtocol {
     public const int MaxPendingCommands = 64;
     public const KeyboardCapabilities RequiredCapabilities = KeyboardCapabilities.DeviceAttribution |
         KeyboardCapabilities.OwnershipEpochs | KeyboardCapabilities.ExecutionAcknowledgements | KeyboardCapabilities.BoundedFrames;
+    public const KeyboardCapabilities LifecycleCapabilities = KeyboardCapabilities.OwnershipEpochs | KeyboardCapabilities.BoundedFrames;
     public static bool IsNavigation(ControllerAction action) => action is ControllerAction.NavigateUp or ControllerAction.NavigateDown or
         ControllerAction.NavigateLeft or ControllerAction.NavigateRight;
     public static bool IsKeyboardAction(ControllerAction action) => IsNavigation(action) || action is ControllerAction.Accept or

@@ -1,5 +1,10 @@
 # Increment 4 Phase 1 — disconnected keyboard protocol and session model
 
+Historical Phase 1 record, checkpointed as `3093db8` after validation and diff
+review. Phase 2 integrates lifecycle transport; see
+[`tools/phase2/README.md`](../../tools/phase2/README.md). Statements below about
+unimplemented transport describe the Phase 1 boundary, not the current tree.
+
 Phase 0 was reviewed and checkpointed as
 `3a3f71d0432389488be3fba31f24cce603cdcbfa` before this work. Its opt-in feasibility
 probe remains separate; none of its toy messages are used by this protocol.
@@ -57,9 +62,11 @@ Envelope fields:
 
 Handshake messages use empty session ID and epoch zero in a separate handshake
 scope. Hello has unknown/empty host ID; HelloAck supplies it. Connection and shell
-identity must match. The advertised version range must contain v2 and all four
-v2 capabilities are mandatory: attribution, ownership epochs, execution acks and
-bounded framing. `KeyboardConnectionIdentity.Negotiate` correlates and validates
+identity must match. The advertised version range must contain v2. Full ownership
+requires attribution, ownership epochs, execution acks and bounded framing.
+Phase 2 adds an explicit lifecycle-only capability subset (epochs and framing);
+it cannot satisfy an ownership request or accept capture/execution messages.
+`KeyboardConnectionIdentity.Negotiate` correlates and validates
 the pair. These metadata fields do not authenticate the operating-system peer.
 Session messages start their own per-direction sequences at 1 after negotiation.
 
@@ -207,4 +214,4 @@ hardware behavior is resolved. Stop after Phase 1 for review.
   were made after the Phase 0 checkpoint. No hardware test or app deployment is
   needed to validate the disconnected library; actual owned keyboard behavior
   remains unimplemented and requires later integration/hardware acceptance.
-- Phase 1 is left uncommitted for review.
+- Phase 1 was subsequently approved and checkpointed separately as `3093db8`.

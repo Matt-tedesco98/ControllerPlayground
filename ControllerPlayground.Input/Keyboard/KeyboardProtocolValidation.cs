@@ -54,10 +54,13 @@ public static class KeyboardProtocolValidation {
                 Require(h.HostInstanceId == Guid.Empty && m.MinimumVersion > 0 && m.MaximumVersion >= m.MinimumVersion &&
                     m.MinimumVersion <= KeyboardProtocol.Version && m.MaximumVersion >= KeyboardProtocol.Version,
                     "Incompatible handshake version.");
-                Require(m.RequiredCapabilities == KeyboardProtocol.RequiredCapabilities, "Unsupported required capabilities."); break;
+                Require((m.RequiredCapabilities & KeyboardProtocol.LifecycleCapabilities) == KeyboardProtocol.LifecycleCapabilities &&
+                    (m.RequiredCapabilities & ~KeyboardProtocol.RequiredCapabilities) == 0, "Unsupported required capabilities."); break;
             case KeyboardHelloAck m:
                 Id(h.HostInstanceId);
-                Require(m.SelectedVersion == KeyboardProtocol.Version && m.Capabilities == KeyboardProtocol.RequiredCapabilities,
+                Require(m.SelectedVersion == KeyboardProtocol.Version &&
+                    (m.Capabilities & KeyboardProtocol.LifecycleCapabilities) == KeyboardProtocol.LifecycleCapabilities &&
+                    (m.Capabilities & ~KeyboardProtocol.RequiredCapabilities) == 0,
                     "Incompatible handshake capabilities/version."); break;
             case KeyboardOpen m: Text(m.InitialText); if (m.ShellOwner != null) Device(m.ShellOwner); break;
             case KeyboardReady m:

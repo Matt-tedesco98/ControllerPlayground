@@ -2,13 +2,16 @@ using System.Collections.Immutable;
 
 namespace ControllerPlayground.Input.Keyboard;
 
-public sealed record KeyboardConnectionIdentity(Guid ConnectionId, Guid ShellInstanceId, Guid HostInstanceId) {
+public sealed record KeyboardConnectionIdentity(Guid ConnectionId, Guid ShellInstanceId, Guid HostInstanceId,
+    KeyboardCapabilities Capabilities = KeyboardProtocol.RequiredCapabilities) {
     public static KeyboardConnectionIdentity Negotiate(KeyboardEnvelope hello, KeyboardEnvelope acknowledgement) {
         KeyboardProtocolValidation.Validate(hello); KeyboardProtocolValidation.Validate(acknowledgement);
-        if (hello.Message is not KeyboardHello || acknowledgement.Message is not KeyboardHelloAck ||
+        if (hello.Message is not KeyboardHello request || acknowledgement.Message is not KeyboardHelloAck response ||
             hello.Header.ConnectionId != acknowledgement.Header.ConnectionId || hello.Header.ShellInstanceId != acknowledgement.Header.ShellInstanceId)
             throw new KeyboardProtocolException("Handshake correlation mismatch.");
-        return new(hello.Header.ConnectionId, hello.Header.ShellInstanceId, acknowledgement.Header.HostInstanceId);
+        if ((response.Capabilities & request.RequiredCapabilities) != request.RequiredCapabilities)
+            throw new KeyboardProtocolException("Required capabilities unavailable; no downgrade is permitted.");
+        return new(hello.Header.ConnectionId, hello.Header.ShellInstanceId, acknowledgement.Header.HostInstanceId, response.Capabilities);
     }
 }
 public enum KeyboardSessionPhase { Opening, AwaitingReady, AwaitingNeutral, Active, Suspended, Completing, Closing, Closed, Faulted }
@@ -100,6 +103,10 @@ public sealed class KeyboardSession {
         if (h.ConnectionId != _connection.ConnectionId || h.ShellInstanceId != _connection.ShellInstanceId ||
             h.HostInstanceId != _connection.HostInstanceId || h.SessionId != SessionId) return Discard("OtherLifetime");
         if (Terminal) return Discard("TerminalSession");
+        if (_connection.Capabilities != KeyboardProtocol.RequiredCapabilities && envelope.Message is
+            KeyboardCaptureBatch or KeyboardExecute or KeyboardExecuted or KeyboardSetOwner or KeyboardOwnerReady or KeyboardDevicesChanged) {
+            NotifyTransportLost(); return Decision(KeyboardDisposition.ProtocolFault, "ControllerExecutionNotNegotiated");
+        }
         int peer = (int)h.Sender;
         if (h.Sequence <= _received[peer]) return Discard("DuplicateMessage");
         bool gap = h.Sequence != _received[peer] + 1;
