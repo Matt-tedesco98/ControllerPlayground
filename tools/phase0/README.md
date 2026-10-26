@@ -1,5 +1,10 @@
 # Increment 4 Phase 0 — isolated feasibility probe
 
+Historical experiment, checkpointed as `3a3f71d`. Production mediated ownership
+was subsequently implemented and the Xbox + DualSense Phase 4A checks completed;
+see [current architecture](../../ControllerPlayground.Input/MULTI_CONTROLLER.md).
+Descriptions below of unchanged IPC and controller selection apply to Phase 0.
+
 This is an opt-in diagnostic experiment, not the production keyboard protocol.
 The shell and KeyboardHost keep their existing capture, mappings, layouts, text
 entry, focus handling and pipe unchanged. GameInput policies are unchanged. The

@@ -1,12 +1,17 @@
 # Shell controller ownership — Increment 3
 
+Current architecture: [MULTI_CONTROLLER.md](MULTI_CONTROLLER.md). The agreed
+Xbox + PS5 DualSense Phase 4A end-to-end checks are complete; see
+[the verification report](../tools/phase4a/README.md). Steam Controller is deferred;
+Windows x64 packaging verification remains subject to separate approval.
+
 This document retains the Increment 3 shell acceptance record. Cross-process
 KeyboardHost ownership subsequently passed Increment 4 Phase 3 final acceptance;
 see the current milestone record below and
 [the Phase 3 report](../tools/phase3/README.md). Statements below that exclude
 KeyboardHost ownership describe the historical Increment 3 boundary.
 
-## Current milestone: Increment 4 Phase 3 accepted — October 25, 2026
+## Increment 4 Phase 3 acceptance — October 25, 2026
 
 The user verified the final callback-deadline deployment with matching shell/helper
 hashes. Repeated opening/closing, delayed-callback cancellation, disconnect takeover,

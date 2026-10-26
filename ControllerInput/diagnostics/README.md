@@ -1,5 +1,10 @@
 # Native device-aware capture — Increment 1
 
+This is the historical Increment 1 record. Later increments implement managed
+attribution, shell ownership and mediated KeyboardHost execution; see
+[current architecture and verification](../../ControllerPlayground.Input/MULTI_CONTROLLER.md).
+Statements below about absent managed ownership/tests describe the original boundary.
+
 This increment changes only the native DLL and its diagnostics/tests. Managed
 polling, shell ownership, KeyboardHost IPC, and the existing GameInput focus
 policy are unchanged. The shell is **not yet a multi-controller ownership UI**.

@@ -1,7 +1,11 @@
 # Increment 4 Phase 2: lifecycle transport
 
-Phase 1 was reviewed and checkpointed separately as `3093db8`. Phase 2 remains
-uncommitted for review. No Phase 3 controller-authorized execution is enabled.
+Historical Phase 2 record, checkpointed as `9cba473` on Phase 1's `3093db8`.
+Statements below about unimplemented controller execution describe Phase 2's
+boundary. Phase 3 subsequently delivered mediated execution, and the agreed
+Xbox + PS5 DualSense Phase 4A regressions passed. See
+[current architecture](../../ControllerPlayground.Input/MULTI_CONTROLLER.md) and
+[the Phase 4A report](../phase4a/README.md).
 
 ## Contract and migration
 

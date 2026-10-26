@@ -1,5 +1,10 @@
 # Increment 4 Phase 3 — controller-specific keyboard execution
 
+Phase 3 remains the accepted implementation checkpoint. The agreed Xbox + PS5
+DualSense Phase 4A regressions are now complete; see [the verification record](../phase4a/README.md)
+and [current architecture](../../ControllerPlayground.Input/MULTI_CONTROLLER.md).
+Steam Controller is deferred, and packaging verification still requires approval.
+
 Phase 2 was reviewed and checkpointed separately as
 `9cba473dde0ab045a9b4f9bcbd0b790cf895e907`. Before this phase,
 the user verified matching v2 shell/helper opening, editing, commit-to-draft,
@@ -183,4 +188,5 @@ explicit and does not provide mediated ownership guarantees.
 Finalization includes only verified Phase 3 source, tests and documentation; build
 outputs, logs, deployment backups and temporary diagnostics are excluded. The
 Phase 2 checkpoint is preserved separately as this commit's direct parent.
-Phase 4 has not started; GameInput focus policies remain unchanged.
+The record above describes Phase 3 acceptance. Subsequent Phase 4A results are
+linked at the top; GameInput focus policies remain unchanged.

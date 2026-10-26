@@ -1,5 +1,11 @@
 # Increment 4 Phase 0 findings — October 25, 2026
 
+Historical feasibility evidence. The later production implementation and current
+verification scope are documented in
+[MULTI_CONTROLLER.md](../../ControllerPlayground.Input/MULTI_CONTROLLER.md).
+The controller-selection mismatch described below was addressed by mediated
+execution; it is not a current unresolved Xbox + DualSense ownership defect.
+
 **Conclusion:** foreground-process capture plus shell authorization is feasible
 in the tested Debug deployment without changing GameInput focus policies. Phase
 0 also reproduced the existing shell/helper controller-selection mismatch. The

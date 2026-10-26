@@ -18,6 +18,9 @@ The project explores what a PC gaming interface could feel like if it were desig
 - Guide/Home button handling
 - Menu/View button actions
 - Focus restoration between screens and overlays
+- Full per-device identities and independent controller input state
+- Shared root navigation, exclusive modal ownership and neutral-gated takeover
+- Shell-authorized, owner-specific KeyboardHost execution and glyphs
 
 ### Native GameInput integration
 
@@ -89,7 +92,8 @@ The current home library still uses prototype game data while the service layer 
 ```text
 ControllerPlayground/
 ├── Controls/          Reusable WinUI controller-focused components
-├── Input/             Managed controller input and glyph mapping
+├── ControllerPlayground.Input/  Managed device input, ownership and keyboard protocol
+├── ControllerPlayground.KeyboardHost/  Separate controller-native keyboard process
 ├── ControllerInput/   Native C++ Microsoft GameInput bridge
 ├── Models/            Game, friend, chat, and activity models
 ├── Navigation/        Application screen definitions
@@ -137,7 +141,24 @@ gating, disconnect takeover and helper failure recovery. All 109 test groups pas
 in Debug and Release; all 28 protocol/session groups also pass without JSON reflection.
 Full Debug builds pass; Release compilation uses the existing command-line
 ReadyToRun workaround. See [the final acceptance record](tools/phase3/README.md)
-for exact scope, validation and remaining limitations. Phase 4 has not started.
+for exact scope, validation and remaining limitations.
+
+### Increment 4 Phase 4A verification — October 26, 2026
+
+Phase 4A verifies Xbox and PS5 DualSense end to end across Home, Library, Game
+Details, Guide, Friends, Chat and KeyboardHost, including ownership, navigation,
+simultaneous input, reconnect/takeover, focus, game launch/resume and helper failures.
+The agreed regression checks are complete for review: 109 groups passed in both
+Debug and Release, 28 reflection-free protocol/session groups passed, and the user
+reported the requested Xbox + DualSense hardware checks work, including Phasmophobia
+launch/resume and return to shell. Coverage limits are recorded in the Phase 4A report.
+Steam Controller functionality and qualification are deferred to a future milestone
+and are not blockers for completion of the Xbox + DualSense milestone. Steam Input
+Desktop Layout interference remains a known compatibility issue; settings and
+production input policies are unchanged. See [the Phase 4A record](tools/phase4a/README.md).
+Multi-controller documentation is consolidated in
+[the current architecture and milestone record](ControllerPlayground.Input/MULTI_CONTROLLER.md).
+Windows x64 packaging verification remains separate work requiring approval.
 
 ## Why I Built It
 

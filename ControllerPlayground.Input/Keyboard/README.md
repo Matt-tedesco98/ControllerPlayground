@@ -1,5 +1,9 @@
 # Increment 4 Phase 1 — disconnected keyboard protocol and session model
 
+Current production architecture and milestone status:
+[MULTI_CONTROLLER.md](../MULTI_CONTROLLER.md). The agreed Xbox + DualSense
+Phase 4A regressions are recorded [here](../../tools/phase4a/README.md).
+
 Historical Phase 1 record, checkpointed as `3093db8` after validation and diff
 review. Phase 2 integrates lifecycle transport; see
 [`tools/phase2/README.md`](../../tools/phase2/README.md). Statements below about

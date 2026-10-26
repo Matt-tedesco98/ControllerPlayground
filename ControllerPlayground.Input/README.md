@@ -1,12 +1,16 @@
 # Managed per-device input — Increment 2
 
-Increment 4's disconnected protocol/session foundation is documented in
-[Keyboard/README.md](Keyboard/README.md). Production keyboard IPC is unchanged.
+For current production behavior, acceptance and remaining limits, start with
+[Multi-controller architecture](MULTI_CONTROLLER.md). Xbox + PS5 DualSense
+implementation and the agreed Phase 4A regression checks are complete. Mediated
+KeyboardHost sessions use attributed batches and shell-authorized execution;
+scalar input remains only on the compatibility path.
 
-For the current shell ownership integration and Increment 3 verification steps,
-see [OWNERSHIP.md](OWNERSHIP.md). The description below records Increment 2;
-MainWindow now uses the attributed batch and root navigation accepts either
-controller. KeyboardHost still uses the scalar compatibility adapter.
+This document records the Increment 2 contract and historical verification.
+References below to unchanged keyboard IPC, scalar shell behavior or absent
+cross-process ownership describe that increment, not the current repository.
+See [OWNERSHIP.md](OWNERSHIP.md) for shell scopes and
+[Keyboard/README.md](Keyboard/README.md) for the protocol foundation.
 
 Increment 1 is checkpointed in commit `22bf245`. Increment 2 adds managed device
 identity, per-device normalization, and attributed actions. Shell modal ownership,
