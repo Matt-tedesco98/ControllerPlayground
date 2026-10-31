@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NAudio.CoreAudioApi;
+using SteamKit2.Internal;
 
 namespace ControllerPlayground.Services {
     public sealed class AudioService {
@@ -39,6 +40,14 @@ namespace ControllerPlayground.Services {
             bool isMuted = device.AudioEndpointVolume.Mute;
             
             device.AudioEndpointVolume.Mute = !isMuted;
+        }
+
+        public int GetDefaultVolumePercent() {
+            using var enumerator = new MMDeviceEnumerator();
+
+            using var device = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+
+            return (int)Math.Round(device.AudioEndpointVolume.MasterVolumeLevelScalar * 100);
         }
     }
 }

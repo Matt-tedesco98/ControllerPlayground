@@ -38,7 +38,7 @@ namespace ControllerPlayground.Views {
                 case ControllerAction.Accept:
                     if (IsAudioFocused && AudioService is AudioService audioService) {
                         try {
-                            AudioStatusText.Text = audioService.GetDefaultOutputInfo();
+                            UpdateAudioDisplay(audioService);
                         }catch (Exception ex) {
                             AudioStatusText.Text = $"Audio unavailable: {ex.Message}";
                         }
@@ -89,7 +89,7 @@ namespace ControllerPlayground.Views {
             try {
                 audioService.AdjustVolume(amount);
 
-                AudioStatusText.Text = audioService.GetDefaultOutputInfo();
+                UpdateAudioDisplay(audioService);
             } catch (Exception ex) { 
                 AudioStatusText.Text = $"Audio error: {ex.Message}";
             }
@@ -103,10 +103,18 @@ namespace ControllerPlayground.Views {
             try {
                 audioService.ToggleMute();
 
-                AudioStatusText.Text = audioService.GetDefaultOutputInfo();
+                UpdateAudioDisplay(audioService);
             } catch (Exception ex) { 
                 AudioStatusText.Text = $"Audio error: {ex.Message}";
             }
+        }
+
+        private void UpdateAudioDisplay(AudioService audioService) {
+            if (audioService is null)
+                return;
+            AudioStatusText.Text = audioService.GetDefaultOutputInfo();
+
+            AudioVolumeBar.Value = audioService.GetDefaultVolumePercent();
         }
     }
 }

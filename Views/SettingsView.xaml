@@ -80,7 +80,18 @@
                     Text="Select Audio to inspect current output"
                     FontSize="20"
                     TextWrapping="Wrap" />
-                
+
+                <ProgressBar
+                    x:Name="AudioVolumeBar"
+                    Minimum="0"
+                    Maximum="100"
+                    Value="0"
+                    Height="12"
+                    IsIndeterminate="False"
+                    IsTabStop="False"
+                    Foreground="#4A90E2"
+                    Background="#444444" />
+
                 <Border
                     Height="1"
                     Background="#444444" />
