@@ -27,6 +27,8 @@ namespace ControllerPlayground.Views {
 
         internal AudioService? AudioService { get; set; }
 
+        private bool IsAudioFocused => ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), AudioButton);
+
         public SettingsView() {
             InitializeComponent();
         }
@@ -34,9 +36,9 @@ namespace ControllerPlayground.Views {
         internal void HandleControllerAction(ControllerAction action) {
             switch (action) {
                 case ControllerAction.Accept:
-                    if (FocusManager.GetFocusedElement(SettingsRoot.XamlRoot) == AudioButton && AudioService != null) {
+                    if (IsAudioFocused && AudioService is AudioService audioService) {
                         try {
-                            AudioStatusText.Text = AudioService.GetDefaultOutputInfo();
+                            AudioStatusText.Text = audioService.GetDefaultOutputInfo();
                         }catch (Exception ex) {
                             AudioStatusText.Text = $"Audio unavailable: {ex.Message}";
                         }
@@ -80,26 +82,28 @@ namespace ControllerPlayground.Views {
         }
 
         private void AdjustAudioVolume(float amount) {
-            if (FocusManager.GetFocusedElement(SettingsRoot.XamlRoot) != AudioButton)
+            var audioService = AudioService;
+            if (!IsAudioFocused || audioService == null)
                 return;
 
             try {
-                AudioService.AdjustVolume(amount);
+                audioService.AdjustVolume(amount);
 
-                AudioStatusText.Text = AudioService.GetDefaultOutputInfo();
+                AudioStatusText.Text = audioService.GetDefaultOutputInfo();
             } catch (Exception ex) { 
                 AudioStatusText.Text = $"Audio error: {ex.Message}";
             }
         }
 
         private void ToggleAudioMute() {
-            if (FocusManager.GetFocusedElement(SettingsRoot.XamlRoot) != AudioButton)
+            var audioService = AudioService;
+            if (!IsAudioFocused || audioService == null)
                 return;
 
             try {
-                AudioService.ToggleMute();
+                audioService.ToggleMute();
 
-                AudioStatusText.Text = AudioService.GetDefaultOutputInfo();
+                AudioStatusText.Text = audioService.GetDefaultOutputInfo();
             } catch (Exception ex) { 
                 AudioStatusText.Text = $"Audio error: {ex.Message}";
             }
