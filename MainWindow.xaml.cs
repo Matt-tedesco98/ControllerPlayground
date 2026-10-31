@@ -40,6 +40,9 @@ public sealed partial class MainWindow : Window {
     // audio service
     private readonly AudioService _audioService = new();
 
+    // power service
+    private readonly PowerService _powerService = new();
+
     // friends overlay
     private bool _isFriendsOpen;
     private int _totalUnreadMessages;
