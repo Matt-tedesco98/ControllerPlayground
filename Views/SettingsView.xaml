@@ -54,6 +54,7 @@
         </StackPanel>
 
         <Border
+            x:Name="AudioPanel"
             Grid.Row="1"
             Width="420"
             Padding="24"
@@ -103,6 +104,49 @@
                 <TextBlock
                     Text="X / Square - Mute or Unmute"
                     FontSize="16" />
+                
+            </StackPanel>
+            
+        </Border>
+
+        <Border
+            x:Name="PowerPanel"
+            Grid.Row="1"
+            Width="420"
+            Padding="24"
+            Margin="0,0,40,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Background="#2B2B2B"
+            CornerRadius="12" 
+            Visibility="Collapsed">
+
+            <StackPanel Spacing="16">
+                
+                <TextBlock
+                    Text="Power Options"
+                    FontSize="26"
+                    FontWeight="SemiBold" />
+
+                <Button
+                    x:Name="SleepButton"
+                    Content="Sleep"
+                    HorizontalAlignment="Stretch" />
+                
+                <Button
+                    x:Name="RestartButton"
+                    Content="Restart PC"
+                    HorizontalAlignment="Stretch" />
+                
+                <Button
+                    x:Name="ShutdownButton"
+                    Content="Shutdown PC"
+                    HorizontalAlignment="Stretch" />
+                
+                <Button
+                    x:Name="ExitAppButton"
+                    Content="Exit ControllerPlayground"
+                    HorizontalAlignment="Stretch" />
                 
             </StackPanel>
             

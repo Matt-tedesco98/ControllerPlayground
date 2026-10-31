@@ -28,6 +28,7 @@ namespace ControllerPlayground.Views {
         internal AudioService? AudioService { get; set; }
 
         private bool IsAudioFocused => ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), AudioButton);
+        private bool IsPowerFocused => ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), PowerButton);
 
         public SettingsView() {
             InitializeComponent();
@@ -36,6 +37,15 @@ namespace ControllerPlayground.Views {
         internal void HandleControllerAction(ControllerAction action) {
             switch (action) {
                 case ControllerAction.Accept:
+                    if (IsPowerFocused) {
+                        AudioPanel.Visibility = Visibility.Collapsed;
+                        PowerPanel.Visibility = Visibility.Visible;
+
+                        SleepButton.Focus(FocusState.Programmatic);
+
+                    } else if (IsAudioFocused) {
+                        AudioButton.Focus(FocusState.Programmatic);
+                    }
                     if (IsAudioFocused && AudioService is AudioService audioService) {
                         try {
                             UpdateAudioDisplay(audioService);
@@ -115,6 +125,17 @@ namespace ControllerPlayground.Views {
             AudioStatusText.Text = audioService.GetDefaultOutputInfo();
 
             AudioVolumeBar.Value = audioService.GetDefaultVolumePercent();
+        }
+
+        internal bool TryClosePowerPanel() {
+            if (PowerPanel.Visibility != Visibility.Visible)
+                return false;
+
+            PowerPanel.Visibility = Visibility.Collapsed;
+            AudioPanel.Visibility = Visibility.Visible;
+
+            PowerButton.Focus(FocusState.Programmatic);
+            return true;
         }
     }
 }

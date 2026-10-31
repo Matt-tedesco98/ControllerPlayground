@@ -185,8 +185,18 @@ public sealed partial class MainWindow {
             return;
         }
         if (action == ControllerAction.Back) {
-            if (_inputRouter.Current != null) { DismissTopShellScope(); return; }
-            GoBack(); return;
+            if (_inputRouter.Current != null) { 
+                DismissTopShellScope(); 
+                return; 
+            }
+            
+            if (_currentScreen == AppScreen.Settings && _settingsView.TryClosePowerPanel()) {
+                return;
+            }
+
+            GoBack(); 
+
+            return;
         }
         object? focused = FocusManager.GetFocusedElement(PlayArea.XamlRoot);
         if (action == ControllerAction.Accept && ReferenceEquals(focused, ShellGuideButton)) { ToggleGuideScope(); return; }
