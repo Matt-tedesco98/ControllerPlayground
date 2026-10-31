@@ -214,7 +214,7 @@ public sealed partial class MainWindow : Window {
                 _homeView.RestoreFocus();
                 break;
             case AppScreen.Settings:
-                PlayArea.Focus(FocusState.Programmatic);
+                _settingsView.RestoreFocus();
                 break;
             case AppScreen.GamePage:
                 _GamePageView.FocusInitialElement();

@@ -5,19 +5,67 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:ControllerPlayground.Controls">
 
-    <Grid Background="#202020">
+    <Grid x:Name="SettingsRoot" Background="#202020">
+        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        
         <TextBlock
+            Grid.Row="0"
             Text="Settings"
             FontSize="36"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center" />
+            FontWeight="SemiBold"
+            Margin="40,32,40,24" />
+        
+        <StackPanel
+            Grid.Row="1"
+            Margin="40,0,40,0"
+            Spacing="12"
+            Width="400"
+            HorizontalAlignment="Left">
+
+            <Button
+                x:Name="AudioButton"
+                Content="Audio"
+                FontSize="22"
+                HorizontalAlignment="Stretch" />
+                
+                <TextBlock
+                    x:Name="AudioStatusText"
+                    Text="Select Audio to inspect current output"
+                    Foreground="#AAAAAA"
+                    FontSize="16"
+                    TextWrapping="Wrap" />
+
+            <Button
+                x:Name="Display"
+                Content="Display"
+                FontSize="22"
+                HorizontalAlignment="Stretch" />
+
+            <Button
+                x:Name="ControllersButton"
+                Content="Controllers"
+                FontSize="22"
+                HorizontalAlignment="Stretch" />
+
+            <Button
+                x:Name="PowerButton"
+                Content="Power"
+                FontSize="22"
+                HorizontalAlignment="Stretch" />
+
+        </StackPanel>
 
         <controls:ControllerPromptBar
             x:Name="PromptBar"
+            Grid.Row="2"
             HorizontalAlignment="Right"
-            VerticalAlignment="Bottom"
             Margin="24"
-            ShowAccept="False"
+            ShowAccept="True"
             ShowBack="True"
             ShowView="False"
             ShowMenu="False"
