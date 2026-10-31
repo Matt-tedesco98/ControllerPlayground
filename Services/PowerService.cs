@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -12,9 +8,9 @@ namespace ControllerPlayground.Services {
         [DllImport("powrprof.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool SetSuspendState(
-            [MarshalAs(UnmanagedType.Bool)] bool hibernate,
-            [MarshalAs(UnmanagedType.Bool)] bool force,
-            [MarshalAs(UnmanagedType.Bool)] bool wakeupEventsDisabled);
+            [MarshalAs(UnmanagedType.I1)] bool hibernate,
+            [MarshalAs(UnmanagedType.I1)] bool force,
+            [MarshalAs(UnmanagedType.I1)] bool wakeupEventsDisabled);
 
         public void Sleep() {
             if (!SetSuspendState(hibernate: false, force: false, wakeupEventsDisabled: false)) {
