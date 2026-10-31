@@ -34,7 +34,7 @@
                 HorizontalAlignment="Stretch" />
 
             <Button
-                x:Name="Display"
+                x:Name="DisplayButton"
                 Content="Display"
                 FontSize="22"
                 HorizontalAlignment="Stretch" />

@@ -16,7 +16,7 @@ namespace ControllerPlayground.Services {
 
             bool muted = device.AudioEndpointVolume.Mute;
 
-            return $"{device.FriendlyName} - Volume: {volume}%" + (muted ? "(Muted)" : "");
+            return $"{device.FriendlyName} - Volume: {volume}%" + (muted ? " (Muted)" : "");
         }
 
         public void AdjustVolume(float amount) {

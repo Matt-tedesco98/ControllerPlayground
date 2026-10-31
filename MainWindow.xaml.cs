@@ -22,6 +22,39 @@ using ControllerPlayground.Services.Data;
 namespace ControllerPlayground;
 
 public sealed partial class MainWindow : Window {
+    private readonly DispatcherTimer _controllerTimer = new();
+    private readonly ControllerService _controllerService = new();
+
+    private readonly GameWindowService _gameWindowService = new();
+
+    // Steam services
+    private readonly SteamSessionService _steamSessionService = new();
+    private readonly SteamLaunchService _steamLaunchService = new();
+    private readonly SteamGameSessionCoordinator _steamGameSessionCoordinator;
+    private readonly ISteamChatService _steamChatService;
+    private readonly SteamLibraryService _steamLibraryService;
+    private readonly SteamAppInfoService _steamAppInfoService;
+    private readonly GameSessionService _gameSessionService = new();
+
+
+    // audio service
+    private readonly AudioService _audioService = new();
+
+    // friends overlay
+    private bool _isFriendsOpen;
+    private int _totalUnreadMessages;
+    private readonly KeyboardHostClient _keyboardHostClient = new();
+
+    // Views
+    private readonly HomeView _homeView = new();
+    private readonly SettingsView _settingsView = new();
+    private readonly GamePageView _GamePageView = new();
+    private readonly LibraryView _libraryView = new();
+
+    // Database services
+    private readonly ControllerPlaygroundDatabase _database = new();
+    private readonly SteamArtworkCacheService _artworkCache = new();
+
     public MainWindow() {
         InitializeComponent();
         _inputRouter = InitializeInputOwnership();
@@ -33,11 +66,15 @@ public sealed partial class MainWindow : Window {
 
         // Guide menu
         GuideMenu.ResumeGameRequested += GuideMenu_ResumeGameRequested;
+
         //game session service
         _gameSessionService.StateChanged += GameSessionService_StateChanged;
         _GamePageView.SessionService = _gameSessionService;
 
         _steamLaunchService.SessionService = _gameSessionService;
+
+        //audio service
+        _settingsView.AudioService = _audioService;
 
         // launch monitor
         _steamGameSessionCoordinator = new SteamGameSessionCoordinator(_steamLaunchService, _gameSessionService, _steamLocalService);
@@ -117,33 +154,6 @@ public sealed partial class MainWindow : Window {
 
     }
 
-    private readonly DispatcherTimer _controllerTimer = new();
-    private readonly ControllerService _controllerService = new();
-
-    private readonly GameWindowService _gameWindowService = new();
-
-    // Steam services
-    private readonly SteamSessionService _steamSessionService = new();
-    private readonly SteamLaunchService _steamLaunchService = new();
-    private readonly SteamGameSessionCoordinator _steamGameSessionCoordinator;
-    private readonly ISteamChatService _steamChatService;
-    private readonly SteamLibraryService _steamLibraryService;
-    private readonly SteamAppInfoService _steamAppInfoService;
-    private readonly GameSessionService _gameSessionService = new();
-    // friends overlay
-    private bool _isFriendsOpen;
-    private int _totalUnreadMessages;
-    private readonly KeyboardHostClient _keyboardHostClient = new();
-
-    // Views
-    private readonly HomeView _homeView = new();
-    private readonly SettingsView _settingsView = new();
-    private readonly GamePageView _GamePageView = new();
-    private readonly LibraryView _libraryView = new();
-
-    // Database services
-    private readonly ControllerPlaygroundDatabase _database = new();
-    private readonly SteamArtworkCacheService _artworkCache = new();
 
     private void ControllerTimer_Tick(object? sender, object e) => ProcessControllerBatch();
 

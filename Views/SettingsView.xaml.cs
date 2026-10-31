@@ -25,7 +25,7 @@ namespace ControllerPlayground.Views {
         internal event Action<AppScreen>? NavigateRequested;
         public ControllerFamily ControllerFamily { get => PromptBar.Family; set => PromptBar.Family = value; }
 
-        private readonly AudioService _audioService = new();
+        internal AudioService? AudioService { get; set; }
 
         public SettingsView() {
             InitializeComponent();
@@ -34,9 +34,9 @@ namespace ControllerPlayground.Views {
         internal void HandleControllerAction(ControllerAction action) {
             switch (action) {
                 case ControllerAction.Accept:
-                    if (FocusManager.GetFocusedElement(SettingsRoot.XamlRoot) == AudioButton) {
+                    if (FocusManager.GetFocusedElement(SettingsRoot.XamlRoot) == AudioButton && AudioService != null) {
                         try {
-                            AudioStatusText.Text = _audioService.GetDefaultOutputInfo();
+                            AudioStatusText.Text = AudioService.GetDefaultOutputInfo();
                         }catch (Exception ex) {
                             AudioStatusText.Text = $"Audio unavailable: {ex.Message}";
                         }
@@ -84,9 +84,9 @@ namespace ControllerPlayground.Views {
                 return;
 
             try {
-                _audioService.AdjustVolume(amount);
+                AudioService.AdjustVolume(amount);
 
-                AudioStatusText.Text = _audioService.GetDefaultOutputInfo();
+                AudioStatusText.Text = AudioService.GetDefaultOutputInfo();
             } catch (Exception ex) { 
                 AudioStatusText.Text = $"Audio error: {ex.Message}";
             }
@@ -97,9 +97,9 @@ namespace ControllerPlayground.Views {
                 return;
 
             try {
-                _audioService.ToggleMute();
+                AudioService.ToggleMute();
 
-                AudioStatusText.Text = _audioService.GetDefaultOutputInfo();
+                AudioStatusText.Text = AudioService.GetDefaultOutputInfo();
             } catch (Exception ex) { 
                 AudioStatusText.Text = $"Audio error: {ex.Message}";
             }
