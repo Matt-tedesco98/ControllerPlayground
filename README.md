@@ -1,193 +1,257 @@
 # ControllerPlayground
 
-ControllerPlayground is an experimental **controller-first Windows gaming shell** built with **C#, WinUI 3, C++, and Microsoft GameInput**.
+**A controller-first Windows gaming shell built for the couch.**
 
-The project explores what a PC gaming interface could feel like if it were designed primarily for a couch, TV, and game controller rather than a mouse and keyboard. Its long-term goal is to bring console-style navigation, game management, social features, overlays, and Windows gaming controls into one cohesive experience.
+ControllerPlayground is an experimental Windows application designed to make PC gaming feel more like a console experience, without sacrificing the flexibility of a PC.
 
-> **Status:** Active prototype. Core navigation, controller input, Steam authentication, friends, and chat foundations are working, while the broader shell is still under development.
+Built with **C#, WinUI 3, C++, and Microsoft GameInput**, the project explores a unified interface for game libraries, controller navigation, system settings, gaming services, and overlays.
+
+> **Development status: Active prototype**
+>
+> ControllerPlayground is under active development and is not ready for general use. Features are implemented incrementally and validated on real hardware. The long-term goal is a unified, controller-native gaming experience across Windows and multiple PC gaming platforms.
+
+## Vision
+
+The goal is to create a Windows gaming experience where a keyboard and mouse are optional rather than required.
+
+ControllerPlayground aims to provide:
+
+- A unified, controller-friendly game library
+- Seamless navigation using Xbox and PlayStation controllers
+- Console-style overlays and system controls
+- Integrated gaming services and launcher management
+- Controller-native text entry
+- Reliable game launching, session monitoring, and return-to-shell behavior
+- A customizable, TV-friendly interface
+
+The project prioritizes reusable components, native Windows integration, and maintainable architecture over rushing toward a release.
 
 ## Current Features
 
-### Controller-first navigation
+### Controller Input and Navigation
 
-- Xbox and PlayStation controller-family detection
-- D-pad and left-stick UI navigation
-- Repeat handling for held directional input
-- Controller-specific on-screen button glyphs
+- Native Microsoft GameInput integration through a C++ bridge
+- Xbox and DualSense controller support
+- Full per-device controller identities
+- D-pad and analog-stick navigation
+- Held-input repeat handling
+- Controller-family-specific button glyphs
 - Shoulder-button tab navigation
 - Guide/Home button handling
-- Menu/View button actions
-- Focus restoration between screens and overlays
-- Full per-device identities and independent controller input state
-- Shared root navigation, exclusive modal ownership and neutral-gated takeover
-- Shell-authorized, owner-specific KeyboardHost execution and glyphs
+- Controller focus restoration
+- Independent multi-controller device state
+- Exclusive ownership of modal interactions
+- Neutral-gated controller ownership takeover
+- Disconnect and reconnect recovery
 
-### Native GameInput integration
+Xbox and DualSense multi-controller behavior passed the October 2026 Phase 4A validation milestone.
 
-ControllerPlayground uses a small native **C++ DLL** for Microsoft GameInput rather than relying only on managed input abstractions.
+### Steam Integration
 
-The native layer currently handles:
+ControllerPlayground integrates with Steam using SteamKit2, local Steam data, and selected web services.
 
-- Gamepad state polling
-- Connection status
-- Vendor and product identification
-- Xbox controller support
-- DualSense detection
-- DualSense PS-button handling through extra-button state
-- Thumbsticks, triggers, face buttons, shoulders, and system-button mapping
+Implemented components include:
 
-### Controller-native UI
+- Steam QR-code authentication
+- Persistent authentication and reconnect handling
+- Secure token storage using Windows Password Vault
+- Steam-owned game discovery
+- Library and installed-game filtering
+- Game metadata and artwork handling
+- Local SQLite data persistence
+- Steam artwork caching
+- Game launching and session monitoring
+- Recently played game functionality
+- Steam friends and chat foundations
+- Steam news and game activity retrieval
 
-The WinUI 3 interface currently includes:
+Steam remains an active integration area. Not all Steam client capabilities are exposed through ControllerPlayground.
 
-- Home/game-library prototype
-- Game tiles
-- Tile-specific context menus
-- Global Guide menu
-- Friends overlay
-- Steam chat pane
+### Game Library and Interface
+
+The WinUI 3 interface includes:
+
+- Home screen with recent games and activity
+- Game library with controller navigation
+- Individual game detail pages
+- Controller-accessible context menus
+- Global Guide/Quick Actions overlay
+- Friends and chat interfaces
 - Controller prompt bar
-- Dynamic Xbox / PlayStation glyphs
-- Game detail pages
-- Activity, Your Stuff, Community, and Game Info tabs
+- Dynamic controller glyphs
 
-### Steam integration
+Game detail pages are organized into Activity, Your Stuff, Community, and Game Info sections. Some content and actions within these sections remain under development.
 
-The project currently combines several Steam integration approaches.
+### Controller-Native Keyboard
 
-**SteamKit2**
-- Steam connection and session management
-- QR-code authentication
-- Persistent authentication
-- Secure refresh-token storage through Windows Password Vault
-- Automatic reconnect handling
-- Steam friend chat
-- Incoming message handling
-- Chat-history retrieval
+ControllerPlayground includes a separate KeyboardHost process for controller-driven text entry.
 
-**Local Steam data**
-- Steam installation discovery through the Windows registry
-- Active Steam user detection
-- `localconfig.vdf` parsing
-- Local friend-list discovery
-- SteamID64 conversion
-- Friend avatar lookup
+The architecture supports:
 
-**Steam Web API**
-- Game news/activity retrieval using Steam app IDs
+- Controller-attributed keyboard sessions
+- Shell-authorized input execution
+- Controller-specific button glyphs
+- Ownership validation and stale-input rejection
+- Session lifecycle and protocol version negotiation
+- Disconnect recovery and neutral-gated takeover
+- Guarded focus restoration
+- Retained legacy communication compatibility
 
-## Game Page Prototype
+The KeyboardHost v2 execution milestone passed 109 test groups in Debug and Release, along with Xbox and DualSense hardware validation.
 
-Game pages are structured around a controller-friendly tab system:
+See [KeyboardHost Phase 3 validation](tools/phase3/README.md) and [Phase 4A end-to-end verification](tools/phase4a/README.md).
 
-- **Activity** — game activity and Steam news
-- **Your Stuff** — DLC and owned-content concepts
-- **Community** — Community Hub, Discussions, and Guides
-- **Game Info** — metadata, cover art, store, and support actions
+### Windows System Controls
 
-The current home library still uses prototype game data while the service layer is being built out.
+ControllerPlayground also provides controller-accessible Windows controls, including:
+
+- Current audio output information
+- Volume adjustment and mute controls
+- Visual volume indication
+- Audio settings navigation
+- Power options for sleep, restart, and shutdown
+- A controller-navigable power options panel
+
+These features are part of the ongoing effort to reduce desktop interactions during couch gaming.
 
 ## Architecture
 
+ControllerPlayground uses a combination of managed C# application components and native Windows integration.
+
 ```text
 ControllerPlayground/
-├── Controls/          Reusable WinUI controller-focused components
-├── ControllerPlayground.Input/  Managed device input, ownership and keyboard protocol
-├── ControllerPlayground.KeyboardHost/  Separate controller-native keyboard process
-├── ControllerInput/   Native C++ Microsoft GameInput bridge
-├── Models/            Game, friend, chat, and activity models
-├── Navigation/        Application screen definitions
-├── Overlays/          Guide, friends, chat, QR login, and context menus
-├── Services/          SteamKit, local Steam, VDF, and web services
-└── Views/             Home, game, friends, settings, and activity views
+├── ControllerInput/
+│   Native C++ GameInput bridge
+├── ControllerPlayground.Input/
+│   Managed input, ownership and protocols
+├── ControllerPlayground.KeyboardHost/
+│   Independent controller-native keyboard
+├── ControllerPlayground.Input.Tests/
+│   Input and protocol validation tests
+├── Controls/
+│   Reusable WinUI components
+├── Models/
+│   Application data models
+├── Navigation/
+│   Screen navigation
+├── Overlays/
+│   Guide, friends, chat and menus
+├── Services/
+│   Steam, game sessions, audio, power
+│   SQLite and artwork caching
+├── Views/
+│   Home, library, game and settings UI
+└── tools/
+    Engineering validation resources
 ```
 
-## Tech Stack
+The architecture is designed to keep native input handling, application UI, system services, and supporting processes separated where practical.
 
-- **C# / .NET 8**
-- **WinUI 3**
-- **Windows App SDK 2.3**
-- **C++**
-- **Microsoft GameInput**
-- **SteamKit2**
-- **Steam Web API**
-- **Windows Password Vault**
-- **QRCoder**
-- **XAML**
+## Technology Stack
 
-## Project Direction
+| Technology | Purpose |
+|---|---|
+| C# / .NET 8 | Application and service logic |
+| WinUI 3 / XAML | Windows user interface |
+| Windows App SDK | Windows application framework |
+| C++ | Native input integration |
+| Microsoft GameInput | Controller input and device state |
+| SteamKit2 | Steam client protocol integration |
+| Steam Web API | Selected game data and news |
+| SQLite | Local persistence |
+| Windows Password Vault | Authentication token storage |
+| Windows APIs | Audio, power and system integration |
 
-ControllerPlayground is being developed toward a more complete Windows couch-gaming experience. Planned areas include:
+## Experimental Research
 
-- Unified game-library discovery
-- Deeper Steam and other launcher integration
-- Global controller-first overlays
-- Display and audio switching
-- Broader controller-native text-entry integration
-- Windows and GPU update surfaces
-- Better suspend/resume behavior
+Some development activities investigate lower-level platform behavior without yet delivering complete application features.
+
+### Steam Controller HID Research
+
+Ongoing research focuses on understanding controller device reports, input mapping, connection transports, and potential integration strategies.
+
+This research is separate from the completed Xbox and DualSense multi-controller qualification. Steam Controller support is not yet considered production-ready.
+
+### Steam Client and Frontend Investigation
+
+ControllerPlayground is exploring Steam client and frontend interfaces to better understand how external launcher functionality may be integrated into a unified shell.
+
+These investigations are experimental and do not imply that undocumented Steam functionality has been integrated into the application.
+
+## Development Roadmap
+
+Planned areas of development include:
+
+- Deeper Steam client and launcher integration
+- Epic Games and Xbox gaming platform discovery
+- Further controller-native keyboard integration
+- Improved display and audio device management
+- Broader Windows system settings
+- Expanded game-session and resume behavior
+- More complete friends, chat and social functionality
 - Discord integration
-- TV-style system controls and settings
+- GPU and Windows update visibility
+- Further UI refinement for television displays
+- Packaging, distribution and installation workflows
 
-These are roadmap goals and are not all implemented yet.
+These are development goals, not commitments or released features.
 
-### Multi-controller roadmap progress — October 25, 2026
+## Validation and Engineering Documentation
 
-Increment 4, Phase 3 (controller-owned KeyboardHost execution) has passed final
-Xbox + DualSense acceptance, including the deployed callback-deadline safeguards.
-The keyboard inherits the initiating controller, rejects non-owner/stale input,
-preserves simultaneous RT/Shift actions, updates owner glyphs, and supports neutral
-gating, disconnect takeover and helper failure recovery. All 109 test groups pass
-in Debug and Release; all 28 protocol/session groups also pass without JSON reflection.
-Full Debug builds pass; Release compilation uses the existing command-line
-ReadyToRun workaround. See [the final acceptance record](tools/phase3/README.md)
-for exact scope, validation and remaining limitations.
+The project follows an incremental development process, including automated testing and physical controller validation.
 
-### Increment 4 Phase 4A verification — October 26, 2026
+Completed milestones include:
 
-Phase 4A verifies Xbox and PS5 DualSense end to end across Home, Library, Game
-Details, Guide, Friends, Chat and KeyboardHost, including ownership, navigation,
-simultaneous input, reconnect/takeover, focus, game launch/resume and helper failures.
-The agreed regression checks are complete for review: 109 groups passed in both
-Debug and Release, 28 reflection-free protocol/session groups passed, and the user
-reported the requested Xbox + DualSense hardware checks work, including Phasmophobia
-launch/resume and return to shell. Coverage limits are recorded in the Phase 4A report.
-Steam Controller functionality and qualification are deferred to a future milestone
-and are not blockers for completion of the Xbox + DualSense milestone. Steam Input
-Desktop Layout interference remains a known compatibility issue; settings and
-production input policies are unchanged. See [the Phase 4A record](tools/phase4a/README.md).
-Multi-controller documentation is consolidated in
-[the current architecture and milestone record](ControllerPlayground.Input/MULTI_CONTROLLER.md).
-Windows x64 packaging verification remains separate work requiring approval.
+- Native Xbox and DualSense input identification
+- Multi-controller ownership and modal input isolation
+- KeyboardHost v2 protocol and lifecycle transport
+- Controller-authorized keyboard execution
+- Phase 4A end-to-end integration regression testing
+
+Detailed records:
+
+- [Multi-controller architecture](ControllerPlayground.Input/MULTI_CONTROLLER.md)
+- [KeyboardHost Phase 3 validation](tools/phase3/README.md)
+- [Phase 4A integration validation](tools/phase4a/README.md)
+
+Hardware validation and automated test results are scoped to the tested configurations. Broader device compatibility and distribution testing remain ongoing work.
+
+## Development Environment
+
+ControllerPlayground currently targets Windows x64.
+
+The repository includes:
+
+- `ControllerPlayground.slnx` — Visual Studio solution
+- `ControllerPlayground.csproj` — Main WinUI application
+- `ControllerInput/ControllerInput.vcxproj` — Native C++ controller bridge
+
+Development uses Visual Studio with the relevant .NET, Windows App SDK, and C++ build tools.
+
+The native `ControllerInput.dll` is copied into the application's build output as part of the configured build workflow.
+
+The project does not currently provide a supported general-purpose installer or stable release.
 
 ## Why I Built It
 
-PC gaming is powerful, but much of Windows still assumes a desktop workflow. ControllerPlayground is an exploration of how Windows gaming could be made more approachable from a couch while preserving the flexibility of a PC.
+PC gaming offers flexibility, performance, and customization, but navigating Windows from a couch can still require switching between a controller, keyboard, and mouse.
 
-The project also serves as a hands-on systems-development project covering native interop, controller input, Windows APIs, UI architecture, authentication, local application data, and network services.
+ControllerPlayground is an attempt to bridge that gap.
 
-## Development
+The project also serves as a practical software-engineering learning experience, exploring native interoperability, controller APIs, UI architecture, authentication, concurrency, Windows system services, and application integration.
 
-The application targets Windows and currently builds around an x64 development workflow.
-
-Main project:
-
-```text
-ControllerPlayground.csproj
-```
-
-Native controller bridge:
-
-```text
-ControllerInput/ControllerInput.vcxproj
-```
-
-The native `ControllerInput.dll` is copied into the WinUI application's output during the build.
+The goal is not simply to create a gaming interface, but to build a better understanding of the systems that make one possible.
 
 ## Usage and Rights
 
-ControllerPlayground is a personal portfolio project. Its source code is publicly available for viewing and evaluation, but no license is granted for copying, modifying, redistributing, or using the code in another project. All rights are reserved by the author.
+ControllerPlayground is a personal portfolio and experimental development project.
+
+The source code is publicly available for viewing and evaluation. No license is currently granted for copying, modifying, redistributing, or using the code in another project.
+
+All rights are reserved by the author.
 
 ## Author
 
 **Matthew Tedesco**
+
+[GitHub](https://github.com/Matt-tedesco98)
