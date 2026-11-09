@@ -1,20 +1,10 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using ControllerPlayground.Input;
 using ControllerPlayground.Navigation;
 using ControllerPlayground.Services;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using System;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -30,6 +20,8 @@ namespace ControllerPlayground.Views {
         private bool IsAudioFocused => ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), AudioButton);
         private bool IsPowerFocused => ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), PowerButton);
 
+        private UIElement ActiveFocusRoot => PowerPanel.Visibility == Visibility.Visible ? PowerPanel : SettingsRoot;
+
         public SettingsView() {
             InitializeComponent();
         }
@@ -43,9 +35,8 @@ namespace ControllerPlayground.Views {
 
                         SleepButton.Focus(FocusState.Programmatic);
 
-                    } else if (IsAudioFocused) {
-                        AudioButton.Focus(FocusState.Programmatic);
                     }
+
                     if (IsAudioFocused && AudioService is AudioService audioService) {
                         try {
                             UpdateAudioDisplay(audioService);
@@ -58,14 +49,14 @@ namespace ControllerPlayground.Views {
                 case ControllerAction.NavigateUp:
                     FocusManager.TryMoveFocus(FocusNavigationDirection.Up,
                         new FindNextElementOptions {
-                            SearchRoot = SettingsRoot
-                    });
+                            SearchRoot = ActiveFocusRoot
+                        });
                     break;
 
                 case ControllerAction.NavigateDown:
                     FocusManager.TryMoveFocus(FocusNavigationDirection.Down,
                         new FindNextElementOptions {
-                            SearchRoot = SettingsRoot
+                            SearchRoot = ActiveFocusRoot
                         });
                     break;
 
@@ -80,15 +71,19 @@ namespace ControllerPlayground.Views {
                 case ControllerAction.X:
                     ToggleAudioMute();
                     break;
-
-                case ControllerAction.Back:
-                    NavigateRequested?.Invoke(AppScreen.Home);
-                    break;
             }
         }
 
         internal void RestoreFocus() {
             AudioButton.Focus(FocusState.Programmatic);
+
+            if (AudioService is AudioService audioService) {
+                try {
+                    UpdateAudioDisplay(audioService);
+                } catch (Exception ex) {
+                    AudioStatusText.Text = $"Audio unavailable: {ex.Message}";
+                }
+            }
         }
 
         private void AdjustAudioVolume(float amount) {
@@ -120,8 +115,6 @@ namespace ControllerPlayground.Views {
         }
 
         private void UpdateAudioDisplay(AudioService audioService) {
-            if (audioService is null)
-                return;
             AudioStatusText.Text = audioService.GetDefaultOutputInfo();
 
             AudioVolumeBar.Value = audioService.GetDefaultVolumePercent();
@@ -136,6 +129,11 @@ namespace ControllerPlayground.Views {
 
             PowerButton.Focus(FocusState.Programmatic);
             return true;
+        }
+
+        internal void ResetPanels() {
+            PowerPanel.Visibility = Visibility.Collapsed;
+            AudioPanel.Visibility = Visibility.Visible;
         }
     }
 }

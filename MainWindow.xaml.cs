@@ -196,6 +196,7 @@ public sealed partial class MainWindow : Window {
                 ScreenHost.Content = _homeView;
                 break;
             case AppScreen.Settings:
+                _settingsView.ResetPanels();
                 ScreenHost.Content = _settingsView;
                 break;
             case AppScreen.GamePage:
