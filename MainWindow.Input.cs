@@ -65,6 +65,7 @@ public sealed partial class MainWindow {
         PlayArea.AddHandler(UIElement.KeyDownEvent, new KeyEventHandler((_, args) => TraceBubblingKey(args, "down")), true);
         PlayArea.AddHandler(UIElement.KeyUpEvent, new KeyEventHandler((_, args) => TraceBubblingKey(args, "up")), true);
         PlayArea.GotFocus += (_, args) => Services.OwnershipTrace.Command($"FOCUS target={DescribeFocus(args.OriginalSource)}");
+        _settingsView.ExitConfirmationStateChanged += open => ModalStateChanged(ControllerScopeKind.ExitConfirmation, open);
         return router;
     }
 
@@ -108,6 +109,7 @@ public sealed partial class MainWindow {
             case ControllerScopeKind.Support: _GamePageView.CloseNativeSupportPage(); break;
             case ControllerScopeKind.KnownIssues: _GamePageView.CloseKnownIssuesPage(); break;
             case ControllerScopeKind.Authentication: SteamQrOverlayLayer.Visibility = Visibility.Collapsed; break;
+            case ControllerScopeKind.ExitConfirmation: _settingsView.HideExitConfirmationSurface(); break;
         }
     }
 
@@ -190,11 +192,11 @@ public sealed partial class MainWindow {
                 return; 
             }
             
-            if (_currentScreen == AppScreen.Settings && _settingsView.TryClosePowerPanel()) {
+            if (_currentScreen == AppScreen.Settings && _settingsView.TryCancelExitConfirmation()) {
                 return;
             }
 
-            if (_currentScreen == AppScreen.Settings && _settingsView.TryCancelExitConfirmation()) {
+            if (_currentScreen == AppScreen.Settings && _settingsView.TryClosePowerPanel()) {
                 return;
             }
 
@@ -254,6 +256,7 @@ public sealed partial class MainWindow {
         ControllerScopeKind.Support => _GamePageView.SupportFocusRoot,
         ControllerScopeKind.KnownIssues => _GamePageView.KnownIssuesFocusRoot,
         ControllerScopeKind.Authentication => SteamQrOverlayLayer,
+        ControllerScopeKind.ExitConfirmation => _settingsView.ExitConfirmationFocusRoot,
         _ => null
     };
     private static bool IsWithin(DependencyObject? element, DependencyObject root) {
@@ -311,7 +314,10 @@ public sealed partial class MainWindow {
             ControllerScopeKind.Guide => "Guide", ControllerScopeKind.Friends => "Friends", ControllerScopeKind.Chat => "Chat",
             ControllerScopeKind.HomeContextMenu or ControllerScopeKind.LibraryContextMenu => "Game menu",
             ControllerScopeKind.Support => "Game support", ControllerScopeKind.KnownIssues => "Known issues",
-            ControllerScopeKind.Authentication => "Steam sign-in", _ => "Text entry"
+            ControllerScopeKind.ExitConfirmation => "Exit confirmation",
+            ControllerScopeKind.Authentication => "Steam sign-in",
+            _ => "Text entry",
+
         };
         OwnershipStatusText.Text = scope.Kind == ControllerScopeKind.KeyboardHandoff ? "Finish or cancel text entry to return." :
             _controllerInputFaulted ? "Controller input unavailable. Use mouse/keyboard, or restart to retry." :
@@ -340,6 +346,7 @@ public sealed partial class MainWindow {
                 case ControllerScopeKind.Support:
                 case ControllerScopeKind.KnownIssues: _GamePageView.FocusInitialElement(); break;
                 case ControllerScopeKind.Authentication: CloseOwnershipButton.Focus(FocusState.Programmatic); break;
+                case ControllerScopeKind.ExitConfirmation:_settingsView.FocusExitConfirmation(); break;
                 default: RestoreScreenFocus(); break;
             }
         });

@@ -20,7 +20,10 @@ namespace ControllerPlayground.Views {
         private bool IsAudioFocused => ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), AudioButton);
         private bool IsPowerFocused => ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), PowerButton);
 
+        internal event Action<bool>? ExitConfirmationStateChanged;
+
         private UIElement ActiveFocusRoot => ExitConfirmationLayer.Visibility == Visibility.Visible ? ExitConfirmationLayer : PowerPanel.Visibility == Visibility.Visible ? PowerPanel : SettingsRoot;
+        internal UIElement ExitConfirmationFocusRoot => ExitConfirmationLayer;
 
         public SettingsView() {
             InitializeComponent();
@@ -39,7 +42,8 @@ namespace ControllerPlayground.Views {
 
                     if (ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), ExitAppButton)) {
                         ExitConfirmationLayer.Visibility = Visibility.Visible;
-                        CancelExitButton.Focus(FocusState.Programmatic);
+                        ExitConfirmationStateChanged?.Invoke(true);
+                        FocusExitConfirmation();
                         return;
                     }
                     if (IsPowerFocused) {
@@ -154,9 +158,18 @@ namespace ControllerPlayground.Views {
             if (ExitConfirmationLayer.Visibility != Visibility.Visible)
                 return false;
 
-            ExitConfirmationLayer.Visibility = Visibility.Collapsed;
-            ExitAppButton.Focus(FocusState.Programmatic);
+            HideExitConfirmationSurface();
+            ExitConfirmationStateChanged?.Invoke(false);
             return true;
+        }
+
+        internal void FocusExitConfirmation() {
+            if (ExitConfirmationLayer.Visibility == Visibility.Visible)
+                CancelExitButton.Focus(FocusState.Programmatic);
+        }
+
+        internal void HideExitConfirmationSurface() {
+            ExitConfirmationLayer.Visibility = Visibility.Collapsed;
         }
     }
 }

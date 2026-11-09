@@ -2,7 +2,7 @@ namespace ControllerPlayground.Input;
 
 public enum ControllerScopeKind {
     Guide, Friends, Chat, HomeContextMenu, LibraryContextMenu,
-    Support, KnownIssues, Authentication, KeyboardHandoff
+    Support, KnownIssues, Authentication, KeyboardHandoff, ExitConfirmation
 }
 
 public sealed class ControllerInputScope {
