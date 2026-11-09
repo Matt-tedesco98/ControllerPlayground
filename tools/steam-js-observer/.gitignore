@@ -1,0 +1,3 @@
+# Raw Steam captures may contain behavioral or account-related metadata.
+captures/
+*.jsonl
