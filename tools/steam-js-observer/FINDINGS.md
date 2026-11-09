@@ -17,6 +17,25 @@ This file contains **manually reviewed, non-sensitive findings only**. Keep raw 
 
 **Historical test date:** October 23, 2026. Steam version/build not preserved in this log; do not assume current compatibility.
 
+## November 9, 2026 — live JavaScript observer validation
+
+**Evidence:** Locally observed `SharedJSContext` with the read-only listener (no `--trace-calls`), from an uploaded JSONL capture. Steam client build was not recorded. This is a **two-launch sample**, not a broad compatibility test.
+
+- 82 valid observer records: **49 namespace inventories**, **3 successful callback subscriptions**, **1 ready signal**, **29 callback events**.
+- API inventory: **782 namespace-qualified method entries** across 49 namespaces (**766 unique unqualified method names**). This is an observed surface listing, **not verification that all methods work**. See [research/steam-api-surface.json](research/steam-api-surface.json).
+- **Counter-Strike 2** (Steam app 730): one `GameActionStart`, **13** `GameActionTaskChange` stages, one `GameActionEnd`.
+  - Stages in observed order: `UpdatingAppInfo`, `CheckShaderDepotManifest`, `RunningInstallScript`, `SynchronizingCloud`, `SynchronizingStats`, `ShowInterstitials`, `SynchronizingControllerConfig`, `VerifyingFiles`, `SiteLicenseSeatCheckout`, `DelayLaunch`, `CreatingProcess`, `WaitingGameWindow`, `Completed`.
+- **Phasmophobia** (Steam app 739630): one `GameActionStart`, **12** task stages, one `GameActionEnd`.
+  - Stages in observed order: `ShowLaunchOption`, `CheckShaderDepotManifest`, `RunningInstallScript`, `SynchronizingCloud`, `SynchronizingStats`, `ShowInterstitials`, `SynchronizingControllerConfig`, `SiteLicenseSeatCheckout`, `DelayLaunch`, `CreatingProcess`, `WaitingGameWindow`, `Completed`.
+- Callback **argument types only** (values beyond sanitized app IDs/stage names were not retained):
+  - `Apps.RegisterForGameActionStart`: `[number, string, string, number]`
+  - `Apps.RegisterForGameActionTaskChange`: `[number, string, string, string, string]`
+  - `Apps.RegisterForGameActionEnd`: `[number]`
+- **Important limitation:** The `GameActionEnd` callback **does not contain a captured app ID**. Its association with each sequential launch is inferred from event order. It means the launch **action ended**, not that the actual game process exited. We have **not** demonstrated game lifetime notifications or process exit detection.
+- The sanitized, ordered task sequences and callback-type observations are in [research/game-launch-events.json](research/game-launch-events.json). Neither JSON file contains timestamps, Steam account details, message content, raw argument values, or CDP packets.
+
+**Next experiment:** Carefully register `GameSessions.RegisterForAppLifetimeNotifications` to determine whether it reports real game start/exit events, and document callback type/field shape first. Its semantics are currently **unverified**.
+
 ## Research capture template (copy below for each validated observation)
 
 - Date / Steam client build:
@@ -31,12 +50,12 @@ This file contains **manually reviewed, non-sensitive findings only**. Keep raw 
 
 ## First local validation checklist
 
-- [ ] Confirm Steam build and `/json/list` target selection
-- [ ] Run `node listener.mjs` with **no** `--trace-calls`
-- [ ] Confirm `subscribed` and `ready` records
-- [ ] Start a test game; confirm Start, TaskChange and End callback types
-- [ ] Confirm no tokens, messages, friend IDs or raw callback data in logs
+- [x] Confirm `/json/list` exposes `SharedJSContext` (Steam build still unknown)
+- [x] Run `node listener.mjs` with **no** `--trace-calls`
+- [x] Confirm `subscribed` and `ready` records
+- [x] Start test games; confirm Start, TaskChange and End callback types
+- [x] Review the uploaded capture fields: no tokens, chat content, friend IDs or raw callback data found
 - [ ] Ctrl+C, stop debug-enabled Steam, and relaunch normally
-- [ ] Update this file with a reviewed result; **never** add the raw JSONL file
+- [x] Update findings and sanitized datasets; **never** add the raw JSONL file
 
 Future tracks: downloads/installs, friends/presence, messages, Steam client version drift, external observer lifetime/reconnect, and a read-only adapter for ControllerPlayground. Observe -> reproduce -> integrate, without replacing the working SteamKit2 path until separately validated.

@@ -2,11 +2,11 @@
 
 This independent Node.js probe connects to Steam's **local Chromium DevTools Protocol (CDP)** `SharedJSContext` target. It records a sanitized inventory of `SteamClient` method names and subscribes to the three **previously observed** `SteamClient.Apps` game-action callbacks. It intentionally does **not** launch games, send messages, change settings, or invoke Steam's private action methods.
 
-**Status:** Prototype, not verified against the current Steam client from this repository. No production ControllerPlayground integration. The research branch should not be merged wholesale into the application.
+**Status:** Prototype, **live-tested on November 9, 2026** for namespace enumeration and three launch-action callbacks with two game launches. Other APIs, process exit detection and independent IPC are unverified. No production ControllerPlayground integration. The research branch should not be merged wholesale into the application.
 
 ## Run on the Windows Steam machine
 
-Requires Node.js 22.4+; no npm dependencies.
+Requires Node.js 22.4+ for built-in WebSocket by default (recommended: a supported current LTS release). Node.js 21.2.0 can run the probe with `node --experimental-websocket listener.mjs`, but Node 21 is no longer supported. No npm dependencies.
 
 1. Exit Steam completely. Start Steam with `steam.exe -cef-enable-debugging` in a trusted, local Windows session. Confirm `http://127.0.0.1:8080/json/list` exposes a `SharedJSContext` target.
 2. From this folder run `node listener.mjs`. This connects only to localhost and saves a new `captures/steam-*.jsonl` file.
@@ -19,10 +19,14 @@ Optional flags: `--port 8080`, `--out captures/my-run.jsonl`. Output files are c
 
 Run the dependency-free probe tests with `node --test tests/*.test.mjs`.
 
+## November 9, 2026 capture
+
+The first reviewed live capture recorded 49 Steam namespaces, 782 namespace-qualified method entries, and 29 launch callbacks across Counter-Strike 2 (730) and Phasmophobia (739630). See [FINDINGS.md](FINDINGS.md), [research/steam-api-surface.json](research/steam-api-surface.json), and [research/game-launch-events.json](research/game-launch-events.json). These JSON files are **curated summaries**, not raw captures. Steam build was not recorded; game exit events are not yet verified.
+
 ## Evidence and privacy policy
 
 - `captures/` and `*.jsonl` are gitignored. **Never commit raw event logs**, API results, user identifiers, authorization tokens, friends/chat content, cookies, personal information, or full CDP packets.
-- Commit *curated findings* as Markdown: Steam client version/date, observed API name, manually reviewed non-sensitive event structure, confidence, and reproducible test steps. Minimize test app identifiers if not required.
+- Commit *curated findings* as Markdown or sanitized JSON: observed date/build (or unknown), API name, manually reviewed non-sensitive event structure, confidence, and reproducible test steps. Minimize test app identifiers if not required.
 - Events are best-effort and may change with Steam updates. A `SharedJSContext` observer is **not** proof of external Steam IPC access or independent C# communication.
 - CDP allows high-privilege operations. Use only loopback, don't expose the port externally, don't run untrusted scripts while debugging is active, and disable it promptly afterward.
 

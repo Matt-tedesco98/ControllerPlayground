@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "observedDate": "2026-11-09",
+  "context": "Steam SharedJSContext (local Chromium DevTools observer)",
+  "steamClientBuild": null,
+  "traceCallsEnabled": false,
+  "counts": {
+    "launches": 2,
+    "callbacks": 29,
+    "subscriptions": 3,
+    "callbacksByMethod": {
+      "Apps.RegisterForGameActionStart": 2,
+      "Apps.RegisterForGameActionTaskChange": 25,
+      "Apps.RegisterForGameActionEnd": 2
+    },
+    "distinctStageLabels": 14
+  },
+  "observedCallbackArgumentTypes": {
+    "Apps.RegisterForGameActionStart": [
+      "number",
+      "string",
+      "string",
+      "number"
+    ],
+    "Apps.RegisterForGameActionTaskChange": [
+      "number",
+      "string",
+      "string",
+      "string",
+      "string"
+    ],
+    "Apps.RegisterForGameActionEnd": [
+      "number"
+    ]
+  },
+  "launchSequences": [
+    {
+      "appId": 730,
+      "title": "Counter-Strike 2",
+      "startCallbackObserved": true,
+      "taskStages": [
+        "UpdatingAppInfo",
+        "CheckShaderDepotManifest",
+        "RunningInstallScript",
+        "SynchronizingCloud",
+        "SynchronizingStats",
+        "ShowInterstitials",
+        "SynchronizingControllerConfig",
+        "VerifyingFiles",
+        "SiteLicenseSeatCheckout",
+        "DelayLaunch",
+        "CreatingProcess",
+        "WaitingGameWindow",
+        "Completed"
+      ],
+      "launchActionEndObserved": true
+    },
+    {
+      "appId": 739630,
+      "title": "Phasmophobia",
+      "startCallbackObserved": true,
+      "taskStages": [
+        "ShowLaunchOption",
+        "CheckShaderDepotManifest",
+        "RunningInstallScript",
+        "SynchronizingCloud",
+        "SynchronizingStats",
+        "ShowInterstitials",
+        "SynchronizingControllerConfig",
+        "SiteLicenseSeatCheckout",
+        "DelayLaunch",
+        "CreatingProcess",
+        "WaitingGameWindow",
+        "Completed"
+      ],
+      "launchActionEndObserved": true
+    }
+  ],
+  "caveats": [
+    "Argument type arrays are observed shapes, not complete or authoritative method signatures.",
+    "Start and TaskChange app IDs and task labels were extracted by the observer; other raw argument values were not retained.",
+    "GameActionEnd has a single numeric argument, but no recorded app ID; its placement in a specific launch sequence was inferred from non-overlapping event order and is not independently confirmed.",
+    "Completed and GameActionEnd signal completion of a Steam launch action, not proven game process exit.",
+    "Two game launches in one observed Steam session; no repeatability or Steam version compatibility claims."
+  ]
+}
