@@ -439,4 +439,17 @@ public sealed partial class MainWindow {
     private void CancelKeyboardIfContextChanged() {
         if (_keyboardContextValid?.Invoke() == false) _keyboardRequestCancellation?.Cancel();
     }
+
+    private void RequestExit() {
+        if (_currentScreen != AppScreen.Settings || !_settingsView.IsExitConfirmationOpen || _dispatchController is not { } controller || _inputRouter.Current is not { Kind: ControllerScopeKind.ExitConfirmation, Owner: { } owner } scope || !_inputRouter.CurrentOwnerAvailable || owner.Id != controller.Id || owner.ConnectionGeneration != controller.ConnectionGeneration)
+            return;
+
+        var authorizedScopeId = scope.Id;
+
+        DispatcherQueue.TryEnqueue(() => {
+            if (!_windowClosed && _currentScreen == AppScreen.Settings && _settingsView.IsExitConfirmationOpen && _inputRouter.Current?.Id == authorizedScopeId && _inputRouter.CurrentOwnerAvailable) {
+                Close();
+            }
+        });
+    }
 }

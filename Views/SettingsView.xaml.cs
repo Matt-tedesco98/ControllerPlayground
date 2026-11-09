@@ -22,6 +22,9 @@ namespace ControllerPlayground.Views {
 
         internal event Action<bool>? ExitConfirmationStateChanged;
 
+        internal event Action? ExitConfirmed;
+        internal bool IsExitConfirmationOpen => ExitConfirmationLayer.Visibility == Visibility.Visible;
+
         private UIElement ActiveFocusRoot => ExitConfirmationLayer.Visibility == Visibility.Visible ? ExitConfirmationLayer : PowerPanel.Visibility == Visibility.Visible ? PowerPanel : SettingsRoot;
         internal UIElement ExitConfirmationFocusRoot => ExitConfirmationLayer;
 
@@ -32,9 +35,14 @@ namespace ControllerPlayground.Views {
         internal void HandleControllerAction(ControllerAction action) {
             switch (action) {
                 case ControllerAction.Accept:
-                    if (ExitConfirmationLayer.Visibility == Visibility.Visible) {
-                        if (ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), CancelExitButton)) {
+                    if (IsExitConfirmationOpen) {
+                        var focused = FocusManager.GetFocusedElement(
+                            SettingsRoot.XamlRoot);
+
+                        if (ReferenceEquals(focused, CancelExitButton)) {
                             TryCancelExitConfirmation();
+                        } else if (ReferenceEquals(focused, ConfirmExitButton)) {
+                            ExitConfirmed?.Invoke();
                         }
 
                         return;

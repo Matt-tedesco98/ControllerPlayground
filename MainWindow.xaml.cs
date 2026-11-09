@@ -79,6 +79,9 @@ public sealed partial class MainWindow : Window {
         //audio service
         _settingsView.AudioService = _audioService;
 
+        //power service
+        _settingsView.ExitConfirmed += RequestExit;
+
         // launch monitor
         _steamGameSessionCoordinator = new SteamGameSessionCoordinator(_steamLaunchService, _gameSessionService, _steamLocalService);
         _steamGameSessionCoordinator.GameStarted += SteamGameSessionMonitor_GameStarted;
