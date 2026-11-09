@@ -95,5 +95,5 @@ export function buildProbeSource({ traceCalls = false } = {}) {
     }
     emit('ready', { traceCalls: ${Boolean(traceCalls)} });
     return { ok: true, traceCalls: ${Boolean(traceCalls)} };
-  })`;
+  })()`;
 }
