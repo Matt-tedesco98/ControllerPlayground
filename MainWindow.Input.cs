@@ -194,6 +194,10 @@ public sealed partial class MainWindow {
                 return;
             }
 
+            if (_currentScreen == AppScreen.Settings && _settingsView.TryCancelExitConfirmation()) {
+                return;
+            }
+
             GoBack(); 
 
             return;

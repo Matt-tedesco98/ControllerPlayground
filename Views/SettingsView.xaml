@@ -162,6 +162,48 @@
             ShowView="False"
             ShowMenu="False"
             BackLabel="Back" />
+
+        <Grid
+            x:Name="ExitConfirmationLayer"
+            Grid.RowSpan="3"
+            Background="#CC000000"
+            Visibility="Collapsed">
+
+            <Border
+                Width="460"
+                Padding="32"
+                Background="#2B2B2B"
+                CornerRadius="12"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center" >
+
+                <StackPanel Spacing="16">
+                    
+                    <TextBlock
+                        Text="Exit ControllerPlayground?"
+                        FontSize="26"
+                        FontWeight="SemiBold" />
+                    
+                    <TextBlock
+                        Text="This will close ControllerPlayground, not Windows."
+                        TextWrapping="Wrap"
+                        FontSize="17" />
+                    
+                    <Button
+                        x:Name="CancelExitButton"
+                        Content="Cancel"
+                        HorizontalAlignment="Stretch" />
+                    
+                    <Button
+                        x:Name="ConfirmExitButton"
+                        Content="Exit ControllerPlayground"
+                        HorizontalAlignment="Stretch" />
+                    
+                </StackPanel>
+                
+            </Border>
+            
+        </Grid>
         
     </Grid>
 

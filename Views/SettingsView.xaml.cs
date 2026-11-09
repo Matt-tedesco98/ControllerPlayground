@@ -20,7 +20,7 @@ namespace ControllerPlayground.Views {
         private bool IsAudioFocused => ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), AudioButton);
         private bool IsPowerFocused => ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), PowerButton);
 
-        private UIElement ActiveFocusRoot => PowerPanel.Visibility == Visibility.Visible ? PowerPanel : SettingsRoot;
+        private UIElement ActiveFocusRoot => ExitConfirmationLayer.Visibility == Visibility.Visible ? ExitConfirmationLayer : PowerPanel.Visibility == Visibility.Visible ? PowerPanel : SettingsRoot;
 
         public SettingsView() {
             InitializeComponent();
@@ -29,6 +29,19 @@ namespace ControllerPlayground.Views {
         internal void HandleControllerAction(ControllerAction action) {
             switch (action) {
                 case ControllerAction.Accept:
+                    if (ExitConfirmationLayer.Visibility == Visibility.Visible) {
+                        if (ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), CancelExitButton)) {
+                            TryCancelExitConfirmation();
+                        }
+
+                        return;
+                    }
+
+                    if (ReferenceEquals(FocusManager.GetFocusedElement(SettingsRoot.XamlRoot), ExitAppButton)) {
+                        ExitConfirmationLayer.Visibility = Visibility.Visible;
+                        CancelExitButton.Focus(FocusState.Programmatic);
+                        return;
+                    }
                     if (IsPowerFocused) {
                         AudioPanel.Visibility = Visibility.Collapsed;
                         PowerPanel.Visibility = Visibility.Visible;
@@ -132,8 +145,18 @@ namespace ControllerPlayground.Views {
         }
 
         internal void ResetPanels() {
+            ExitConfirmationLayer.Visibility = Visibility.Collapsed;
             PowerPanel.Visibility = Visibility.Collapsed;
             AudioPanel.Visibility = Visibility.Visible;
+        }
+
+        internal bool TryCancelExitConfirmation() {
+            if (ExitConfirmationLayer.Visibility != Visibility.Visible)
+                return false;
+
+            ExitConfirmationLayer.Visibility = Visibility.Collapsed;
+            ExitAppButton.Focus(FocusState.Programmatic);
+            return true;
         }
     }
 }
