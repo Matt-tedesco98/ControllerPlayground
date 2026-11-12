@@ -35,3 +35,12 @@ jobs:
           name: managed-controller-feature-results
           path: artifacts/feature-tests.json
           if-no-files-found: ignore
+
+  windows-uia-runner-tests:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify UI assertion logic and app-not-running reports
+        shell: powershell
+        run: powershell.exe -NoProfile -MTA -ExecutionPolicy Bypass -File ControllerPlayground.FeatureTests/WindowsUi/Test-UiScenarios.ps1
