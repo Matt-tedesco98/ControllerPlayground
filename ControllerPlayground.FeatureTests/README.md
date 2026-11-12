@@ -4,7 +4,7 @@ This is a small **deterministic command-line runner**, not an AI agent. Codex,
 Claude Code, a human developer, or CI can ask it to list and run *registered*
 scenarios. Only the runner's C# assertions decide pass/fail.
 
-The current scenarios invoke the **real managed `ControllerInputRouter`**
+The managed scenarios invoke the **real managed `ControllerInputRouter`**
 with synthetic, controller-attributed actions. They do not exercise the WinUI
 application, Microsoft GameInput, actual USB/Bluetooth devices, or virtual HID
 controllers. A passing result is **not an end-to-end UI or hardware pass**.
@@ -55,8 +55,9 @@ each simulated button press.
 
 1. **Now:** deterministic managed-router assertions using synthetic
    `ControllerActionEvent`s; these tests are fast and device-free.
-2. **Next:** an opt-in Windows UI integration adapter that starts a test build,
-   inspects WinUI focus/automation properties, and verifies observable UI state.
+2. **Now, opt-in:** [Windows UI Automation inspection](WindowsUi/README.md)
+   checks observable accessibility state in a running WinUI app. It uses a
+   separate entry point and report.
 3. **Then:** a virtual-controller adapter, *after* confirming its Xbox/other
    virtual devices are discovered by the native GameInput capture. Virtual
    device presence alone does not prove Guide-button semantics, identities,
