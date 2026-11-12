@@ -1,0 +1,37 @@
+name: Managed controller feature tests
+
+on:
+  push:
+    paths:
+      - 'ControllerPlayground.FeatureTests/**'
+      - 'ControllerPlayground.Input/**'
+      - 'ControllerPlayground.csproj'
+      - 'ControllerPlayground.slnx'
+      - '.github/workflows/managed-feature-tests.yml'
+  pull_request:
+    paths:
+      - 'ControllerPlayground.FeatureTests/**'
+      - 'ControllerPlayground.Input/**'
+      - 'ControllerPlayground.csproj'
+      - 'ControllerPlayground.slnx'
+      - '.github/workflows/managed-feature-tests.yml'
+
+jobs:
+  feature-tests:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Run deterministic managed controller scenarios
+        run: dotnet run --project ControllerPlayground.FeatureTests/ControllerPlayground.FeatureTests.csproj --configuration Release -- run --all --json --report artifacts/feature-tests.json
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: managed-controller-feature-results
+          path: artifacts/feature-tests.json
+          if-no-files-found: ignore
