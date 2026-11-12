@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('inspect', 'guide-open', 'guide-closed', 'focused', 'exit-open', 'exit-closed', 'exit-focus-restored')]
+    [ValidateSet('inspect', 'guide-open', 'guide-closed', 'focused', 'exit-open', 'exit-closed', 'exit-focus-restored', 'exit-sequence')]
     [string]$Scenario,
     [string]$AutomationId,
     [string]$Baseline,
@@ -71,22 +71,26 @@ if ($exitCode -eq 0) {
         }
         $exitCode = 3
     } else {
+        $failure = $null
         try {
-            $result.evidence = Get-UiSnapshot $apps[0]
+            if ($Scenario -eq 'exit-sequence') {
+                $result['confirmation'] = $null
+                $failure = Watch-ExitSequence { Get-UiSnapshot $apps[0] } $result 60
+            } else {
+                $result.evidence = Get-UiSnapshot $apps[0]
+                $failure = Get-UiAssertionFailure $result.scenario $result.evidence $AutomationId $baselineReport
+            }
         } catch {
             $result.status = 'unavailable'
             $result.diagnosticCode = 'accessibility_tree_unavailable'
             $result.message = "Could not read the ControllerPlayground accessibility tree. Use an unlocked desktop and run the app and runner at the same privilege level. $($_.Exception.Message)"
             $exitCode = 3
         }
-        if ($exitCode -eq 0) {
-            $failure = Get-UiAssertionFailure $result.scenario $result.evidence $AutomationId $baselineReport
-            if ($failure) {
-                $result.status = 'failed'
-                $result.diagnosticCode = 'assertion_failed'
-                $result.message = $failure
-                $exitCode = 1
-            }
+        if ($exitCode -eq 0 -and $failure) {
+            $result.status = 'failed'
+            $result.diagnosticCode = 'assertion_failed'
+            $result.message = $failure
+            $exitCode = 1
         }
     }
 }

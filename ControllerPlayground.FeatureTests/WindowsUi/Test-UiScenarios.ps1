@@ -49,6 +49,32 @@ $snapshot.focus = $null
 Assert-Scenario exit-open $false
 Assert-Scenario focused $false CancelExitButton
 
+$closed = $baseline.evidence.Clone()
+$closed.markers = @{ ExitAppButton = 1; CancelExitButton = 0; ConfirmExitButton = 0 }
+$open = $closed.Clone()
+$open.markers = @{ ExitAppButton = 1; CancelExitButton = 1; ConfirmExitButton = 1 }
+$open.focus = @{ automationId = 'CancelExitButton'; runtimeId = @(1, 2, 5) }
+$queue = [Collections.Queue]::new()
+$queue.Enqueue($closed)
+$queue.Enqueue($open)
+$queue.Enqueue($closed)
+$sequence = @{ evidence = $null; baseline = $null; confirmation = $null }
+$failure = Watch-ExitSequence { $queue.Dequeue() } $sequence 1
+if ($failure -or $sequence.baseline -ne $closed -or $sequence.confirmation -ne $open -or $sequence.evidence -ne $closed) {
+    throw "Expected all three observations in the exit sequence. $failure"
+}
+
+$queue.Enqueue($closed)
+$queue.Enqueue($open)
+$wrongFocus = $closed.Clone()
+$wrongFocus.focus = $null
+$queue.Enqueue($wrongFocus)
+$sequence = @{ evidence = $null; baseline = $null; confirmation = $null }
+$failure = Watch-ExitSequence { $queue.Dequeue() } $sequence 0
+if ($failure -notlike 'Timed out waiting for exit-focus-restored.*' -or $sequence.evidence -ne $wrongFocus) {
+    throw "Expected the exit sequence to fail with the last observed focus. $failure"
+}
+
 try {
     Get-UiSnapshot @{ MainWindowHandle = [IntPtr]::Zero }
     throw 'Expected the missing-window diagnostic.'

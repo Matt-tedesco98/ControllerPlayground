@@ -97,3 +97,36 @@ function Get-UiAssertionFailure {
         }
     }
 }
+
+function Watch-ExitSequence {
+    param([scriptblock]$Capture, $Result, [int]$TimeoutSeconds)
+
+    $clock = [Diagnostics.Stopwatch]::StartNew()
+    $steps = @(
+        @{ scenario = 'focused'; message = 'Focus Exit ControllerPlayground in Settings with confirmation closed.' }
+        @{ scenario = 'exit-open'; message = 'Open exit confirmation and leave focus on Cancel.' }
+        @{ scenario = 'exit-focus-restored'; message = 'Dismiss confirmation with Back and leave focus alone.' }
+    )
+    foreach ($step in $steps) {
+        [Console]::Error.WriteLine($step.message)
+        do {
+            $snapshot = & $Capture
+            $Result.evidence = $snapshot
+            $failure = Get-UiAssertionFailure $step.scenario $snapshot 'ExitAppButton' @{ evidence = $Result.baseline }
+            if ($step.scenario -eq 'focused' -and !$failure) {
+                $failure = Get-UiAssertionFailure 'exit-closed' $snapshot
+            }
+            if (!$failure) {
+                switch ($step.scenario) {
+                    'focused' { $Result.baseline = $snapshot }
+                    'exit-open' { $Result.confirmation = $snapshot }
+                }
+                break
+            }
+            if ($clock.Elapsed.TotalSeconds -ge $TimeoutSeconds) {
+                return "Timed out waiting for $($step.scenario). $failure"
+            }
+            Start-Sleep -Milliseconds 200
+        } while ($true)
+    }
+}

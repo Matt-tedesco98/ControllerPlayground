@@ -24,13 +24,27 @@ powershell.exe -NoProfile -MTA -File $runner -Scenario focused -AutomationId Lib
 | `exit-open` | Both confirmation buttons are visible and `CancelExitButton` has focus |
 | `exit-closed` | The Settings exit button is visible and both confirmation buttons are hidden |
 | `exit-focus-restored` | Confirmation is closed and the same Settings exit button has focus in the same running window |
+| `exit-sequence` | Observes the baseline, open confirmation, and restored focus in one app session |
 
-For the exit sequence, navigate to Settings and focus **Exit ControllerPlayground**
-with confirmation closed. Capture the baseline. Then open confirmation with the
-controller's Accept action and sample while focus remains on Cancel. Dismiss
-with Cancel or the controller's Back action. Take the last sample after
-dismissal settles, keeping the app in the foreground. Use the same app instance
-and Settings screen throughout.
+For an interactive test, start the following command, then switch to
+ControllerPlayground and leave it in the foreground. You have 60 seconds
+to complete the three steps with the controller:
+
+1. In Settings, focus **Exit ControllerPlayground** with confirmation closed.
+2. After a couple of seconds, press Accept. Leave focus on **Cancel**.
+3. After a couple of seconds, press **Back** and leave focus alone.
+
+```powershell
+powershell.exe -NoProfile -MTA -File $runner -Scenario exit-sequence -Report artifacts/exit-sequence.json
+```
+
+The report saves the baseline, open confirmation and last observation. The
+runner prints a prompt at each stage and identifies the stage that timed out
+if it could not observe the expected state.
+
+You can also run the checks individually. Capture the baseline before opening
+confirmation, capture the open state with focus on Cancel, and capture the
+restoration after dismissal. Use the same app instance and Settings screen.
 
 ```powershell
 powershell.exe -NoProfile -MTA -File $runner -Scenario focused -AutomationId ExitAppButton -DelaySeconds 5 -Report artifacts/exit-before.json
