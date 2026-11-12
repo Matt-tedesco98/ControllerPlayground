@@ -5,6 +5,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="ControllerPlayground.Input/ControllerPlayground.Input.csproj" Id="54f3489e-7240-4363-a103-ba9babc9cac5" />
+  <Project Path="ControllerPlayground.FeatureTests/ControllerPlayground.FeatureTests.csproj" />
   <Project Path="ControllerPlayground.Input.Tests/ControllerPlayground.Input.Tests.csproj">
     <BuildDependency Project="ControllerInput/ControllerInput.vcxproj" />
   </Project>
