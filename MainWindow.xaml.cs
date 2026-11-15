@@ -78,6 +78,10 @@ public sealed partial class MainWindow : Window {
 
         //audio service
         _settingsView.AudioService = _audioService;
+        _settingsView.Loaded += (_, _) => {
+            if (_currentScreen == AppScreen.Settings && _inputRouter.Current == null)
+                QueueActiveScopeFocus();
+        };
 
         //power service
         _settingsView.ExitConfirmed += RequestExit;
